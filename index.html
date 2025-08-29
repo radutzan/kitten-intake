@@ -8,35 +8,31 @@
 </head>
 <body>
     <header>
-        <h1>🐱 Kitten Intake</h1>
+        <h1>🐱 Intake</h1>
+    </header>
+    <nav>
         <div class="header-buttons" id="header-buttons">
-            <button type="button" onclick="printSection('checklist')" class="btn btn-secondary" id="print-checklist-btn" disabled>🖨️ Print Checklist</button>
-            <button type="button" onclick="printSection('dispense')" class="btn btn-secondary" id="print-dosages-btn" disabled>🖨️ Print Records</button>
+            <button type="button" onclick="printSection('checklist')" class="btn btn-secondary" id="print-checklist-btn" disabled>🖨️  Checklist</button>
+            <button type="button" onclick="printSection('dispense')" class="btn btn-secondary" id="print-dosages-btn" disabled>🖨️  Records</button>
             <button type="button" id="add-kitten-btn" class="btn btn-primary">+ Add Kitten</button>
         </div>
-    </header>
+    </nav>
 
-    <section class="input-section no-print">
+    <section class="input-section">
         <div id="kittens-container">
             <!-- Kitten forms will be added here dynamically -->
         </div>
-        <button type="button" id="calculate-btn" class="btn btn-success">Calculate Doses & Generate Schedule</button>
     </section>
 
     <section class="results-section" id="results-section" style="display: none;">
         <div class="results-content">
-            <div id="intake-records" class="result-section">
-                <h3>Individual Intake Records</h3>
-                <div id="intake-records-content"></div>
-            </div>
-
             <div id="dispense-summary" class="result-section">
-                <h3>Medication Dispense Summary</h3>
+                <h3>Aggregate Totals for Foster Home</h3>
                 <div id="dispense-summary-content"></div>
             </div>
 
             <div id="foster-checklist" class="result-section">
-                <h3>Foster Care Medication Checklist</h3>
+                <h3>Foster Medication Checklist</h3>
                 <div id="foster-checklist-content"></div>
             </div>
         </div>

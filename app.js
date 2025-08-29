@@ -10,12 +10,13 @@ document.addEventListener('DOMContentLoaded', function() {
     addKitten(); // Add first kitten form by default
     updateHeaderButtons(); // Initialize button states
     
+    // Hide results section initially
+    document.getElementById('results-section').style.display = 'none';
 });
 
 // Event Listeners
 function setupEventListeners() {
     document.getElementById('add-kitten-btn').addEventListener('click', addKitten);
-    document.getElementById('calculate-btn').addEventListener('click', calculateAndDisplay);
     
     // Header print buttons
     document.getElementById('print-checklist-btn').addEventListener('click', () => printSection('checklist'));
@@ -32,7 +33,9 @@ function addKitten() {
     kittenForm.id = kittenId;
     
     kittenForm.innerHTML = `
+        <div class="number">${kittenCounter}</div>
         <div class="kitten-form-content">
+            ${kittenCounter > 1 ? `<button type="button" class="btn btn-danger remove" onclick="removeKitten('${kittenId}')">—</button>` : ''}
             <div class="form-grid top">
                 <div class="form-group">
                     <label for="${kittenId}-name">Name</label>
@@ -42,14 +45,14 @@ function addKitten() {
                 
                 <div class="form-group">
                     <label for="${kittenId}-weight">Weight (grams)</label>
-                    <input type="number" id="${kittenId}-weight" placeholder="Weight (grams)" name="weight" min="1" step="1" required>
+                    <input type="text" inputmode="decimal" pattern="[0-9.]*" id="${kittenId}-weight" placeholder="Weight (grams)" name="weight" min="1" step="0.1" required>
                     <div class="error" id="${kittenId}-weight-error"></div>
                     <div class="weight-display" id="${kittenId}-weight-display" style="display: none;"></div>
                 </div>
             </div>
             
-            <div class="form-grid">
-                <div class="form-group">
+            <div class="form-group">
+                <div class="horizontal-label">
                     <label>Flea Med</label>
                     <div class="radio-group">
                         <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none" checked>
@@ -59,51 +62,51 @@ function addKitten() {
                         <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution">
                         <label for="${kittenId}-topical-revolution">Revolution</label>
                     </div>
-                    
-                    <div class="checkbox-group">
-                        <label class="regular">
-                            <input type="checkbox" id="${kittenId}-bathed" name="bathed">
-                            <span>Bathed at intake? <span>Delays flea meds for 2 days</span></span>
-                        </label>
-                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>Panacur</label>
-                    <div class="radio-group">
-                        <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3" checked>
-                        <label for="${kittenId}-panacur-3">3 days</label>
-                        <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5">
-                        <label for="${kittenId}-panacur-5">5 days</label>
-                    </div>
+                <div class="checkbox-group bathed">
+                    <label class="regular">
+                        <input type="checkbox" id="${kittenId}-bathed" name="bathed">
+                        <span>Bathed at intake <span>Delays flea meds for 2 days</span></span>
+                    </label>
                 </div>
             </div>
             
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Day 1 Doses Given</label>
-                    <div class="checkbox-group">
-                        <label>
-                            <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1">
-                            Panacur
-                        </label>
-                        <label>
-                            <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1">
-                            Ponazuril
-                        </label>
-                        <label>
-                            <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
-                            Drontal
-                        </label>
-                    </div>
+            <div class="form-group horizontal-label">
+                <label>Panacur</label>
+                <div class="radio-group">
+                    <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3" checked>
+                    <label for="${kittenId}-panacur-3">3 days</label>
+                    <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5">
+                    <label for="${kittenId}-panacur-5">5 days</label>
                 </div>
-                 ${kittenCounter > 1 ? `<div class="form-group"><button type="button" class="btn btn-danger" onclick="removeKitten('${kittenId}')">Remove</button></div>` : ''}
+            </div>
+        
+            <div class="form-group">
+                <label>Doses Given</label>
+                <div class="checkbox-group dayone">
+                    <label>
+                        <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1">
+                        Panacur
+                    </label>
+                    <label>
+                        <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1">
+                        Ponazuril
+                    </label>
+                    <label>
+                        <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
+                        Drontal
+                    </label>
+                </div>
             </div>
         </div>
         
         <div class="dose-display empty" id="${kittenId}-dose-display">
-            <div class="dose-display-header">
-                <h4>Doses</h4>
+            <div class="dose-print-header" id="${kittenId}-dose-header">
+                <h3 class="kitten-info"></h3>
+            </div>
+            <div class="dose-section-header">
+                <strong>Doses</strong>
             </div>
             <div class="dose-display-content" id="${kittenId}-dose-content">
                 <div class="dose-item">Enter weight to see calculated doses</div>
@@ -113,11 +116,44 @@ function addKitten() {
     
     container.appendChild(kittenForm);
     
+    // Scroll to the new kitten form
+    kittenForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
     // Add weight conversion and dose calculation listeners
     const weightInput = document.getElementById(`${kittenId}-weight`);
-    weightInput.addEventListener('input', function() {
+    
+    // Filter input to allow only numbers and periods
+    weightInput.addEventListener('input', function(e) {
+        // Remove any characters that aren't digits or periods
+        const filteredValue = e.target.value.replace(/[^0-9.]/g, '');
+        
+        // Ensure only one decimal point is allowed
+        const parts = filteredValue.split('.');
+        if (parts.length > 2) {
+            e.target.value = parts[0] + '.' + parts.slice(1).join('');
+        } else {
+            e.target.value = filteredValue;
+        }
+        
         updateWeightDisplay(kittenId);
         updateDoseDisplay(kittenId);
+        updateResultsAutomatically();
+    });
+    
+    // Prevent pasting invalid characters
+    weightInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        const filteredPaste = paste.replace(/[^0-9.]/g, '');
+        
+        // Handle multiple decimal points in pasted content
+        const parts = filteredPaste.split('.');
+        const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
+        
+        e.target.value = validPaste;
+        updateWeightDisplay(kittenId);
+        updateDoseDisplay(kittenId);
+        updateResultsAutomatically();
     });
     
     // Add real-time validation
@@ -133,6 +169,7 @@ function removeKitten(kittenId) {
     const element = document.getElementById(kittenId);
     if (element) {
         element.remove();
+        updateResultsAutomatically();
     }
 }
 
@@ -154,26 +191,62 @@ function addMedicationListeners(kittenId) {
     // Listen for topical medication changes
     const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
     topicalRadios.forEach(radio => {
-        radio.addEventListener('change', () => updateDoseDisplay(kittenId));
+        radio.addEventListener('change', () => {
+            updateDoseDisplay(kittenId);
+            updateResultsAutomatically();
+        });
     });
     
     // Listen for bathing status changes
     const bathedCheckbox = document.getElementById(`${kittenId}-bathed`);
-    bathedCheckbox.addEventListener('change', () => updateDoseDisplay(kittenId));
+    bathedCheckbox.addEventListener('change', () => {
+        updateDoseDisplay(kittenId);
+        updateResultsAutomatically();
+    });
     
     // Listen for panacur regimen changes
     const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
     panacurRadios.forEach(radio => {
-        radio.addEventListener('change', () => updateDoseDisplay(kittenId));
+        radio.addEventListener('change', () => {
+            updateDoseDisplay(kittenId);
+            updateResultsAutomatically();
+        });
+    });
+    
+    // Listen for day 1 medication checkbox changes
+    const day1Checkboxes = [
+        document.getElementById(`${kittenId}-panacur-day1`),
+        document.getElementById(`${kittenId}-ponazuril-day1`),
+        document.getElementById(`${kittenId}-drontal-day1`)
+    ];
+    day1Checkboxes.forEach(checkbox => {
+        if (checkbox) {
+            checkbox.addEventListener('change', () => {
+                updateDoseDisplay(kittenId);
+                updateResultsAutomatically();
+            });
+        }
     });
 }
 
 function updateDoseDisplay(kittenId) {
     const doseDisplay = document.getElementById(`${kittenId}-dose-display`);
     const doseContent = document.getElementById(`${kittenId}-dose-content`);
+    const doseHeader = document.getElementById(`${kittenId}-dose-header`);
     
+    const nameInput = document.getElementById(`${kittenId}-name`);
     const weightInput = document.getElementById(`${kittenId}-weight`);
     const grams = parseFloat(weightInput.value);
+    
+    // Update the print header with current name and weight
+    const kittenName = nameInput.value.trim() || 'Unnamed Kitten';
+    const headerElement = doseHeader.querySelector('.kitten-info');
+    if (grams > 0) {
+        const weightLb = convertToPounds(grams);
+        headerElement.textContent = `${kittenName} - ${grams}g (${weightLb.toFixed(2)} lb)`;
+    } else {
+        headerElement.textContent = `${kittenName}`;
+    }
     
     if (!grams || grams <= 0) {
         doseDisplay.classList.add('empty');
@@ -200,6 +273,11 @@ function updateDoseDisplay(kittenId) {
         if (radio.checked) panacurDays = parseInt(radio.value);
     });
     
+    // Get day 1 given status
+    const panacurDay1Given = document.getElementById(`${kittenId}-panacur-day1`).checked;
+    const ponazurilDay1Given = document.getElementById(`${kittenId}-ponazuril-day1`).checked;
+    const drontalDay1Given = document.getElementById(`${kittenId}-drontal-day1`).checked;
+    
     // Calculate doses
     const panacurDose = calculatePanacurDose(weightLb);
     const ponazurilDose = calculatePonazurilDose(weightLb);
@@ -210,13 +288,13 @@ function updateDoseDisplay(kittenId) {
     // Build dose display content
     let content = `
         <div class="dose-item">
-            <strong>Panacur:</strong> ${panacurDose.toFixed(2)} mL/day × ${panacurDays} days
+            <strong>Panacur</strong> ${panacurDose.toFixed(2)} mL/day × ${panacurDays} days
         </div>
         <div class="dose-item">
-            <strong>Ponazuril:</strong> ${ponazurilDose.toFixed(2)} mL/day × 3 days
+            <strong>Ponazuril</strong> ${ponazurilDose.toFixed(2)} mL/day × 3 days
         </div>
         <div class="dose-item">
-            <strong>Drontal:</strong> ${drontalDose === outOfRangeString ? drontalDose : drontalDose + ' tablet(s)'}
+            <strong>Drontal</strong> ${drontalDose === outOfRangeString ? drontalDose : drontalDose + ' tablet(s)'}
         </div>
     `;
     
@@ -225,25 +303,74 @@ function updateDoseDisplay(kittenId) {
         const timing = bathed ? ' (delayed 2 days if bathed)' : '';
         content += `
             <div class="dose-item">
-                <strong>Revolution:</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
+                <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
             </div>
             <div class="dose-item">
-                <strong>Advantage II:</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
+                <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
             </div>
         `;
     } else if (topical === 'revolution') {
         const timing = bathed ? ' (delayed 2 days if bathed)' : '';
         content += `
             <div class="dose-item">
-                <strong>Revolution:</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
+                <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
             </div>
         `;
     } else if (topical === 'advantage') {
         const timing = bathed ? ' (delayed 2 days if bathed)' : '';
         content += `
             <div class="dose-item">
-                <strong>Advantage II:</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
+                <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
             </div>
+        `;
+    }
+    
+    // Calculate remaining doses for foster care
+    const panacurRemaining = panacurDay1Given ? (panacurDays - 1) : panacurDays;
+    const ponazurilRemaining = ponazurilDay1Given ? 2 : 3;
+    const panacurTotal = panacurDose * panacurRemaining;
+    const ponazurilTotal = ponazurilDose * ponazurilRemaining;
+    
+    // Build "For Foster" section
+    const remainsForFoster = [];
+    
+    if (!drontalDay1Given && drontalDose !== outOfRangeString) {
+        remainsForFoster.push(`<strong>Drontal</strong> ${drontalDose + ' tablet(s)'}`);
+    }
+    
+    if (panacurRemaining > 0) {
+        remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${panacurDose.toFixed(2)} mL = ${panacurTotal.toFixed(2)} mL total`);
+    }
+    
+    if (ponazurilRemaining > 0) {
+        remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${ponazurilDose.toFixed(2)} mL = ${ponazurilTotal.toFixed(2)} mL total`);
+    }
+    
+    if (bathed && topical !== 'none') {
+        const topicalName = topical === 'revolution' ? 'Revolution' : 'Advantage II';
+        const topicalDose = topical === 'revolution' ? revolutionDose : advantageDose;
+        if (topicalDose !== outOfRangeString) {
+            remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose on Day +2 = ${topicalDose.toFixed(2) + ' mL'}`);
+        }
+    }
+    
+    // Add "For Foster" section if there are any remaining medications
+    if (remainsForFoster.length > 0) {
+        content += `
+            <div class="dose-section-header">
+                <strong>For Foster</strong>
+            </div>
+        `;
+        remainsForFoster.forEach(item => {
+            content += `<div class="dose-item foster-item">${item}</div>`;
+        });
+    } else {
+        content += `
+            <div class="dose-section-divider"></div>
+            <div class="dose-section-header">
+                <strong>For Foster</strong>
+            </div>
+            <div class="dose-item foster-item">None</div>
         `;
     }
     
@@ -256,8 +383,18 @@ function addValidationListeners(kittenId) {
     const nameInput = document.getElementById(`${kittenId}-name`);
     const weightInput = document.getElementById(`${kittenId}-weight`);
     
-    nameInput.addEventListener('blur', () => validateField(kittenId, 'name'));
-    weightInput.addEventListener('blur', () => validateField(kittenId, 'weight'));
+    nameInput.addEventListener('blur', () => {
+        validateField(kittenId, 'name');
+        updateResultsAutomatically();
+    });
+    nameInput.addEventListener('input', () => {
+        updateDoseDisplay(kittenId);
+        updateResultsAutomatically();
+    });
+    weightInput.addEventListener('blur', () => {
+        validateField(kittenId, 'weight');
+        updateResultsAutomatically();
+    });
 }
 
 function validateField(kittenId, fieldName) {
@@ -327,7 +464,7 @@ function calculateRevolutionDose(weightLb) {
     if (weightLb >= 2.2 && weightLb < 4.4) return 0.1;
     if (weightLb >= 4.4 && weightLb < 9) return 0.2;
     if (weightLb >= 9 && weightLb <= 19.9) return 0.45;
-    return "out of range";
+    return outOfRangeString;
 }
 
 function calculateAdvantageIIDose(weightLb) {
@@ -414,6 +551,65 @@ function collectKittenData() {
     });
     
     return collectedKittens;
+}
+
+// Automatic Results Update Function
+function updateResultsAutomatically() {
+    // Check if we have any kittens with valid basic data
+    const kittenForms = document.querySelectorAll('.kitten-form');
+    
+    if (kittenForms.length === 0) {
+        // No kittens, hide results
+        document.getElementById('results-section').style.display = 'none';
+        updateHeaderButtons();
+        return;
+    }
+    
+    // Check if at least one kitten has name and weight
+    let hasValidKitten = false;
+    kittenForms.forEach(form => {
+        const kittenId = form.id;
+        const name = document.getElementById(`${kittenId}-name`).value.trim();
+        const weight = parseFloat(document.getElementById(`${kittenId}-weight`).value);
+        
+        if (name && weight > 0) {
+            hasValidKitten = true;
+        }
+    });
+    
+    if (!hasValidKitten) {
+        // No valid kittens, hide results
+        document.getElementById('results-section').style.display = 'none';
+        updateHeaderButtons();
+        return;
+    }
+    
+    // We have at least one valid kitten, update results
+    try {
+        kittens = collectKittenData();
+        
+        // Filter out invalid kittens for the results
+        const validKittens = kittens.filter(kitten =>
+            kitten.name && kitten.weightGrams > 0
+        );
+        
+        if (validKittens.length > 0) {
+            const schedules = generateSchedule(validKittens);
+            displayFosterChecklist(validKittens, schedules);
+            displayDispenseSummary(validKittens);
+            
+            document.getElementById('results-section').style.display = 'block';
+        } else {
+            document.getElementById('results-section').style.display = 'none';
+        }
+        
+        updateHeaderButtons();
+    } catch (error) {
+        // If there's an error in calculations, hide results
+        console.error('Error updating results:', error);
+        document.getElementById('results-section').style.display = 'none';
+        updateHeaderButtons();
+    }
 }
 
 // Schedule Generation
@@ -512,117 +708,13 @@ function getAllScheduleDays(schedules) {
     return sortedDays;
 }
 
-// Main Calculation and Display Function
+// Legacy function - kept for compatibility but no longer used
+// Results now update automatically via updateResultsAutomatically()
 function calculateAndDisplay() {
-    if (!validateAllKittens()) {
-        alert('Please fix the validation errors before calculating.');
-        return;
-    }
-    
-    kittens = collectKittenData();
-    const schedules = generateSchedule(kittens);
-    
-    displayIntakeRecords(kittens);
-    displayFosterChecklist(kittens, schedules);
-    displayDispenseSummary(kittens);
-    
-    document.getElementById('results-section').style.display = 'block';
-    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
-    
-    // Enable print buttons
-    updateHeaderButtons();
+    updateResultsAutomatically();
 }
 
 // Display Functions
-function displayIntakeRecords(kittens) {
-    const container = document.getElementById('intake-records-content');
-    container.innerHTML = '';
-    
-    kittens.forEach(kitten => {
-        const record = document.createElement('div');
-        record.className = 'intake-record';
-        
-        // Determine what was given at center
-        const givenAtCenter = [];
-        
-        if (kitten.day1Given.drontal) {
-            givenAtCenter.push(`Drontal: ${kitten.doses.drontal === outOfRangeString ? kitten.doses.drontal : kitten.doses.drontal + ' tablet(s)'}`);
-        }
-        
-        if (kitten.day1Given.panacur) {
-            givenAtCenter.push(`Panacur Day 1: ${kitten.doses.panacur.toFixed(2)} mL`);
-        }
-        
-        if (kitten.day1Given.ponazuril) {
-            givenAtCenter.push(`Ponazuril Day 1: ${kitten.doses.ponazuril.toFixed(2)} mL`);
-        }
-        
-        if (!kitten.bathed && kitten.topical !== 'none') {
-            const topicalName = kitten.topical === 'revolution' ? 'Revolution' : 'Advantage II';
-            givenAtCenter.push(`${topicalName}: ${kitten.doses.topical === outOfRangeString ? kitten.doses.topical : kitten.doses.topical.toFixed(2) + ' mL'}`);
-        }
-        
-        // Determine what remains for foster
-        const remainsForFoster = [];
-        
-        if (!kitten.day1Given.drontal) {
-            remainsForFoster.push(`Drontal: ${kitten.doses.drontal === outOfRangeString ? kitten.doses.drontal : kitten.doses.drontal + ' tablet(s)'}`);
-        }
-        
-        const panacurRemaining = kitten.day1Given.panacur ?
-            (kitten.panacurDays - 1) : kitten.panacurDays;
-        if (panacurRemaining > 0) {
-            const totalPanacur = kitten.doses.panacur * panacurRemaining;
-            remainsForFoster.push(`Panacur: ${panacurRemaining} days × ${kitten.doses.panacur.toFixed(2)} mL = ${totalPanacur.toFixed(2)} mL total`);
-        }
-        
-        const ponazurilRemaining = kitten.day1Given.ponazuril ? 2 : 3;
-        if (ponazurilRemaining > 0) {
-            const totalPonazuril = kitten.doses.ponazuril * ponazurilRemaining;
-            remainsForFoster.push(`Ponazuril: ${ponazurilRemaining} days × ${kitten.doses.ponazuril.toFixed(2)} mL = ${totalPonazuril.toFixed(2)} mL total`);
-        }
-        
-        if (kitten.bathed && kitten.topical !== 'none') {
-            const topicalName = kitten.topical === 'revolution' ? 'Revolution' : 'Advantage II';
-            remainsForFoster.push(`${topicalName}: 1 dose on Day +2 = ${kitten.doses.topical === outOfRangeString ? kitten.doses.topical : kitten.doses.topical.toFixed(2) + ' mL'}`);
-        }
-        
-        record.innerHTML = `
-            <h4>${kitten.name}</h4>
-            <div class="dose-info">
-                <div class="dose-item">
-                    <strong>Weight:</strong> ${kitten.weightGrams}g (${kitten.weightLb.toFixed(2)} lb)
-                </div>
-                <div class="dose-item">
-                    <strong>Panacur dose:</strong> ${kitten.doses.panacur.toFixed(2)} mL per day
-                </div>
-                <div class="dose-item">
-                    <strong>Ponazuril dose:</strong> ${kitten.doses.ponazuril.toFixed(2)} mL per day
-                </div>
-                <div class="dose-item">
-                    <strong>Drontal dose:</strong> ${kitten.doses.drontal === outOfRangeString ? kitten.doses.drontal : kitten.doses.drontal + ' tablet(s)'}
-                </div>
-                ${kitten.topical !== 'none' ? `
-                <div class="dose-item">
-                    <strong>${kitten.topical === 'revolution' ? 'Revolution' : 'Advantage II'} dose:</strong> ${kitten.doses.topical === outOfRangeString ? kitten.doses.topical : kitten.doses.topical.toFixed(2) + ' mL'}
-                </div>
-                ` : ''}
-            </div>
-            
-            <div class="status-info">
-                <strong>Given at Center:</strong><br>
-                ${givenAtCenter.join('<br>')}
-            </div>
-            
-            <div class="status-info">
-                <strong>Remains for Foster:</strong><br>
-                ${remainsForFoster.length > 0 ? remainsForFoster.join('<br>') : 'None'}
-            </div>
-        `;
-        
-        container.appendChild(record);
-    });
-}
 
 function displayFosterChecklist(kittens, schedules) {
     const container = document.getElementById('foster-checklist-content');
@@ -741,14 +833,6 @@ function displayDispenseSummary(kittens) {
     const container = document.getElementById('dispense-summary-content');
     container.innerHTML = '';
     
-    // Per-kitten summary
-    const perKittenSection = document.createElement('div');
-    perKittenSection.className = 'dispense-section';
-    perKittenSection.innerHTML = '<h4>Per-Kitten Dispense Amounts</h4>';
-    
-    const dispenseGrid = document.createElement('div');
-    dispenseGrid.className = 'dispense-grid';
-    
     const totals = {
         panacur: 0,
         ponazuril: 0,
@@ -758,10 +842,7 @@ function displayDispenseSummary(kittens) {
     };
     
     kittens.forEach(kitten => {
-        const card = document.createElement('div');
-        card.className = 'dispense-card';
-        
-        const panacurRemaining = kitten.day1Given.panacur ? 
+        const panacurRemaining = kitten.day1Given.panacur ?
             (kitten.panacurDays - 1) : kitten.panacurDays;
         const ponazurilRemaining = kitten.day1Given.ponazuril ? 2 : 3;
         
@@ -769,10 +850,8 @@ function displayDispenseSummary(kittens) {
         const ponazurilTotal = kitten.doses.ponazuril * ponazurilRemaining;
         
         let topicalAmount = 0;
-        let topicalName = '';
         if (kitten.bathed && kitten.topical !== 'none') {
             topicalAmount = kitten.doses.topical === outOfRangeString ? 0 : kitten.doses.topical;
-            topicalName = kitten.topical === 'revolution' ? 'Revolution' : 'Advantage II';
         }
         
         const drontalAmount = kitten.day1Given.drontal ? 0 : 1; // 1 dose if not given at center
@@ -783,50 +862,38 @@ function displayDispenseSummary(kittens) {
         if (kitten.topical === 'revolution' && kitten.doses.topical !== outOfRangeString) totals.revolution += topicalAmount;
         if (kitten.topical === 'advantage' && kitten.doses.topical !== outOfRangeString) totals.advantage += topicalAmount;
         if (kitten.doses.drontal !== outOfRangeString) totals.drontal += drontalAmount;
-        
-        card.innerHTML = `
-            <h5>${kitten.name}</h5>
-            <div><strong>Panacur:</strong> ${panacurTotal.toFixed(2)} mL</div>
-            <div><strong>Ponazuril:</strong> ${ponazurilTotal.toFixed(2)} mL</div>
-            ${topicalAmount > 0 ? `<div><strong>${topicalName}:</strong> ${kitten.doses.topical === outOfRangeString ? kitten.doses.topical : topicalAmount.toFixed(2) + ' mL'}</div>` : ''}
-            <div><strong>Drontal:</strong> ${drontalAmount > 0 ? (kitten.doses.drontal === outOfRangeString ? kitten.doses.drontal : `${kitten.doses.drontal} tablet(s)`) : '0 (given at center)'}</div>
-        `;
-        
-        dispenseGrid.appendChild(card);
     });
     
-    perKittenSection.appendChild(dispenseGrid);
-    container.appendChild(perKittenSection);
-    
-    // Aggregate totals
+    // Aggregate totals only
     const aggregateSection = document.createElement('div');
     aggregateSection.className = 'med-totals';
     aggregateSection.innerHTML = `
-        <h4>Aggregate Totals for Foster Home</h4>
         <div class="total-item">
-            <span>Panacur:</span>
+            <span>Panacur</span>
             <strong>${totals.panacur.toFixed(2)} mL</strong>
         </div>
         <div class="total-item">
-            <span>Ponazuril:</span>
+            <span>Ponazuril</span>
             <strong>${totals.ponazuril.toFixed(2)} mL</strong>
         </div>
         ${totals.revolution > 0 ? `
         <div class="total-item">
-            <span>Revolution:</span>
+            <span>Revolution</span>
             <strong>${totals.revolution.toFixed(2)} mL</strong>
         </div>
         ` : ''}
         ${totals.advantage > 0 ? `
         <div class="total-item">
-            <span>Advantage II:</span>
+            <span>Advantage II</span>
             <strong>${totals.advantage.toFixed(2)} mL</strong>
         </div>
         ` : ''}
+        ${totals.drontal > 0 ? `
         <div class="total-item">
-            <span>Drontal:</span>
-            <strong>${totals.drontal > 0 ? `${totals.drontal} tablet(s)` : '0 (all given at center)'}</strong>
+            <span>Drontal</span>
+            <strong>${totals.drontal} tablet(s)</strong>
         </div>
+        ` : ''}
     `;
     
     container.appendChild(aggregateSection);
@@ -848,11 +915,6 @@ function printSection(section) {
     
     // Print
     window.print();
-    
-    // Remove print classes after printing
-    setTimeout(() => {
-        body.classList.remove('print-checklist-only', 'print-dispense-only');
-    }, 1000);
 }
 
 // Header Button Management
