@@ -4,12 +4,22 @@
     --yellow-bg: #fff3cd;
     --green-bg: #e8f5e8;
     --corner: 20px;
+
+    --fs-smallest: 10px;
+    --fs-body-small: 12px;
+    --fs-body-medium: 14px;
+    --fs-body-large: 16px;
+    --fs-header-small: 16px;
+    --fs-header-medium: 20px;
+    --fs-header-large: 24px;
+    --fs-display: 32px;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
 body {
@@ -23,10 +33,14 @@ body {
     min-width: 350px;
 }
 
+.print-only {
+    display: none;
+}
+
 /* Header */
 nav {
     margin-bottom: 20px;
-    padding-bottom: 20px;
+    padding: 10px 0;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -36,16 +50,15 @@ nav {
     top: 0;
     background-color: white;
     z-index: 100;
-    padding-top: 20px;
     border-bottom: 2px solid #e9ecef;
 }
 
 h1 {
     color: #2c3e50;
-    font-size: 2em;
+    font-size: var(--fs-display);
     margin-bottom: 0;
-    position: fixed;
-    top: 40px;
+    position: absolute;
+    top: 32px;
     z-index: 500;
 }
 
@@ -61,7 +74,7 @@ h1 {
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--fs-body-medium);
     font-weight: 600;
     text-decoration: none;
     display: inline-block;
@@ -100,7 +113,7 @@ h1 {
     background-color: #e74c3c;
     color: white;
     padding: 8px 16px;
-    font-size: 12px;
+    font-size: var(--fs-body-small);
     width: fit-content;
 }
 
@@ -146,7 +159,8 @@ h1 {
     padding-left: calc(var(--corner) + 4px);
     position: relative;
     max-width: 480px;
-    z-index: 100;
+    z-index: 90;
+    flex-grow: 1;
 }
 
 .kitten-form h3 {
@@ -193,6 +207,7 @@ h1 {
 .form-group label {
     font-weight: 600;
     color: #495057;
+    -webkit-user-select: none;
 }
 
 .form-group label.regular {
@@ -204,7 +219,7 @@ h1 {
     padding: 8px 12px;
     border: 1px solid #ced4da;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: var(--fs-body-medium);
 }
 
 .form-group input:focus,
@@ -219,7 +234,7 @@ h1 {
 }
 
 .top .form-group input {
-    font-size: 24px;
+    font-size: var(--fs-header-large);
     width: 100%;
 }
 
@@ -229,6 +244,8 @@ h1 {
     border-radius: 32px;
     overflow: hidden;
     margin-top: 4px;
+    padding: 4px;
+    gap: 4px;
     background-color: white;
     box-shadow: inset 0 0 2px rgba(0,0,0,0.42);
     width: 100%;
@@ -239,7 +256,7 @@ h1 {
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    padding: 5px 18px;
+    padding: 2px 18px;
     font-weight: 600;
     cursor: pointer;
     background-color: transparent;
@@ -270,21 +287,22 @@ h1 {
     color: white;
 }
 
-.checkbox-group {
+.checkbox-group, 
+.radio-group-normal {
     display: flex;
     flex-direction: row;
-    gap: 20px;
     flex-wrap: wrap;
     margin-top: 8px;
 }
 
-.checkbox-group.bathed {
-    padding-left: 99px;
+.radio-group-normal {
+    margin-top: 12px;
 }
 
-.checkbox-group label {
+.checkbox-group label, 
+.radio-group-normal label {
     display: flex;
-    flex-grow: 1;
+    width: 33%;
     align-items: center;
     font-weight: normal;
     cursor: pointer;
@@ -296,11 +314,12 @@ h1 {
 }
 
 .checkbox-group label span span {
-    font-size: 14px;
+    font-size: var(--fs-body-medium);
     margin-top: -3px;
 }
 
-.checkbox-group input[type="checkbox"] {
+.checkbox-group input, 
+.radio-group-normal input {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -308,7 +327,6 @@ h1 {
     height: 30px;
     padding: 0;
     border: 2px solid #999;
-    border-radius: 4px;
     margin-right: 12px;
     cursor: pointer;
     position: relative;
@@ -317,16 +335,19 @@ h1 {
     flex-shrink: 0;
 }
 
-.checkbox-group input[type="checkbox"]:hover {
+.checkbox-group input:hover,
+.radio-group-normal input:hover {
     border-color: var(--blue);
 }
 
-.checkbox-group input[type="checkbox"]:checked {
+.checkbox-group input[type="checkbox"]:checked,
+.radio-group-normal input:checked {
     background-color: var(--blue);
     border-color: var(--blue);
 }
 
-.checkbox-group input[type="checkbox"]:checked::after {
+.checkbox-group input[type="checkbox"]:checked::after,
+.radio-group-normal input:checked::after {
     content: '✓';
     position: absolute;
     top: 50%;
@@ -338,9 +359,33 @@ h1 {
     line-height: 1;
 }
 
-.checkbox-group input[type="checkbox"]:focus {
+.checkbox-group input[type="checkbox"]:focus,
+.radio-group-normal input:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(40, 90, 168, 0.3);
+}
+
+.checkbox-group input[type="checkbox"]:disabled,
+.radio-group-normal input:disabled {
+    background-color: transparent;
+    border-color: rgba(0,0,0,0.05);
+}
+
+.checkbox-group input[type="checkbox"] {
+    border-radius: 4px;
+}
+
+.radio-group-normal input[type="radio"] {
+    border-radius: 34px;
+}
+
+.radio-group-normal input:checked::after {
+    content: '●';
+    font-size: 10px;
+}
+
+.radio-group-normal .bathed {
+    width: 50%;
 }
 
 .weight-display {
@@ -362,18 +407,12 @@ h1 {
     width: 300px;
 }
 
-.dose-display h4 {
-    margin: 0;
-    color: var(--blue);
-    font-size: 1.1em;
-}
-
 .dose-display .dose-item {
     margin-bottom: 8px;
     padding: 5px 8px;
     background-color: white;
     border-radius: 10px;
-    font-size: 0.9em;
+    font-size: var(--fs-body-medium);
 }
 
 .dose-display .dose-item:last-child {
@@ -393,7 +432,7 @@ h1 {
 .dose-section-header {
     margin-top: 16px;
     margin-bottom: 8px;
-    font-size: 0.9em;
+    font-size: var(--fs-body-medium);
     color: var(--blue);
     padding-left: 8px;
 }
@@ -416,26 +455,22 @@ h1 {
     color: #6c757d;
 }
 
-/* Print-only dose header */
-.dose-print-header {
-    display: none;
-}
-
 .dose-print-header h3 {
-    margin: 0 0 15px 0;
-    color: #2c3e50;
-    font-size: 1.2em;
+    margin: 0;
+    font-size: var(--fs-header-small);
     font-weight: 600;
-    text-align: center;
-    border-bottom: 2px solid #2c3e50;
+    color: black;
     padding-bottom: 8px;
 }
 
 /* Error Styles */
 .error {
     color: #e74c3c;
-    font-size: 12px;
+    font-size: var(--fs-body-small);
     margin-top: 5px;
+    position: absolute;
+    right: 8px;
+    top: 0;
 }
 
 .form-group.has-error input,
@@ -465,9 +500,8 @@ h1 {
 .result-section h3 {
     color: #2c3e50;
     margin-bottom: 10px;
-    font-size: 1.2em;
+    font-size: var(--fs-header-small);
 }
-
 
 .dose-info {
     display: grid;
@@ -491,7 +525,7 @@ h1 {
 .checklist-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: var(--fs-smallest);
 }
 
 .checklist-table th,
@@ -512,7 +546,6 @@ h1 {
     background-color: #e8f5e8;
     font-weight: 600;
     text-align: left;
-    min-width: 80px;
 }
 
 .checklist-table .kitten-header {
@@ -524,8 +557,7 @@ h1 {
 .checklist-table .med-header {
     background-color: #5bc0de;
     color: white;
-    font-size: 11px;
-    min-width: 100px;
+    font-size: var(--fs-smallest);
 }
 
 .checklist-table input[type="checkbox"] {
@@ -560,7 +592,7 @@ h1 {
     transform: translate(-50%, -50%);
     color: white;
     font-weight: bold;
-    font-size: 12px;
+    font-size: var(--fs-body-small);
     line-height: 1;
 }
 
@@ -589,41 +621,60 @@ h1 {
     padding: 5px 0;
 }
 
+footer {
+    text-align: center;
+}
+
 /* Print Styles */
 @media print {
-    .no-print, header, nav, .kitten-form-content  {
+    .no-print, header, nav, .kitten-form-content, footer  {
         display: none !important;
     }
     
     body {
         padding: 10px;
+        min-height: auto;
     }
     
     .kitten-form {
+        display: inline-block;
         margin-bottom: 0;
+        margin-top: 20px;
+        margin-right: 20px;
     }
 
-    .dose-print-header {
+    .print-only {
         display: block !important;
+    }
+
+    h2 {
+        font-size: var(--fs-body-small);
+    }
+
+    .input-section {
+        width: 720px;
     }
 
     .dose-section-header {
         margin-top: 10px;
         margin-bottom: 0;
+        padding: 0;
+    }
+
+    .dose-display {
+        padding: 0;
+        background: none;
+        width: 340px;
     }
 
     .dose-display .dose-item {
         margin: 0;
-        padding: 0 8px;
+        padding: 0;
     }
 
     .horizontal-label {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .checkbox-group.bathed {
-        padding-left: 0;
     }
 
     .radio-group input[type="radio"]:checked + label {
@@ -644,11 +695,16 @@ h1 {
     .result-section {
         background-color: white;
         break-inside: avoid;
-        page-break-inside: avoid;
+        overflow-x: visible;
+        padding: 0;
+    }
+
+    .med-totals {
+        width: 650px;
     }
     
     .checklist-table {
-        font-size: 10px;
+        font-size: var(--fs-smallest);
     }
     
     .checklist-table th,
@@ -661,7 +717,9 @@ h1 {
         page-break-inside: avoid;
     }
     
-    /* Hide specific sections when printing only certain parts */
+    .print-checklist-only nav,
+    .print-checklist-only header,
+    .print-checklist-only .input-section,
     .print-checklist-only #dispense-summary {
         display: none !important;
     }
@@ -698,7 +756,6 @@ h1 {
     }
     
     h1 {
-        position: absolute;
         top: 20px;
         left: 10px;
     }
@@ -713,17 +770,12 @@ h1 {
     }
 
     .top .form-group input {
-        font-size: 24px;
         width: 100%;
     }
 
     .horizontal-label {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .checkbox-group.bathed {
-        padding-left: 0;
     }
     
     .dose-display {
@@ -757,7 +809,7 @@ h1 {
     }
     
     .checklist-table {
-        font-size: 10px;
+        font-size: var(--fs-smallest);
     }
 }
 
