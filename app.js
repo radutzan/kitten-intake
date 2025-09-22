@@ -42,21 +42,84 @@ function updateDateTime() {
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     updateDateTime(); // Set current date and time in header
-    addKitten(); // Add first kitten form by default
-    updateHeaderButtons(); // Initialize button states
+    
+    // Try to restore saved data first
+    const savedData = localStorageManager.loadFormData();
+    if (savedData) {
+        // Restore saved forms
+        localStorageManager.restoreFormData(savedData);
+        // Update all calculations and displays
+        setTimeout(() => {
+            updateResultsAutomatically();
+            updateHeaderButtons();
+        }, 100);
+    } else {
+        // No saved data, create default first kitten form
+        addKitten();
+        updateHeaderButtons();
+    }
     
     // Hide results section initially
     document.getElementById('results-section').style.display = 'none';
-    
-    // Add beforeunload event listener to warn about unsaved content
-    setupBeforeUnloadWarning();
 });
 
 document.addEventListener("touchstart", function(){}, true);
 
+// Auto-save helper function
+function autoSaveFormData() {
+    if (window.localStorageManager) {
+        localStorageManager.saveFormData();
+    }
+}
+
+// Clear all data function with confirmation
+function clearAllData() {
+    const hasData = document.querySelectorAll('.kitten-form').length > 0;
+    
+    if (!hasData) {
+        alert('No data to clear.');
+        return;
+    }
+    
+    const confirmed = confirm(
+        'Are you sure you want to clear all cat data?\n\n' +
+        'This cannot be undone.'
+    );
+    
+    if (confirmed) {
+        // Clear localStorage
+        if (window.localStorageManager) {
+            localStorageManager.clearFormData();
+        }
+        
+        // Clear all forms from DOM
+        const container = document.getElementById('kittens-container');
+        if (container) {
+            container.innerHTML = '';
+        }
+        
+        // Reset application state
+        kittens = [];
+        kittenCounter = 0;
+        
+        // Hide results section
+        document.getElementById('results-section').style.display = 'none';
+        
+        // Add fresh kitten form
+        addKitten();
+        
+        // Update button states
+        updateHeaderButtons();
+        
+        // Update date/time header
+        updateDateTime();
+    }
+}
+
 // Event Listeners
 function setupEventListeners() {
     document.getElementById('add-kitten-btn').addEventListener('click', addKitten);
+    document.getElementById('clear-all-btn').addEventListener('click', clearAllData);
     
     // Header print buttons
     document.getElementById('print-checklist-btn').addEventListener('click', () => printSection('checklist'));
@@ -199,6 +262,7 @@ function addKitten() {
         updateWeightDisplay(kittenId);
         updateDoseDisplay(kittenId);
         updateResultsAutomatically();
+        autoSaveFormData();
     });
     
     // Prevent pasting invalid characters
@@ -215,6 +279,7 @@ function addKitten() {
         updateWeightDisplay(kittenId);
         updateDoseDisplay(kittenId);
         updateResultsAutomatically();
+        autoSaveFormData();
     });
     
     // Add real-time validation
@@ -229,76 +294,19 @@ function addKitten() {
 }
 
 
-function hasUnsavedContentForKitten(kittenId) {
-    const nameInput = document.getElementById(`${kittenId}-name`);
-    const weightInput = document.getElementById(`${kittenId}-weight`);
-    
-    // Check if there's a name entered
-    if (nameInput && nameInput.value.trim()) {
-        return true;
-    }
-    
-    // Check if there's a weight entered
-    if (weightInput && weightInput.value.trim() && parseFloat(weightInput.value) > 0) {
-        return true;
-    }
-    
-    // Check if any medication options have been changed from defaults
-    const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-    let topicalChanged = false;
-    topicalRadios.forEach(radio => {
-        if (radio.checked && radio.value !== 'none') {
-            topicalChanged = true;
-        }
-    });
-    if (topicalChanged) return true;
-    
-    // Check if flea status has been changed from default (neither)
-    const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
-    let fleaStatus = 'neither';
-    fleaStatusRadios.forEach(radio => {
-        if (radio.checked) fleaStatus = radio.value;
-    });
-    if (fleaStatus !== 'neither') {
-        return true;
-    }
-    
-    // Check if panacur regimen has been changed from default (3 days)
-    const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
-    let panacurChanged = false;
-    panacurRadios.forEach(radio => {
-        if (radio.checked && radio.value !== '3') {
-            panacurChanged = true;
-        }
-    });
-    if (panacurChanged) return true;
-    
-    // Check if any day 1 medication checkboxes have been changed from defaults
-    const panacurDay1 = document.getElementById(`${kittenId}-panacur-day1`);
-    const ponazurilDay1 = document.getElementById(`${kittenId}-ponazuril-day1`);
-    const drontalDay1 = document.getElementById(`${kittenId}-drontal-day1`);
-    
-    if (panacurDay1 && panacurDay1.checked) return true;
-    if (ponazurilDay1 && ponazurilDay1.checked) return true;
-    if (drontalDay1 && !drontalDay1.checked) return true; // Drontal is checked by default
-    
-    return false;
-}
-
 function removeKitten(kittenId) {
     const element = document.getElementById(kittenId);
     if (!element) return;
     
-    // Check if this kitten form has any data entered
-    if (hasUnsavedContentForKitten(kittenId)) {
-        const confirmed = confirm('This cat form contains data. Are you sure you want to remove it?');
-        if (!confirmed) {
-            return; // User cancelled, don't remove
-        }
+    // Simple confirmation for removing a kitten form
+    const confirmed = confirm('Are you sure you want to remove this cat form?');
+    if (!confirmed) {
+        return; // User cancelled, don't remove
     }
     
     element.remove();
     updateResultsAutomatically();
+    autoSaveFormData();
 }
 
 function updateWeightDisplay(kittenId) {
@@ -323,6 +331,7 @@ function addMedicationListeners(kittenId) {
             updateFleaCheckboxStates(kittenId);
             updateDoseDisplay(kittenId);
             updateResultsAutomatically();
+            autoSaveFormData();
         });
     });
     
@@ -332,6 +341,7 @@ function addMedicationListeners(kittenId) {
         radio.addEventListener('change', () => {
             updateDoseDisplay(kittenId);
             updateResultsAutomatically();
+            autoSaveFormData();
         });
     });
     
@@ -341,6 +351,7 @@ function addMedicationListeners(kittenId) {
         radio.addEventListener('change', () => {
             updateDoseDisplay(kittenId);
             updateResultsAutomatically();
+            autoSaveFormData();
         });
     });
     
@@ -355,6 +366,7 @@ function addMedicationListeners(kittenId) {
             checkbox.addEventListener('change', () => {
                 updateDoseDisplay(kittenId);
                 updateResultsAutomatically();
+                autoSaveFormData();
             });
         }
     });
@@ -576,14 +588,17 @@ function addValidationListeners(kittenId) {
     nameInput.addEventListener('blur', () => {
         validateField(kittenId, 'name');
         updateResultsAutomatically();
+        autoSaveFormData();
     });
     nameInput.addEventListener('input', () => {
         updateDoseDisplay(kittenId);
         updateResultsAutomatically();
+        autoSaveFormData();
     });
     weightInput.addEventListener('blur', () => {
         validateField(kittenId, 'weight');
         updateResultsAutomatically();
+        autoSaveFormData();
     });
 }
 
@@ -1154,87 +1169,4 @@ function updateHeaderButtons() {
         printDosagesBtn.disabled = !hasResults;
         printDosagesBtn.style.opacity = hasResults ? '1' : '0.5';
     }
-}
-
-// Beforeunload Warning Functions
-function hasUnsavedContent() {
-    const kittenForms = document.querySelectorAll('.kitten-form');
-    
-    // If no kitten forms exist, no unsaved content
-    if (kittenForms.length === 0) {
-        return false;
-    }
-    
-    // Check each kitten form for meaningful content
-    for (const form of kittenForms) {
-        const kittenId = form.id;
-        const nameInput = document.getElementById(`${kittenId}-name`);
-        const weightInput = document.getElementById(`${kittenId}-weight`);
-        
-        // Check if there's a name entered
-        if (nameInput && nameInput.value.trim()) {
-            return true;
-        }
-        
-        // Check if there's a weight entered
-        if (weightInput && weightInput.value.trim() && parseFloat(weightInput.value) > 0) {
-            return true;
-        }
-        
-        // Check if any medication options have been changed from defaults
-        const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-        let topicalChanged = false;
-        topicalRadios.forEach(radio => {
-            if (radio.checked && radio.value !== 'none') {
-                topicalChanged = true;
-            }
-        });
-        if (topicalChanged) return true;
-        
-        // Check if flea status has been changed from default (neither)
-        const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
-        let fleaStatus = 'neither';
-        fleaStatusRadios.forEach(radio => {
-            if (radio.checked) fleaStatus = radio.value;
-        });
-        if (fleaStatus !== 'neither') {
-            return true;
-        }
-        
-        // Check if panacur regimen has been changed from default (3 days)
-        const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
-        let panacurChanged = false;
-        panacurRadios.forEach(radio => {
-            if (radio.checked && radio.value !== '3') {
-                panacurChanged = true;
-            }
-        });
-        if (panacurChanged) return true;
-        
-        // Check if any day 1 medication checkboxes have been changed from defaults
-        const panacurDay1 = document.getElementById(`${kittenId}-panacur-day1`);
-        const ponazurilDay1 = document.getElementById(`${kittenId}-ponazuril-day1`);
-        const drontalDay1 = document.getElementById(`${kittenId}-drontal-day1`);
-        
-        if (panacurDay1 && panacurDay1.checked) return true;
-        if (ponazurilDay1 && ponazurilDay1.checked) return true;
-        if (drontalDay1 && !drontalDay1.checked) return true; // Drontal is checked by default
-    }
-    
-    return false;
-}
-
-function setupBeforeUnloadWarning() {
-    window.addEventListener('beforeunload', function(event) {
-        if (hasUnsavedContent()) {
-            // Modern browsers ignore the custom message and show their own
-            const message = 'You have unsaved kitten intake data. Are you sure you want to leave?';
-            
-            // For older browsers that still support custom messages
-            event.returnValue = message;
-            
-            // For modern browsers
-            return message;
-        }
-    });
 }

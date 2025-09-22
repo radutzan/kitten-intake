@@ -12,9 +12,10 @@
     </header>
     <nav>
         <div class="header-buttons" id="header-buttons">
+            <button type="button" id="clear-all-btn" class="btn btn-warning">Clear All</button>
             <button type="button" onclick="printSection('checklist')" class="btn btn-secondary" id="print-checklist-btn" disabled>🖨️  Checklist</button>
             <button type="button" onclick="printSection('dispense')" class="btn btn-secondary" id="print-dosages-btn" disabled>🖨️  Records</button>
-            <button type="button" id="add-kitten-btn" class="btn btn-primary">+ Add Cat</button>
+            <button type="button" id="add-kitten-btn" class="btn btn-primary">Add Cat</button>
         </div>
     </nav>
 
@@ -44,6 +45,7 @@
         <small>For the cats · Updated 9/21/25</small>
     </footer>
 
+    <script src="localStorage-manager.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
