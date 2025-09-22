@@ -370,7 +370,7 @@ function updateFleaCheckboxStates(kittenId) {
         return;
     }
     
-    const radioGroup = fleaStatusRadios[0].closest('.radio-group');
+    const radioGroup = fleaStatusRadios[0].closest('.radio-group-normal');
     if (!radioGroup) {
         console.error(`No radio group found for ${kittenId}`);
         return;
