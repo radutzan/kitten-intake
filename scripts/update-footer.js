@@ -5,9 +5,9 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
- * Updates the commit count in the footer of index.html
+ * Updates the footer information in index.html including commit count and date
  */
-function updateCommitCount() {
+function updateFooter() {
     try {
         // Get the total commit count from git
         const currentCommitCount = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim());
@@ -19,15 +19,16 @@ function updateCommitCount() {
         // If GitHub Actions: use current count (workflow will commit after script runs)
         const displayCommitCount = isGitHubActions ? currentCommitCount : currentCommitCount + 1;
         
-        // Get today's date in MM/DD/YY format
+        // Get today's date in MM/DD/YY format in US Pacific timezone
         const today = new Date();
-        const month = (today.getMonth() + 1).toString().padStart(2, '0');
-        const day = today.getDate().toString().padStart(2, '0');
-        const year = today.getFullYear().toString().slice(-2);
+        const pacificDate = new Date(today.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
+        const month = (pacificDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = pacificDate.getDate().toString().padStart(2, '0');
+        const year = pacificDate.getFullYear().toString().slice(-2);
         const todayFormatted = `${month}/${day}/${year}`;
         
         const context = isGitHubActions ? 'GitHub Actions' : 'local execution';
-        console.log(`Found ${currentCommitCount} commits, updating to ${displayCommitCount} (${context})`);
+        console.log(`Found ${currentCommitCount} commits, updating footer to show ${displayCommitCount} (${context})`);
         console.log(`Updating date to ${todayFormatted}`);
         
         // Read the current index.html
@@ -55,25 +56,31 @@ function updateCommitCount() {
         }
         
         // Create the new footer content
-        const newSmallContent = `<small>Updated ${todayFormatted} · <a href="https://github.com/radutzan/kitten-intake">Build ${displayCommitCount}</a> · For the cats</small>`;
+        const newSmallContent = `<small>Updated ${todayFormatted} · <a href="https://github.com/radutzan/kitten-intake">#${displayCommitCount}</a> · For the cats</small>`;
         const newFooterContent = footerContent.substring(0, smallStart) + newSmallContent + footerContent.substring(smallEnd);
         
         // Replace the footer in the full HTML content
         const newHtmlContent = htmlContent.substring(0, footerStart) + newFooterContent + htmlContent.substring(footerEnd);
         
-        // Write the updated content back
+        // Check if the content has actually changed
+        if (newHtmlContent === htmlContent) {
+            console.log(`✅ Footer is already up to date (commit count ${displayCommitCount}, date ${todayFormatted})`);
+            return;
+        }
+        
+        // Write the updated content back only if it has changed
         fs.writeFileSync(htmlPath, newHtmlContent, 'utf8');
-        console.log(`✅ Updated commit count to ${displayCommitCount} and date to ${todayFormatted} in index.html`);
+        console.log(`✅ Updated footer with commit count ${displayCommitCount} and date ${todayFormatted} in index.html`);
         
     } catch (error) {
         if (error.message.includes('git rev-list')) {
             console.error('❌ Error: This script must be run in a git repository');
         } else {
-            console.error('❌ Error updating commit count:', error.message);
+            console.error('❌ Error updating footer:', error.message);
         }
         process.exit(1);
     }
 }
 
 // Run the update
-updateCommitCount();
+updateFooter();

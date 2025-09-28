@@ -95,7 +95,6 @@ class ResultsDisplay {
         
         // Date column
         const dateHeader = document.createElement('th');
-        dateHeader.textContent = 'Date';
         dateHeader.rowSpan = 2;
         dateHeader.className = 'date-col';
         headerRow1.appendChild(dateHeader);
@@ -110,13 +109,18 @@ class ResultsDisplay {
                 kittenHeader.colSpan = medCount;
                 kittenHeader.className = 'kitten-header';
                 const displayName = kitten.name || 'Unnamed Kitten';
-                kittenHeader.innerHTML = `${displayName}<br><small>${kitten.weightGrams}g (${kitten.weightLb.toFixed(2)} lb)</small>`;
+                kittenHeader.innerHTML = `<strong>${displayName}</strong> <span>${kitten.weightGrams}g (${kitten.weightLb.toFixed(2)} lb)</span>`;
                 headerRow1.appendChild(kittenHeader);
                 
                 // Medication sub-headers
-                Object.entries(schedule.medications).forEach(([medType, medData]) => {
+                const medEntries = Object.entries(schedule.medications);
+                medEntries.forEach(([medType, medData], medIndex) => {
                     const medHeader = document.createElement('th');
-                    medHeader.className = 'med-header';
+                    let className = 'med-header';
+                    if (medIndex === 0) {
+                        className += ' first-kitten-col';
+                    }
+                    medHeader.className = className;
                     
                     let medName = '';
                     let doseDisplay = '';
@@ -166,8 +170,12 @@ class ResultsDisplay {
                 
                 // Only add cells if this kitten has medications
                 if (medCount > 0) {
-                    Object.entries(schedule.medications).forEach(([medType, medData]) => {
+                    const medEntries = Object.entries(schedule.medications);
+                    medEntries.forEach(([medType, medData], medIndex) => {
                         const cell = document.createElement('td');
+                        if (medIndex === 0) {
+                            cell.className = 'first-kitten-col';
+                        }
                         
                         if (medData.days.includes(day)) {
                             const checkbox = document.createElement('input');

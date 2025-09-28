@@ -187,45 +187,274 @@ class LocalStorageManager {
      * Restore a single kitten form
      */
     restoreKittenForm(kittenId, kittenData, isFirst = false) {
-        // Call the existing addKitten function to create the form structure
-        if (typeof window.addKitten === 'function') {
-            window.addKitten();
+        // Extract kitten number from ID for display and counter management
+        const kittenNumber = parseInt(kittenId.split('-')[1]);
+        
+        // Update global counter to this kitten's number (important for subsequent operations)
+        if (window.kittenCounter < kittenNumber) {
+            window.kittenCounter = kittenNumber;
         }
 
-        // Wait for DOM to update, then restore values
-        setTimeout(() => {
-            // Find the most recently created form (should have the highest counter)
-            const allForms = document.querySelectorAll('.kitten-form');
-            const lastForm = allForms[allForms.length - 1];
-            
-            if (lastForm && lastForm.id !== kittenId) {
-                // Update the form ID to match the saved data
-                lastForm.id = kittenId;
+        // Create form directly with correct ID - no more ID reassignment needed
+        const container = document.getElementById('kittens-container');
+        const kittenForm = document.createElement('div');
+        kittenForm.className = 'kitten-form';
+        kittenForm.id = kittenId; // Set correct ID from the start
+        
+        kittenForm.innerHTML = `
+            <div class="number">${kittenNumber}</div>
+            <div class="kitten-form-content">
+                ${kittenNumber > 1 ? `<button type="button" class="btn btn-danger remove" onclick="removeKitten('${kittenId}')">—</button>` : ''}
+                <div class="form-grid top">
+                    <div class="form-group">
+                        <label for="${kittenId}-name">Name</label>
+                        <input type="text" id="${kittenId}-name" name="name" placeholder="Name" required>
+                        <div class="error" id="${kittenId}-name-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="${kittenId}-weight">Weight (grams)</label>
+                        <input type="text" inputmode="decimal" pattern="[0-9.]*" id="${kittenId}-weight" placeholder="Weight (grams)" name="weight" min="1" step="0.1" required>
+                        <div class="error" id="${kittenId}-weight-error"></div>
+                        <div class="weight-display" id="${kittenId}-weight-display" style="display: none;"></div>
+                    </div>
+                </div>
                 
-                // Update all the input IDs and names within this form
-                this.updateFormElementIds(lastForm, kittenId);
-            }
+                <div class="form-group">
+                    <div class="">
+                        <label>Flea Med</label>
+                        <div class="radio-group">
+                            <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
+                            <label for="${kittenId}-topical-revolution">Revolution</label>
+                            <input type="radio" name="${kittenId}-topical" value="advantage" id="${kittenId}-topical-advantage">
+                            <label for="${kittenId}-topical-advantage">Advantage II</label>
+                            <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none">
+                            <label for="${kittenId}-topical-none">Skip</label>
+                        </div>
+                    </div>
+                    
+                    <div class="radio-group-normal">
+                        <label for="${kittenId}-flea-given">
+                            <input type="radio" name="${kittenId}-flea-status" value="given" id="${kittenId}-flea-given">
+                            Given
+                        </label>
+                        <label for="${kittenId}-flea-bathed" class="bathed">
+                            <input type="radio" name="${kittenId}-flea-status" value="bathed" id="${kittenId}-flea-bathed" checked>
+                            Delay: Bathed
+                        </label>
+                    </div>
+                </div>
+            
+                <div class="form-group">
+                    <label>Given at Intake</label>
+                    <div class="checkbox-group dayone">
+                        <label>
+                            <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1" checked>
+                            Panacur
+                        </label>
+                        <label>
+                            <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1" checked>
+                            Ponazuril
+                        </label>
+                        <label>
+                            <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
+                            Drontal
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Panacur Treatment</label>
+                    <div class="radio-group">
+                        <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3">
+                        <label for="${kittenId}-panacur-3">3 days</label>
+                        <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5" checked>
+                        <label for="${kittenId}-panacur-5">5 days</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dose-display empty" id="${kittenId}-dose-display">
+                <div class="dose-print-header print-only" id="${kittenId}-dose-header">
+                    <h3 class="kitten-info"></h3>
+                </div>
+                <div class="dose-section-header">
+                    <strong>Doses</strong>
+                </div>
+                <div class="dose-display-content" id="${kittenId}-dose-content">
+                    <div class="dose-item">Enter weight to see calculated doses</div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(kittenForm);
 
-            this.setInputValue(`${kittenId}-name`, kittenData.name);
-            this.setInputValue(`${kittenId}-weight`, kittenData.weight);
-            this.setRadioValue(`${kittenId}-topical`, kittenData.topical);
-            this.setRadioValue(`${kittenId}-flea-status`, kittenData.fleaStatus);
-            this.setRadioValue(`${kittenId}-panacur`, kittenData.panacur);
-            this.setCheckboxValue(`${kittenId}-panacur-day1`, kittenData.day1Given.panacur);
-            this.setCheckboxValue(`${kittenId}-ponazuril-day1`, kittenData.day1Given.ponazuril);
-            this.setCheckboxValue(`${kittenId}-drontal-day1`, kittenData.day1Given.drontal);
+        // Add event listeners like the original addKitten function would
+        this.addFormEventListeners(kittenId);
 
-            // Trigger updates for this kitten
-            if (typeof window.updateWeightDisplay === 'function') {
-                window.updateWeightDisplay(kittenId);
+        // Set the saved values immediately - no setTimeout needed
+        this.setInputValue(`${kittenId}-name`, kittenData.name);
+        this.setInputValue(`${kittenId}-weight`, kittenData.weight);
+        this.setRadioValue(`${kittenId}-topical`, kittenData.topical);
+        this.setRadioValue(`${kittenId}-flea-status`, kittenData.fleaStatus);
+        this.setRadioValue(`${kittenId}-panacur`, kittenData.panacur);
+        this.setCheckboxValue(`${kittenId}-panacur-day1`, kittenData.day1Given.panacur);
+        this.setCheckboxValue(`${kittenId}-ponazuril-day1`, kittenData.day1Given.ponazuril);
+        this.setCheckboxValue(`${kittenId}-drontal-day1`, kittenData.day1Given.drontal);
+
+        // Trigger updates for this kitten
+        if (typeof window.updateWeightDisplay === 'function') {
+            window.updateWeightDisplay(kittenId);
+        }
+        if (typeof window.updateDoseDisplay === 'function') {
+            window.updateDoseDisplay(kittenId);
+        }
+        if (typeof window.updateFleaCheckboxStates === 'function') {
+            window.updateFleaCheckboxStates(kittenId);
+        }
+    }
+
+    /**
+     * Add event listeners to a restored form (replaces FormManager.addValidationListeners + addMedicationListeners)
+     */
+    addFormEventListeners(kittenId) {
+        // Add weight input filtering and validation
+        const weightInput = document.getElementById(`${kittenId}-weight`);
+        if (weightInput) {
+            // Filter input to allow only numbers and periods
+            weightInput.addEventListener('input', (e) => {
+                const filteredValue = e.target.value.replace(/[^0-9.]/g, '');
+                const parts = filteredValue.split('.');
+                if (parts.length > 2) {
+                    e.target.value = parts[0] + '.' + parts.slice(1).join('');
+                } else {
+                    e.target.value = filteredValue;
+                }
+                
+                if (typeof window.updateWeightDisplay === 'function') {
+                    window.updateWeightDisplay(kittenId);
+                }
+                if (typeof window.updateDoseDisplay === 'function') {
+                    window.updateDoseDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+
+            // Prevent pasting invalid characters
+            weightInput.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const filteredPaste = paste.replace(/[^0-9.]/g, '');
+                const parts = filteredPaste.split('.');
+                const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
+                
+                e.target.value = validPaste;
+                if (typeof window.updateWeightDisplay === 'function') {
+                    window.updateWeightDisplay(kittenId);
+                }
+                if (typeof window.updateDoseDisplay === 'function') {
+                    window.updateDoseDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+        }
+
+        // Add medication change listeners
+        const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
+        topicalRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (typeof window.updateFleaCheckboxStates === 'function') {
+                    window.updateFleaCheckboxStates(kittenId);
+                }
+                if (typeof window.updateDoseDisplay === 'function') {
+                    window.updateDoseDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+        });
+
+        // Add other change listeners for flea status, panacur, day1 checkboxes
+        const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
+        fleaStatusRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (typeof window.updateDoseDisplay === 'function') {
+                    window.updateDoseDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+        });
+
+        const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
+        panacurRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (typeof window.updateDoseDisplay === 'function') {
+                    window.updateDoseDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+        });
+
+        const day1Checkboxes = [
+            document.getElementById(`${kittenId}-panacur-day1`),
+            document.getElementById(`${kittenId}-ponazuril-day1`),
+            document.getElementById(`${kittenId}-drontal-day1`)
+        ];
+        day1Checkboxes.forEach(checkbox => {
+            if (checkbox) {
+                checkbox.addEventListener('change', () => {
+                    if (typeof window.updateDoseDisplay === 'function') {
+                        window.updateDoseDisplay(kittenId);
+                    }
+                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                    }
+                    if (window.localStorageManager) {
+                        window.localStorageManager.saveFormData();
+                    }
+                });
             }
-            if (typeof window.updateDoseDisplay === 'function') {
-                window.updateDoseDisplay(kittenId);
-            }
-            if (typeof window.updateFleaCheckboxStates === 'function') {
-                window.updateFleaCheckboxStates(kittenId);
-            }
-        }, 50 * (parseInt(kittenId.split('-')[1]))); // Stagger the updates
+        });
+
+        // Add name validation listeners
+        const nameInput = document.getElementById(`${kittenId}-name`);
+        if (nameInput) {
+            nameInput.addEventListener('input', () => {
+                if (typeof window.updateDoseDisplay === 'function') {
+                    window.updateDoseDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+        }
     }
 
     /**

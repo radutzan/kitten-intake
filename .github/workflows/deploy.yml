@@ -34,7 +34,7 @@ jobs:
         node-version: '18'
         
     - name: Update footer information
-      run: node scripts/update-commit-count.js
+      run: node scripts/update-footer.js
       
     - name: Check for changes
       id: verify-changed-files

@@ -296,9 +296,10 @@ class FormManager {
             </div>
         `;
         
+        const bathDelayString = ' (delay 2d, bathed)';
+        const timing = bathed ? bathDelayString : '';
         if (topical === 'none') {
             // Show both topical options when none is selected
-            const timing = bathed ? ' (delayed 2 days if bathed)' : '';
             content += `
                 <div class="dose-item">
                     <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
@@ -308,14 +309,12 @@ class FormManager {
                 </div>
             `;
         } else if (topical === 'revolution') {
-            const timing = bathed ? ' (delayed 2 days if bathed)' : '';
             content += `
                 <div class="dose-item">
                     <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
                 </div>
             `;
         } else if (topical === 'advantage') {
-            const timing = bathed ? ' (delayed 2 days if bathed)' : '';
             content += `
                 <div class="dose-item">
                     <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
@@ -337,11 +336,11 @@ class FormManager {
         }
         
         if (panacurRemaining > 0) {
-            remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${panacurDose.toFixed(2)} mL = ${panacurTotal.toFixed(2)} mL total`);
+            remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${panacurDose.toFixed(2)} mL = ${panacurTotal.toFixed(2)} mL`);
         }
         
         if (ponazurilRemaining > 0) {
-            remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${ponazurilDose.toFixed(2)} mL = ${ponazurilTotal.toFixed(2)} mL total`);
+            remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${ponazurilDose.toFixed(2)} mL = ${ponazurilTotal.toFixed(2)} mL`);
         }
         
         // Handle topical medication for foster care
