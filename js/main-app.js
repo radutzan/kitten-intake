@@ -147,13 +147,13 @@ class MainApp {
         });
         
         // Header print buttons
-        document.getElementById('print-checklist-btn').addEventListener('click', () => {
-            window.printSection('checklist');
-        });
+        // document.getElementById('print-checklist-btn').addEventListener('click', () => {
+        //     window.printSection('checklist');
+        // });
         
-        document.getElementById('print-dosages-btn').addEventListener('click', () => {
-            window.printSection('dispense');
-        });
+        // document.getElementById('print-dosages-btn').addEventListener('click', () => {
+        //     window.printSection('dispense');
+        // });
     }
 
     // Auto-save helper function

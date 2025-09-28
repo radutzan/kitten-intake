@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    
+    <!-- UPDATE THE URL BELOW WITH YOUR DESIRED REDIRECT URL -->
+    <meta http-equiv="refresh" content="0; url=https://radutzan.github.io/kitten-intake/">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f5f5f5;
+        }
+        .redirect-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .loading {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .fallback-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .fallback-link:hover {
+            text-decoration: underline;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-container">
+        <div class="spinner"></div>
+        <div class="loading">Redirecting you now...</div>
+        <p>If you are not automatically redirected, 
+        <a href="https://radutzan.github.io/kitten-intake/" class="fallback-link" id="fallback-link">click here</a>.</p>
+    </div>
+
+    <script>
+        // UPDATE THE URL BELOW WITH YOUR DESIRED REDIRECT URL
+        const redirectUrl = "https://radutzan.github.io/kitten-intake/";
+        
+        // Update the fallback link
+        document.getElementById('fallback-link').href = redirectUrl;
+        
+        // JavaScript redirect (backup method)
+        setTimeout(function() {
+            window.location.href = redirectUrl;
+        }, 100);
+    </script>
+</body>
+</html>
