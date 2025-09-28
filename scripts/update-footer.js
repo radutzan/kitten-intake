@@ -5,19 +5,55 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
+ * Determines the execution context for the footer update
+ * @returns {Object} Context information including type and commit count adjustment
+ */
+function determineContext() {
+    // Check for explicit context override
+    const explicitContext = process.env.FOOTER_CONTEXT;
+    if (explicitContext) {
+        switch (explicitContext.toLowerCase()) {
+            case 'local':
+            case 'precommit':
+                return { type: 'local', addOne: true, description: 'local pre-commit' };
+            case 'github':
+            case 'github-actions':
+                return { type: 'github', addOne: false, description: 'GitHub Actions' };
+            case 'ubuntu':
+            case 'deploy':
+            case 'server':
+                return { type: 'ubuntu', addOne: false, description: 'Ubuntu server deployment' };
+            default:
+                console.warn(`⚠️  Unknown FOOTER_CONTEXT: ${explicitContext}, falling back to auto-detection`);
+        }
+    }
+
+    // Auto-detect context based on environment
+    if (process.env.GITHUB_ACTIONS === 'true') {
+        return { type: 'github', addOne: false, description: 'GitHub Actions (auto-detected)' };
+    }
+
+    if (process.env.DEPLOY_CONTEXT === 'ubuntu' || process.env.USER === 'ubuntu' || process.env.SERVER_DEPLOYMENT === 'true') {
+        return { type: 'ubuntu', addOne: false, description: 'Ubuntu server deployment (auto-detected)' };
+    }
+
+    // Default to local context
+    return { type: 'local', addOne: true, description: 'local execution (auto-detected)' };
+}
+
+/**
  * Updates the footer information in index.html including commit count and date
  */
 function updateFooter() {
     try {
+        // Determine execution context
+        const context = determineContext();
+        
         // Get the total commit count from git
         const currentCommitCount = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim());
         
-        // Determine if running in GitHub Actions or locally
-        const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
-        
-        // If local: add 1 for upcoming manual commit
-        // If GitHub Actions: use current count (workflow will commit after script runs)
-        const displayCommitCount = isGitHubActions ? currentCommitCount : currentCommitCount + 1;
+        // Calculate display commit count based on context
+        const displayCommitCount = context.addOne ? currentCommitCount + 1 : currentCommitCount;
         
         // Get today's date in MM/DD/YY format in US Pacific timezone
         const today = new Date();
@@ -27,9 +63,9 @@ function updateFooter() {
         const year = pacificDate.getFullYear().toString().slice(-2);
         const todayFormatted = `${month}/${day}/${year}`;
         
-        const context = isGitHubActions ? 'GitHub Actions' : 'local execution';
-        console.log(`Found ${currentCommitCount} commits, updating footer to show ${displayCommitCount} (${context})`);
-        console.log(`Updating date to ${todayFormatted}`);
+        console.log(`🔧 Context: ${context.description}`);
+        console.log(`📊 Found ${currentCommitCount} commits, updating footer to show ${displayCommitCount}`);
+        console.log(`📅 Updating date to ${todayFormatted}`);
         
         // Read the current index.html
         const htmlPath = path.join(__dirname, '..', 'index.html');
@@ -82,5 +118,11 @@ function updateFooter() {
     }
 }
 
-// Run the update
-updateFooter();
+// Export for testing
+if (require.main === module) {
+    // Run the update when called directly
+    updateFooter();
+} else {
+    // Export functions for testing
+    module.exports = { updateFooter, determineContext };
+}
