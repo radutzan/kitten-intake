@@ -9,7 +9,6 @@ class ScheduleManager {
     }
 
     generateSchedule(kittens) {
-        const today = new Date();
         const schedules = [];
         
         kittens.forEach(kitten => {
@@ -19,14 +18,17 @@ class ScheduleManager {
                 medications: {}
             };
             
+            // ALL medications start tomorrow (simplified approach)
+            const standardStartOffset = 1;
+            
             // Panacur schedule
-            const panacurRemainingDays = kitten.day1Given.panacur ? 
+            const panacurRemainingDays = kitten.day1Given.panacur ?
                 (kitten.panacurDays - 1) : kitten.panacurDays;
             
             if (panacurRemainingDays > 0) {
                 schedule.medications.panacur = {
                     dose: kitten.doses.panacur,
-                    days: this.generateDaysFromToday(panacurRemainingDays)
+                    days: this.generateDaysFromToday(panacurRemainingDays, standardStartOffset)
                 };
             }
             
@@ -36,7 +38,7 @@ class ScheduleManager {
             if (ponazurilRemainingDays > 0) {
                 schedule.medications.ponazuril = {
                     dose: kitten.doses.ponazuril,
-                    days: this.generateDaysFromToday(ponazurilRemainingDays)
+                    days: this.generateDaysFromToday(ponazurilRemainingDays, standardStartOffset)
                 };
             }
             
@@ -45,7 +47,7 @@ class ScheduleManager {
             if (!kitten.day1Given.drontal && kitten.doses.drontal !== outOfRangeString) {
                 schedule.medications.drontal = {
                     dose: kitten.doses.drontal,
-                    days: [this.appState.constructor.formatDate(today)]
+                    days: this.generateDaysFromToday(1, standardStartOffset)
                 };
             }
             
@@ -54,21 +56,18 @@ class ScheduleManager {
                 if (!kitten.fleaGiven) {
                     // Flea med not given at intake
                     if (kitten.bathed) {
-                        // Cat was bathed - delay flea med by 2 days
-                        const topicalDay = new Date(today);
-                        topicalDay.setDate(today.getDate() + 2);
-                        
+                        // Cat was bathed - delay flea med by 2 days from today
                         schedule.medications.topical = {
                             type: kitten.topical,
                             dose: kitten.doses.topical,
-                            days: [this.appState.constructor.formatDate(topicalDay)]
+                            days: this.generateDaysFromToday(1, 2) // 1 day, starting 2 days from today
                         };
                     } else {
-                        // Cat was not bathed - give flea med today
+                        // Cat was not bathed - start tomorrow like other medications
                         schedule.medications.topical = {
                             type: kitten.topical,
                             dose: kitten.doses.topical,
-                            days: [this.appState.constructor.formatDate(today)]
+                            days: this.generateDaysFromToday(1, standardStartOffset)
                         };
                     }
                 }
@@ -81,13 +80,13 @@ class ScheduleManager {
         return schedules;
     }
 
-    generateDaysFromToday(numDays) {
+    generateDaysFromToday(numDays, startOffset = 0) {
         const today = new Date();
         const days = [];
         
         for (let i = 0; i < numDays; i++) {
             const date = new Date(today);
-            date.setDate(today.getDate() + i);
+            date.setDate(today.getDate() + startOffset + i);
             days.push(this.appState.constructor.formatDate(date));
         }
         

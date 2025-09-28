@@ -73,7 +73,13 @@ class ResultsDisplay {
         // Get all unique dates across all schedules
         const allDays = this.scheduleManager.getAllScheduleDays(schedules);
         
-        if (allDays.length === 0) {
+        // Optimize Drontal scheduling - move it to first available day with other medications
+        this.optimizeDrontalScheduling(kittens, schedules, allDays);
+        
+        // Recalculate all days after optimizing Drontal
+        const updatedAllDays = this.scheduleManager.getAllScheduleDays(schedules);
+        
+        if (updatedAllDays.length === 0) {
             container.innerHTML = '<p>No medications needed for foster care.</p>';
             return;
         }
@@ -144,7 +150,7 @@ class ResultsDisplay {
         // Create body
         const tbody = document.createElement('tbody');
         
-        allDays.forEach(day => {
+        updatedAllDays.forEach(day => {
             const row = document.createElement('tr');
             
             // Date cell
@@ -183,6 +189,20 @@ class ResultsDisplay {
         table.appendChild(tbody);
         container.innerHTML = '';
         container.appendChild(table);
+    }
+
+    optimizeDrontalScheduling(kittens, schedules, allDays) {
+        // Since all medications now start tomorrow by default,
+        // Drontal optimization is simplified to just assign to first available day
+        if (allDays.length === 0) return;
+
+        kittens.forEach(kitten => {
+            const schedule = schedules.find(s => s.kittenId === kitten.id);
+            if (!schedule || !schedule.medications.drontal) return;
+            
+            // Assign Drontal to the first available day with other medications
+            schedule.medications.drontal.days = [allDays[0]];
+        });
     }
 
     displayDispenseSummary(kittens) {
