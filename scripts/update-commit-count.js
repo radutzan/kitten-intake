@@ -9,9 +9,15 @@ const path = require('path');
  */
 function updateCommitCount() {
     try {
-        // Get the total commit count from git and add 1 (for the upcoming commit)
+        // Get the total commit count from git
         const currentCommitCount = parseInt(execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim());
-        const futureCommitCount = currentCommitCount + 1;
+        
+        // Determine if running in GitHub Actions or locally
+        const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+        
+        // If local: add 1 for upcoming manual commit
+        // If GitHub Actions: use current count (workflow will commit after script runs)
+        const displayCommitCount = isGitHubActions ? currentCommitCount : currentCommitCount + 1;
         
         // Get today's date in MM/DD/YY format
         const today = new Date();
@@ -20,11 +26,12 @@ function updateCommitCount() {
         const year = today.getFullYear().toString().slice(-2);
         const todayFormatted = `${month}/${day}/${year}`;
         
-        console.log(`Found ${currentCommitCount} commits, updating to ${futureCommitCount} for upcoming commit`);
+        const context = isGitHubActions ? 'GitHub Actions' : 'local execution';
+        console.log(`Found ${currentCommitCount} commits, updating to ${displayCommitCount} (${context})`);
         console.log(`Updating date to ${todayFormatted}`);
         
         // Read the current index.html
-        const htmlPath = path.join(__dirname, 'index.html');
+        const htmlPath = path.join(__dirname, '..', 'index.html');
         let htmlContent = fs.readFileSync(htmlPath, 'utf8');
         
         // Find the footer section and locate the small element within it
@@ -48,7 +55,7 @@ function updateCommitCount() {
         }
         
         // Create the new footer content
-        const newSmallContent = `<small>Updated ${todayFormatted} · <a href="https://github.com/radutzan/kitten-intake">Build ${futureCommitCount}</a> · For the cats</small>`;
+        const newSmallContent = `<small>Updated ${todayFormatted} · <a href="https://github.com/radutzan/kitten-intake">Build ${displayCommitCount}</a> · For the cats</small>`;
         const newFooterContent = footerContent.substring(0, smallStart) + newSmallContent + footerContent.substring(smallEnd);
         
         // Replace the footer in the full HTML content
@@ -56,7 +63,7 @@ function updateCommitCount() {
         
         // Write the updated content back
         fs.writeFileSync(htmlPath, newHtmlContent, 'utf8');
-        console.log(`✅ Updated commit count to ${futureCommitCount} and date to ${todayFormatted} in index.html`);
+        console.log(`✅ Updated commit count to ${displayCommitCount} and date to ${todayFormatted} in index.html`);
         
     } catch (error) {
         if (error.message.includes('git rev-list')) {
