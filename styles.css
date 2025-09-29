@@ -10,7 +10,7 @@
     --fs-body-small: 12px;
     --fs-body-medium: 14px;
     --fs-body-large: 16px;
-    --fs-body: var(--fs-body-medium);
+    --fs-body: var(--fs-body-large);
     --fs-header-small: 16px;
     --fs-header-medium: 20px;
     --fs-header-large: 24px;
@@ -655,7 +655,7 @@ footer {
     @page {
         size: landscape;
     }
-    
+
     :root {
         --corner: 0;
         --fs-body-small: 10px;
