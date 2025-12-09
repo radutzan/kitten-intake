@@ -97,6 +97,20 @@ class FormManager {
                         <label for="${kittenId}-panacur-5">5 days</label>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <div class="">
+                        <label>Ringworm</label>
+                        <div class="radio-group">
+                            <input type="radio" name="${kittenId}-ringworm-status" value="not-scanned" id="${kittenId}-ringworm-not-scanned" checked>
+                            <label for="${kittenId}-ringworm-not-scanned">Not scanned</label>
+                            <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
+                            <label for="${kittenId}-ringworm-negative">Negative</label>
+                            <input type="radio" name="${kittenId}-ringworm-status" value="positive" id="${kittenId}-ringworm-positive">
+                            <label for="${kittenId}-ringworm-positive">Positive</label>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="dose-display empty" id="${kittenId}-dose-display">
@@ -185,6 +199,62 @@ class FormManager {
         
         // Set initial checkbox states (None is selected by default)
         this.updateFleaCheckboxStates(kittenId);
+
+        // Add listeners for ringworm changes
+        this.addRingwormListeners(kittenId);
+
+        // Copy settings from the first kitten if available
+        const allKittens = document.querySelectorAll('.kitten-form');
+        if (allKittens.length > 1) {
+            const firstKittenId = allKittens[0].id;
+            if (firstKittenId !== kittenId) {
+                this.copySettingsFromKitten(firstKittenId, kittenId);
+            }
+        }
+    }
+
+    copySettingsFromKitten(sourceId, targetId) {
+        // Copy Topical
+        const sourceTopical = document.querySelector(`input[name="${sourceId}-topical"]:checked`);
+        if (sourceTopical) {
+            const targetTopical = document.getElementById(`${targetId}-topical-${sourceTopical.value}`);
+            if (targetTopical) targetTopical.checked = true;
+        }
+
+        // Copy Flea Status
+        const sourceFleaStatus = document.querySelector(`input[name="${sourceId}-flea-status"]:checked`);
+        if (sourceFleaStatus) {
+            const targetFleaStatus = document.getElementById(`${targetId}-flea-${sourceFleaStatus.value}`);
+            if (targetFleaStatus) targetFleaStatus.checked = true;
+        }
+
+        // Copy Day 1 Meds
+        const meds = ['panacur', 'ponazuril', 'drontal'];
+        meds.forEach(med => {
+            const sourceCheckbox = document.getElementById(`${sourceId}-${med}-day1`);
+            const targetCheckbox = document.getElementById(`${targetId}-${med}-day1`);
+            if (sourceCheckbox && targetCheckbox) {
+                targetCheckbox.checked = sourceCheckbox.checked;
+            }
+        });
+
+        // Copy Panacur Duration
+        const sourcePanacur = document.querySelector(`input[name="${sourceId}-panacur"]:checked`);
+        if (sourcePanacur) {
+            const targetPanacur = document.getElementById(`${targetId}-panacur-${sourcePanacur.value}`);
+            if (targetPanacur) targetPanacur.checked = true;
+        }
+
+        // Copy Ringworm Settings
+        const sourceRingworm = document.querySelector(`input[name="${sourceId}-ringworm-status"]:checked`);
+        if (sourceRingworm) {
+            const targetRingworm = document.getElementById(`${targetId}-ringworm-${sourceRingworm.value}`);
+            if (targetRingworm) targetRingworm.checked = true;
+        }
+
+        // Update UI
+        this.updateFleaCheckboxStates(targetId);
+        this.updateDoseDisplay(targetId);
     }
 
     removeKitten(kittenId) {
@@ -484,6 +554,15 @@ class FormManager {
             // Show flea status radio group when flea medication is selected
             radioGroup.style.display = 'flex';
         }
+    }
+
+    addRingwormListeners(kittenId) {
+        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+        ringwormRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.autoSaveFormData();
+            });
+        });
     }
 
     // Validation

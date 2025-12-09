@@ -217,7 +217,7 @@ h1 {
     margin-bottom: 0;
 }
 
-.horizontal-label {
+.horizontal, .horizontal-label {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -225,6 +225,23 @@ h1 {
 
 .horizontal-label label {
     width: 128px;
+}
+
+.horizontal.label-control .checkbox-group {
+    margin-top: 0;
+}
+
+.horizontal.label-control .checkbox-group label {
+    width: auto;
+}
+
+.horizontal.label-control .checkbox-group input {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
+.horizontal.label-control label:first-of-type {
+    flex-grow: 1;
 }
 
 .form-group label {

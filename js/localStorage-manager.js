@@ -125,6 +125,7 @@ class LocalStorageManager {
                 topical: this.getRadioValue(`${kittenId}-topical`),
                 fleaStatus: this.getRadioValue(`${kittenId}-flea-status`),
                 panacur: this.getRadioValue(`${kittenId}-panacur`),
+                ringwormStatus: this.getRadioValue(`${kittenId}-ringworm-status`),
                 day1Given: {
                     panacur: this.getCheckboxValue(`${kittenId}-panacur-day1`),
                     ponazuril: this.getCheckboxValue(`${kittenId}-ponazuril-day1`),
@@ -272,6 +273,20 @@ class LocalStorageManager {
                         <label for="${kittenId}-panacur-5">5 days</label>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <div class="">
+                        <label>Ringworm</label>
+                        <div class="radio-group">
+                            <input type="radio" name="${kittenId}-ringworm-status" value="not-scanned" id="${kittenId}-ringworm-not-scanned" checked>
+                            <label for="${kittenId}-ringworm-not-scanned">Not scanned</label>
+                            <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
+                            <label for="${kittenId}-ringworm-negative">Negative</label>
+                            <input type="radio" name="${kittenId}-ringworm-status" value="positive" id="${kittenId}-ringworm-positive">
+                            <label for="${kittenId}-ringworm-positive">Positive</label>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="dose-display empty" id="${kittenId}-dose-display">
@@ -298,6 +313,7 @@ class LocalStorageManager {
         this.setRadioValue(`${kittenId}-topical`, kittenData.topical);
         this.setRadioValue(`${kittenId}-flea-status`, kittenData.fleaStatus);
         this.setRadioValue(`${kittenId}-panacur`, kittenData.panacur);
+        this.setRadioValue(`${kittenId}-ringworm-status`, kittenData.ringwormStatus || 'not-scanned');
         this.setCheckboxValue(`${kittenId}-panacur-day1`, kittenData.day1Given.panacur);
         this.setCheckboxValue(`${kittenId}-ponazuril-day1`, kittenData.day1Given.ponazuril);
         this.setCheckboxValue(`${kittenId}-drontal-day1`, kittenData.day1Given.drontal);
@@ -312,6 +328,7 @@ class LocalStorageManager {
         if (typeof window.updateFleaCheckboxStates === 'function') {
             window.updateFleaCheckboxStates(kittenId);
         }
+        
     }
 
     /**
@@ -413,6 +430,16 @@ class LocalStorageManager {
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
                 }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+        });
+
+        // Add ringworm listeners
+        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+        ringwormRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
                 if (window.localStorageManager) {
                     window.localStorageManager.saveFormData();
                 }

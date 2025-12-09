@@ -132,6 +132,13 @@ class AppState {
             const ponazurilDay1Given = document.getElementById(`${kittenId}-ponazuril-day1`).checked;
             const drontalDay1Given = document.getElementById(`${kittenId}-drontal-day1`).checked;
             
+            // Get ringworm data
+            const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+            let ringwormStatus = 'not-scanned';
+            ringwormRadios.forEach(radio => {
+                if (radio.checked) ringwormStatus = radio.value;
+            });
+
             const kitten = {
                 id: kittenId,
                 name,
@@ -142,6 +149,7 @@ class AppState {
                 bathed,
                 panacurDays,
                 ponazurilDays: 3,
+                ringwormStatus,
                 day1Given: {
                     panacur: panacurDay1Given,
                     ponazuril: ponazurilDay1Given,
