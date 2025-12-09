@@ -3,6 +3,7 @@
     --blue: #285AA8;
     --dark-gray: #495057;
     --box-bg: #f8f9fa;
+    --box-bg-2: #f2f4f6;
     --yellow-bg: #fff3cd;
     --green-bg: #e8f5e8;
     --corner: 20px;
@@ -148,6 +149,7 @@ h1 {
     padding: 0;
     top: -20px;
     right: -20px;
+    z-index: 99;
 }
 
 .print-buttons {
@@ -167,8 +169,10 @@ h1 {
     margin-bottom: 20px;
     position: relative;
     display: flex;
-    gap: 20px;
+    gap: 8px;
     align-items: start;
+    background-color: var(--box-bg);
+    border-radius: var(--corner);
 }
 
 .kitten-form .number {
@@ -176,8 +180,10 @@ h1 {
 }
 
 .kitten-form-content {
-    background-color: var(--box-bg);
+    background-color: var(--box-bg-2);
     border-radius: var(--corner);
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
     padding: var(--corner);
     padding-left: calc(var(--corner) + 4px);
     position: relative;
@@ -464,14 +470,12 @@ input[type="radio"]:focus {
 /* #endregion */
 
 /* #region Dose Display & Results */
-.dose-display {
-    background-color: var(--box-bg);
-    border-radius: var(--corner);
+.result-display {
     padding: 10px;
     width: 300px;
 }
 
-.dose-display .dose-item {
+.result-display .dose-item {
     margin-bottom: 8px;
     padding: 5px 8px;
     background-color: white;
@@ -479,30 +483,30 @@ input[type="radio"]:focus {
     font-size: var(--fs-body-medium);
 }
 
-.dose-display .dose-item:last-child {
+.result-display .dose-item:last-child {
     margin-bottom: 0;
 }
 
-.dose-display .dose-item strong {
+.result-display .dose-item strong {
     display: inline-block;
     width: 100px;
     height: 100%;
 }
 
-.dose-display > .dose-section-header {
+.result-display > .dose-section-header {
     margin-top: 0;
 }
 
-.dose-display .foster-item {
+.result-display .foster-item {
     background-color: var(--yellow-bg);
 }
 
-.dose-display.empty {
+.result-display.empty {
     opacity: 0.6;
     border-color: #dee2e6;
 }
 
-.dose-display.empty h4 {
+.result-display.empty h4 {
     color: #6c757d;
 }
 
@@ -719,13 +723,13 @@ footer {
         padding: 0;
     }
 
-    .dose-display {
+    .result-display {
         padding: 0;
         background: none;
         width: 280px;
     }
 
-    .dose-display .dose-item {
+    .result-display .dose-item {
         margin: 0;
         padding: 0;
         border-radius: 0;
@@ -838,9 +842,10 @@ footer {
         align-items: flex-start;
     }
     
-    .dose-display {
+    .result-display {
         position: static;
         width: 100%;
+        padding-top: 0;
     }
 
     .btn-success {
@@ -849,7 +854,7 @@ footer {
     }
 
     .remove {
-        right: 5px;
+        right: -5px;
     }
 
     .form-grid.top {

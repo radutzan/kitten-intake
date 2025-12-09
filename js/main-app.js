@@ -83,8 +83,8 @@ class MainApp {
             this.formManager.updateWeightDisplay(kittenId);
         };
         
-        window.updateDoseDisplay = (kittenId) => {
-            this.formManager.updateDoseDisplay(kittenId);
+        window.updateResultDisplay = (kittenId) => {
+            this.formManager.updateResultDisplay(kittenId);
         };
         
         window.updateFleaCheckboxStates = (kittenId) => {

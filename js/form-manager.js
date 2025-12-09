@@ -16,20 +16,12 @@ class FormManager {
         }
     }
 
-    // Kitten Management
-    addKitten() {
-        const container = document.getElementById('kittens-container');
-        const kittenId = `kitten-${this.appState.incrementKittenCounter()}`;
-        const kittenCounter = this.appState.getKittenCounter();
-        
-        const kittenForm = document.createElement('div');
-        kittenForm.className = 'kitten-form';
-        kittenForm.id = kittenId;
-        
-        kittenForm.innerHTML = `
-            <div class="number">${kittenCounter}</div>
+    // Generate HTML template for a kitten form (single source of truth)
+    generateKittenFormHTML(kittenId, kittenNumber) {
+        return `
+            ${kittenNumber > 1 ? `<button type="button" class="btn btn-danger remove" onclick="removeKitten('${kittenId}')">—</button>` : ''}
+            <div class="number">${kittenNumber}</div>
             <div class="kitten-form-content">
-                ${kittenCounter > 1 ? `<button type="button" class="btn btn-danger remove" onclick="removeKitten('${kittenId}')">—</button>` : ''}
                 <div class="form-grid top">
                     <div class="form-group">
                         <label for="${kittenId}-name">Name</label>
@@ -113,18 +105,31 @@ class FormManager {
                 </div>
             </div>
             
-            <div class="dose-display empty" id="${kittenId}-dose-display">
-                <div class="dose-print-header print-only" id="${kittenId}-dose-header">
+            <div class="result-display empty" id="${kittenId}-result-display">
+                <div class="dose-print-header print-only" id="${kittenId}-result-header">
                     <h3 class="kitten-info"></h3>
                 </div>
                 <div class="dose-section-header">
                     <strong>Doses</strong>
                 </div>
-                <div class="dose-display-content" id="${kittenId}-dose-content">
+                <div class="result-display-content" id="${kittenId}-result-content">
                     <div class="dose-item">Enter weight to see calculated doses</div>
                 </div>
             </div>
         `;
+    }
+
+    // Kitten Management
+    addKitten() {
+        const container = document.getElementById('kittens-container');
+        const kittenId = `kitten-${this.appState.incrementKittenCounter()}`;
+        const kittenCounter = this.appState.getKittenCounter();
+        
+        const kittenForm = document.createElement('div');
+        kittenForm.className = 'kitten-form';
+        kittenForm.id = kittenId;
+        
+        kittenForm.innerHTML = this.generateKittenFormHTML(kittenId, kittenCounter);
         
         container.appendChild(kittenForm);
         
@@ -165,7 +170,7 @@ class FormManager {
             }
             
             this.updateWeightDisplay(kittenId);
-            this.updateDoseDisplay(kittenId);
+            this.updateResultDisplay(kittenId);
             if (window.KittenApp && window.KittenApp.resultsDisplay) {
                 window.KittenApp.resultsDisplay.updateResultsAutomatically();
             }
@@ -184,7 +189,7 @@ class FormManager {
             
             e.target.value = validPaste;
             this.updateWeightDisplay(kittenId);
-            this.updateDoseDisplay(kittenId);
+            this.updateResultDisplay(kittenId);
             if (window.KittenApp && window.KittenApp.resultsDisplay) {
                 window.KittenApp.resultsDisplay.updateResultsAutomatically();
             }
@@ -254,7 +259,7 @@ class FormManager {
 
         // Update UI
         this.updateFleaCheckboxStates(targetId);
-        this.updateDoseDisplay(targetId);
+        this.updateResultDisplay(targetId);
     }
 
     removeKitten(kittenId) {
@@ -288,10 +293,10 @@ class FormManager {
         }
     }
 
-    updateDoseDisplay(kittenId) {
-        const doseDisplay = document.getElementById(`${kittenId}-dose-display`);
-        const doseContent = document.getElementById(`${kittenId}-dose-content`);
-        const doseHeader = document.getElementById(`${kittenId}-dose-header`);
+    updateResultDisplay(kittenId) {
+        const doseDisplay = document.getElementById(`${kittenId}-result-display`);
+        const doseContent = document.getElementById(`${kittenId}-result-content`);
+        const doseHeader = document.getElementById(`${kittenId}-result-header`);
         
         const nameInput = document.getElementById(`${kittenId}-name`);
         const weightInput = document.getElementById(`${kittenId}-weight`);
@@ -462,7 +467,7 @@ class FormManager {
         topicalRadios.forEach(radio => {
             radio.addEventListener('change', () => {
                 this.updateFleaCheckboxStates(kittenId);
-                this.updateDoseDisplay(kittenId);
+                this.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
                 }
@@ -474,7 +479,7 @@ class FormManager {
         const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
         fleaStatusRadios.forEach(radio => {
             radio.addEventListener('change', () => {
-                this.updateDoseDisplay(kittenId);
+                this.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
                 }
@@ -486,7 +491,7 @@ class FormManager {
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
         panacurRadios.forEach(radio => {
             radio.addEventListener('change', () => {
-                this.updateDoseDisplay(kittenId);
+                this.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
                 }
@@ -503,7 +508,7 @@ class FormManager {
         day1Checkboxes.forEach(checkbox => {
             if (checkbox) {
                 checkbox.addEventListener('change', () => {
-                    this.updateDoseDisplay(kittenId);
+                    this.updateResultDisplay(kittenId);
                     if (window.KittenApp && window.KittenApp.resultsDisplay) {
                         window.KittenApp.resultsDisplay.updateResultsAutomatically();
                     }
@@ -545,7 +550,7 @@ class FormManager {
             if (neitherRadio && !neitherRadio.checked) {
                 neitherRadio.checked = true;
                 // Update results when we change the flea status
-                this.updateDoseDisplay(kittenId);
+                this.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
                 }
@@ -578,7 +583,7 @@ class FormManager {
             this.autoSaveFormData();
         });
         nameInput.addEventListener('input', () => {
-            this.updateDoseDisplay(kittenId);
+            this.updateResultDisplay(kittenId);
             if (window.KittenApp && window.KittenApp.resultsDisplay) {
                 window.KittenApp.resultsDisplay.updateResultsAutomatically();
             }
