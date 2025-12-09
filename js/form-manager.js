@@ -112,8 +112,10 @@ class FormManager {
                 <div class="dose-section-header">
                     <strong>Doses</strong>
                 </div>
-                <div class="result-display-content" id="${kittenId}-result-content">
-                    <div class="dose-item">Enter weight to see calculated doses</div>
+                <div id="${kittenId}-result-content">
+                    <div class="result-display-content">
+                        <div class="result-item">Enter weight to see calculated doses</div>
+                    </div>
                 </div>
             </div>
         `;
@@ -204,9 +206,6 @@ class FormManager {
         
         // Set initial checkbox states (None is selected by default)
         this.updateFleaCheckboxStates(kittenId);
-
-        // Add listeners for ringworm changes
-        this.addRingwormListeners(kittenId);
 
         // Copy settings from the first kitten if available
         const allKittens = document.querySelectorAll('.kitten-form');
@@ -314,7 +313,7 @@ class FormManager {
         
         if (!grams || grams <= 0) {
             doseDisplay.classList.add('empty');
-            doseContent.innerHTML = '<div class="dose-item">Enter weight to see calculated doses</div>';
+            doseContent.innerHTML = ' <div class="result-display-content"><div class="result-item">Enter weight to see calculated doses</div></div>';
             return;
         }
         
@@ -360,13 +359,14 @@ class FormManager {
         
         // Build dose display content
         let content = `
-            <div class="dose-item">
+        <div class="result-display-content">
+            <div class="result-item">
                 <strong>Panacur</strong> ${panacurDose.toFixed(2)} mL/day × ${panacurDays} days
             </div>
-            <div class="dose-item">
+            <div class="result-item">
                 <strong>Ponazuril</strong> ${ponazurilDose.toFixed(2)} mL/day × 3 days
             </div>
-            <div class="dose-item">
+            <div class="result-item">
                 <strong>Drontal</strong> ${drontalDose === outOfRangeString ? drontalDose : drontalDose + ' tablet(s)'}
             </div>
         `;
@@ -376,26 +376,29 @@ class FormManager {
         if (topical === 'none') {
             // Show both topical options when none is selected
             content += `
-                <div class="dose-item">
+                <div class="result-item">
                     <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
                 </div>
-                <div class="dose-item">
+                <div class="result-item">
                     <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
                 </div>
             `;
         } else if (topical === 'revolution') {
             content += `
-                <div class="dose-item">
+                <div class="result-item">
                     <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
                 </div>
             `;
         } else if (topical === 'advantage') {
             content += `
-                <div class="dose-item">
+                <div class="result-item">
                     <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
                 </div>
             `;
         }
+        content += `
+        </div>
+        `;
         
         // Calculate remaining doses for foster care
         const panacurRemaining = panacurDay1Given ? (panacurDays - 1) : panacurDays;
@@ -443,19 +446,48 @@ class FormManager {
                 <div class="dose-section-header">
                     <strong>For Foster</strong>
                 </div>
+                <div class="result-display-content foster">
             `;
             remainsForFoster.forEach(item => {
-                content += `<div class="dose-item foster-item">${item}</div>`;
+                content += `<div class="result-item">${item}</div>`;
             });
         } else {
             content += `
-                <div class="dose-section-divider"></div>
                 <div class="dose-section-header">
                     <strong>For Foster</strong>
                 </div>
-                <div class="dose-item foster-item">None</div>
+                <div class="result-display-content">
+                    <div class="result-item">None</div>
+                </div>
             `;
         }
+        
+        // Get ringworm status
+        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+        let ringwormStatus = 'not-scanned';
+        ringwormRadios.forEach(radio => {
+            if (radio.checked) ringwormStatus = radio.value;
+        });
+        
+        // Map status to display text
+        const ringwormStatusText = {
+            'not-scanned': 'Not scanned',
+            'negative': 'Negative',
+            'positive': 'Positive'
+        };
+        
+        // Add "Other" section
+        content += `
+                </div>
+                <div class="dose-section-header">
+                    <strong>Other</strong>
+                </div>
+                <div class="result-display-content">
+                    <div class="result-item">
+                        <strong>Ringworm</strong> ${ringwormStatusText[ringwormStatus] || ringwormStatus}
+                    </div>
+                </div>
+        `;
         
         doseDisplay.classList.remove('empty');
         doseContent.innerHTML = content;
@@ -467,6 +499,18 @@ class FormManager {
         topicalRadios.forEach(radio => {
             radio.addEventListener('change', () => {
                 this.updateFleaCheckboxStates(kittenId);
+                this.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+        
+        // Listen for ringworm status changes
+        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+        ringwormRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
                 this.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -559,15 +603,6 @@ class FormManager {
             // Show flea status radio group when flea medication is selected
             radioGroup.style.display = 'flex';
         }
-    }
-
-    addRingwormListeners(kittenId) {
-        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
-        ringwormRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                this.autoSaveFormData();
-            });
-        });
     }
 
     // Validation

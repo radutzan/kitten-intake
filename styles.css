@@ -170,7 +170,7 @@ h1 {
     position: relative;
     display: flex;
     gap: 8px;
-    align-items: start;
+    align-items: stretch;
     background-color: var(--box-bg);
     border-radius: var(--corner);
 }
@@ -475,19 +475,29 @@ input[type="radio"]:focus {
     width: 300px;
 }
 
-.result-display .dose-item {
-    margin-bottom: 8px;
-    padding: 5px 8px;
+.result-display-content {
+    border-radius: 8px;
     background-color: white;
-    border-radius: 10px;
-    font-size: var(--fs-body-medium);
 }
 
-.result-display .dose-item:last-child {
+.result-display-content.foster {
+    background-color: var(--yellow-bg);
+}
+
+.result-display .result-item {
     margin-bottom: 0;
+    padding: 5px 8px;
+    border-radius: 0;
+    background-color: transparent;
+    font-size: var(--fs-body-medium);
+    border-bottom: 1px solid var(--box-bg-2);
 }
 
-.result-display .dose-item strong {
+.result-display .result-item:last-child {
+    border-bottom: none;
+}
+
+.result-display .result-item strong {
     display: inline-block;
     width: 100px;
     height: 100%;
@@ -495,10 +505,6 @@ input[type="radio"]:focus {
 
 .result-display > .dose-section-header {
     margin-top: 0;
-}
-
-.result-display .foster-item {
-    background-color: var(--yellow-bg);
 }
 
 .result-display.empty {
@@ -511,7 +517,7 @@ input[type="radio"]:focus {
 }
 
 .dose-section-header {
-    margin-top: 16px;
+    margin-top: 12px;
     margin-bottom: 8px;
     font-size: var(--fs-body-medium);
     color: var(--blue);
@@ -545,21 +551,14 @@ input[type="radio"]:focus {
     font-size: var(--fs-header-small);
 }
 
-.dose-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.dose-item {
+.result-item {
     padding: 8px;
     background-color: #f8f9fa;
     border-radius: 4px;
     display: flex;
 }
 
-.dose-item strong {
+.result-item strong {
     color: #2c3e50;
 }
 
@@ -729,7 +728,7 @@ footer {
         width: 280px;
     }
 
-    .result-display .dose-item {
+    .result-display .result-item {
         margin: 0;
         padding: 0;
         border-radius: 0;
@@ -859,10 +858,6 @@ footer {
 
     .form-grid.top {
         gap: 5px;
-    }
-    
-    .dose-info {
-        grid-template-columns: 1fr;
     }
     
     .dispense-grid {
