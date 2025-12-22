@@ -41,6 +41,12 @@ class LocalStorageManager {
             };
 
             localStorage.setItem(this.storageKey, JSON.stringify(payload));
+
+            // Update URL in real-time for instant sharing
+            if (window.KittenApp && window.KittenApp.urlStateManager) {
+                window.KittenApp.urlStateManager.updateUrlRealtime();
+            }
+
             return true;
         } catch (e) {
             // Handle quota exceeded or other errors silently

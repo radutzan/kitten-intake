@@ -9,4 +9,4 @@ This is a single-page HTML/JS application to assist in rescued cat and kitten in
 It runs in a browser, with no server setup — just open index.html.
 
 ## Credits
-Most of the logic is written by AI: Claude Sonnet 4 via Roo Code and OpenRouter. Product management by Anti, UI design and LLM management by Radu.
+The logic is written by Anthropic's Claude. Product management by [Anti](https://antoniayunge.cl), UI design and LLM management by [Radu](https://radu.cl).

@@ -14,6 +14,10 @@ class FormManager {
         if (window.localStorageManager) {
             localStorageManager.saveFormData();
         }
+        // Update URL in real-time for instant sharing
+        if (window.KittenApp && window.KittenApp.urlStateManager) {
+            window.KittenApp.urlStateManager.updateUrlRealtime();
+        }
     }
 
     // Generate HTML template for a kitten form (single source of truth)

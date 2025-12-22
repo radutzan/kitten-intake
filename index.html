@@ -13,12 +13,24 @@
     <nav>
         <div class="header-buttons" id="header-buttons">
             <button type="button" id="clear-all-btn" class="btn btn-warning">Clear All</button>
+            <button type="button" id="share-btn" class="btn btn-secondary">Share</button>
             <button type="button" onclick="window.print()" class="btn btn-secondary" id="print-checklist-btn">Print</button>
             <!-- <button type="button" onclick="printSection('checklist')" class="btn btn-secondary" id="print-checklist-btn" disabled>🖨️  Checklist</button>
             <button type="button" onclick="printSection('dispense')" class="btn btn-secondary" id="print-dosages-btn" disabled>🖨️  Records</button> -->
             <button type="button" id="add-kitten-btn" class="btn btn-primary">Add Cat</button>
         </div>
     </nav>
+
+    <!-- Banner for shared URL state -->
+    <div id="shared-url-banner" class="shared-url-banner" style="display: none;">
+        <div class="shared-url-banner-content">
+            <span class="shared-url-message">Viewing shared form</span>
+            <div class="shared-url-actions">
+                <button type="button" id="eject-btn" class="btn btn-secondary btn-small">Eject</button>
+                <button type="button" id="keep-btn" class="btn btn-primary btn-small">Keep</button>
+            </div>
+        </div>
+    </div>
 
     <h2 class="print-only">Cat Intake</h2>
 
@@ -54,5 +66,6 @@
     <script src="js/print-manager.js"></script>
     <script src="js/main-app.js"></script>
     <script src="js/localStorage-manager.js"></script>
+    <script src="js/url-state-manager.js"></script>
 </body>
 </html>

@@ -873,3 +873,43 @@ footer {
     }
 }
 /* #endregion */
+
+/* #region Shared URL Banner */
+.shared-url-banner {
+    background-color: var(--yellow-bg);
+    border: 1px solid #ffc107;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.shared-url-banner-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.shared-url-message {
+    font-weight: 500;
+    color: #856404;
+}
+
+.shared-url-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: var(--fs-body-small);
+    margin: 0;
+}
+
+@media print {
+    .shared-url-banner {
+        display: none !important;
+    }
+}
+/* #endregion */
