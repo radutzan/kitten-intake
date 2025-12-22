@@ -44,7 +44,7 @@ class FormManager {
                 <div class="medication-grid">
                     <div class="medication-row">
                         <div class="medication-cell">
-                            <label>Flea Med</label>
+                            <label>Flea Med <span class="inline-dose" id="${kittenId}-flea-dose"></span></label>
                             <div class="radio-group">
                                 <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
                                 <label for="${kittenId}-topical-revolution">Revolution</label>
@@ -61,7 +61,7 @@ class FormManager {
                     </div>
                     <div class="medication-row">
                         <div class="medication-cell">
-                            <label>Panacur</label>
+                            <label>Panacur <span class="inline-dose" id="${kittenId}-panacur-dose"></span></label>
                             <div class="radio-group">
                                 <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
                                 <label for="${kittenId}-panacur-1">1 day</label>
@@ -78,7 +78,7 @@ class FormManager {
                     </div>
                     <div class="medication-row">
                         <div class="medication-cell">
-                            <label>Ponazuril</label>
+                            <label>Ponazuril <span class="inline-dose" id="${kittenId}-ponazuril-dose"></span></label>
                             <div class="radio-group">
                                 <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
                                 <label for="${kittenId}-ponazuril-1">1 day</label>
@@ -93,7 +93,7 @@ class FormManager {
                     </div>
                     <div class="medication-row drontal-row">
                         <div class="medication-cell">
-                            <label>Drontal</label>
+                            <label>Drontal <span class="inline-dose" id="${kittenId}-drontal-dose"></span></label>
                         </div>
                         <div class="given-cell">
                             <label>Given</label>
@@ -331,6 +331,15 @@ class FormManager {
         if (!grams || grams <= 0) {
             doseDisplay.classList.add('empty');
             doseContent.innerHTML = ' <div class="result-display-content"><div class="result-item">Enter weight to see calculated doses</div></div>';
+            // Clear inline dose displays
+            const fleaDoseEl = document.getElementById(`${kittenId}-flea-dose`);
+            const panacurDoseEl = document.getElementById(`${kittenId}-panacur-dose`);
+            const ponazurilDoseEl = document.getElementById(`${kittenId}-ponazuril-dose`);
+            const drontalDoseEl = document.getElementById(`${kittenId}-drontal-dose`);
+            if (fleaDoseEl) fleaDoseEl.textContent = '';
+            if (panacurDoseEl) panacurDoseEl.textContent = '';
+            if (ponazurilDoseEl) ponazurilDoseEl.textContent = '';
+            if (drontalDoseEl) drontalDoseEl.textContent = '';
             return;
         }
         
@@ -374,7 +383,32 @@ class FormManager {
         const advantageDose = this.doseCalculator.calculateAdvantageIIDose(weightLb);
         
         const outOfRangeString = this.appState.getOutOfRangeString();
-        
+
+        // Update inline dose displays
+        const fleaDoseEl = document.getElementById(`${kittenId}-flea-dose`);
+        const panacurDoseEl = document.getElementById(`${kittenId}-panacur-dose`);
+        const ponazurilDoseEl = document.getElementById(`${kittenId}-ponazuril-dose`);
+        const drontalDoseEl = document.getElementById(`${kittenId}-drontal-dose`);
+
+        if (fleaDoseEl) {
+            if (topical === 'none') {
+                fleaDoseEl.textContent = '';
+            } else if (topical === 'revolution') {
+                fleaDoseEl.textContent = revolutionDose === outOfRangeString ? outOfRangeString : `${AppState.formatNumber(revolutionDose, 2)} mL`;
+            } else if (topical === 'advantage') {
+                fleaDoseEl.textContent = advantageDose === outOfRangeString ? outOfRangeString : `${AppState.formatNumber(advantageDose, 2)} mL`;
+            }
+        }
+        if (panacurDoseEl) {
+            panacurDoseEl.textContent = `${AppState.formatNumber(panacurDose, 2)} mL/day`;
+        }
+        if (ponazurilDoseEl) {
+            ponazurilDoseEl.textContent = `${AppState.formatNumber(ponazurilDose, 2)} mL/day`;
+        }
+        if (drontalDoseEl) {
+            drontalDoseEl.textContent = drontalDose === outOfRangeString ? outOfRangeString : `${drontalDose} tablet(s)`;
+        }
+
         // Build dose display content
         let content = `
         <div class="result-display-content">

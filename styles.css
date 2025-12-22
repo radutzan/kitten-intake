@@ -336,7 +336,7 @@ input[type="radio"]:focus {
 
 .radio-group {
     display: flex;
-    border-radius: 32px;
+    border-radius: 14px;
     overflow: hidden;
     margin-top: 4px;
     padding: 4px;
@@ -351,7 +351,7 @@ input[type="radio"]:focus {
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    padding: 2px 18px;
+    padding: 2px 12px;
     font-weight: 600;
     cursor: pointer;
     background-color: transparent;
@@ -361,7 +361,7 @@ input[type="radio"]:focus {
     position: relative;
     text-align: center;
     white-space: nowrap;
-    border-radius: 32px;
+    border-radius: 10px;
 }
 
 .radio-group label:last-child {
@@ -475,6 +475,13 @@ input[type="radio"]:focus {
     color: #495057;
     display: block;
     margin-bottom: 4px;
+    position: relative;
+}
+
+.medication-cell .inline-dose {
+    font-weight: normal;
+    position: absolute;
+    left: 92px;
 }
 
 .medication-cell .radio-group {
