@@ -1,6 +1,6 @@
 # Rescued Cat & Kitten Intake
 
-This is a single-page HTML/JS application to assist in rescued cat and kitten intake. (Available here.)[https://radu.cl/cats/kitten-intake/]
+This is a single-page HTML/JS application to assist in rescued cat and kitten intake. [Available here.](https://radu.cl/cats/kitten-intake/)
 
 * Calculates medication dosages based on weight
 * Allows documenting which medications were given at intake
