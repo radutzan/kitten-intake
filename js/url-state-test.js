@@ -22,10 +22,10 @@ function testUrlState() {
     console.log('\n2. Flag encoding test (v1 - 11 bits):');
     const testCases = [
         {
-            name: 'All defaults (rev, given, not-scanned, 5d pan, 3d pon, all day1)',
+            name: 'All defaults (rev, flea given, not-scanned, 5d pan, 3d pon, all day1)',
             kitten: {
                 topical: 'revolution',
-                fleaStatus: 'given',
+                fleaGiven: true,
                 ringwormStatus: 'not-scanned',
                 panacur: '5',
                 ponazuril: '3',
@@ -36,7 +36,7 @@ function testUrlState() {
             name: 'All alternate values',
             kitten: {
                 topical: 'none',
-                fleaStatus: 'bathed',
+                fleaGiven: false,
                 ringwormStatus: 'positive',
                 panacur: '1',
                 ponazuril: '1',
@@ -44,10 +44,10 @@ function testUrlState() {
             }
         },
         {
-            name: 'Mixed: advantage, bathed, negative, 3d pan, 1d pon',
+            name: 'Mixed: advantage, flea not given, negative, 3d pan, 1d pon',
             kitten: {
                 topical: 'advantage',
-                fleaStatus: 'bathed',
+                fleaGiven: false,
                 ringwormStatus: 'negative',
                 panacur: '3',
                 ponazuril: '1',
@@ -58,7 +58,7 @@ function testUrlState() {
             name: 'Panacur 1 day only',
             kitten: {
                 topical: 'revolution',
-                fleaStatus: 'given',
+                fleaGiven: true,
                 ringwormStatus: 'not-scanned',
                 panacur: '1',
                 ponazuril: '3',
@@ -72,7 +72,7 @@ function testUrlState() {
         const decoded = manager.decodeFlags(encoded);
         const match =
             decoded.topical === tc.kitten.topical &&
-            decoded.fleaStatus === tc.kitten.fleaStatus &&
+            decoded.fleaGiven === tc.kitten.fleaGiven &&
             decoded.ringwormStatus === tc.kitten.ringwormStatus &&
             decoded.panacur === tc.kitten.panacur &&
             decoded.ponazuril === tc.kitten.ponazuril &&

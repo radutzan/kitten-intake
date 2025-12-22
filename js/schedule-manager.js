@@ -55,22 +55,12 @@ class ScheduleManager {
             // Topical schedule logic
             if (kitten.topical !== 'none' && kitten.doses.topical !== outOfRangeString && kitten.doses.topical > 0) {
                 if (!kitten.fleaGiven) {
-                    // Flea med not given at intake
-                    if (kitten.bathed) {
-                        // Cat was bathed - delay flea med by 2 days from today
-                        schedule.medications.topical = {
-                            type: kitten.topical,
-                            dose: kitten.doses.topical,
-                            days: this.generateDaysFromToday(1, 2) // 1 day, starting 2 days from today
-                        };
-                    } else {
-                        // Cat was not bathed - start tomorrow like other medications
-                        schedule.medications.topical = {
-                            type: kitten.topical,
-                            dose: kitten.doses.topical,
-                            days: this.generateDaysFromToday(1, standardStartOffset)
-                        };
-                    }
+                    // Flea med not given at intake - foster needs to give it
+                    schedule.medications.topical = {
+                        type: kitten.topical,
+                        dose: kitten.doses.topical,
+                        days: this.generateDaysFromToday(1, standardStartOffset)
+                    };
                 }
                 // If fleaGiven, no schedule entry (med already given at intake)
             }
@@ -191,12 +181,10 @@ class ScheduleManager {
         
         if (remaining.topical.amount > 0) {
             const topicalName = remaining.topical.type === 'revolution' ? 'Revolution' : 'Advantage II';
-            const timing = kitten.bathed ? 'on Day +2' : 'today';
             summary.push({
                 medication: topicalName,
                 dose: AppState.formatNumber(remaining.topical.amount, 2) + ' mL',
-                days: 1,
-                timing: timing
+                days: 1
             });
         }
         

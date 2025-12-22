@@ -450,52 +450,53 @@ input[type="radio"]:focus {
 
 /* #endregion */
 
-/* #region Medication Table */
-.medication-table {
-    width: 100%;
-    border-collapse: collapse;
+/* #region Medication Grid */
+.medication-grid {
     margin-bottom: 20px;
 }
 
-.medication-table th {
-    text-align: left;
-    font-weight: 600;
-    color: #495057;
-    padding: 0 0 8px 0;
-    font-size: var(--fs-body-medium);
+.medication-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
-.medication-table th:last-child {
-    text-align: center;
-    width: 60px;
+.medication-row:last-child {
+    margin-bottom: 0;
 }
 
-.medication-table td {
-    padding: 8px 0;
-    vertical-align: middle;
+.medication-cell {
+    flex: 1;
 }
 
-.medication-table tbody tr {
-    border-top: 1px solid rgba(0,0,0,0.08);
-}
-
-.medication-table td > label {
+.medication-cell > label {
     font-weight: 600;
     color: #495057;
     display: block;
     margin-bottom: 4px;
 }
 
-.medication-table .radio-group {
+.medication-cell .radio-group {
     margin-top: 0;
 }
 
-.medication-table .given-cell {
-    text-align: center;
-    vertical-align: middle;
+.given-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 60px;
+    flex-shrink: 0;
 }
 
-.medication-table .given-cell input[type="checkbox"] {
+.given-cell > label {
+    font-weight: normal;
+    color: #495057;
+    font-size: var(--fs-body-medium);
+    margin-bottom: 4px;
+}
+
+.given-cell input[type="checkbox"] {
     width: 30px;
     height: 30px;
     border: 2px solid #999;
@@ -503,29 +504,22 @@ input[type="radio"]:focus {
     font-size: 20px;
 }
 
-.medication-table .given-cell input[type="checkbox"]:hover {
+.given-cell input[type="checkbox"]:hover {
     border-color: var(--blue);
 }
 
-.medication-table .given-cell input[type="checkbox"]:disabled {
+.given-cell input[type="checkbox"]:disabled {
     background-color: transparent;
     border-color: rgba(0,0,0,0.1);
     cursor: not-allowed;
 }
 
-.medication-table .drontal-cell {
-    text-align: right;
-    padding-right: 12px;
-}
-
-.medication-table .drontal-cell label {
-    margin-bottom: 0;
+.drontal-row {
+    align-items: center;
 }
 
 .ringworm-section {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(0,0,0,0.08);
+    margin-top: 0;
 }
 /* #endregion */
 

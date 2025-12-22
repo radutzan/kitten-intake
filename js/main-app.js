@@ -120,7 +120,8 @@ class MainApp {
         AppState.updateDateTime(); // Set current date and time in header
 
         // Check for URL state first (shared link)
-        if (this.urlStateManager.hasUrlState()) {
+        if (this.urlStateManager.isSharedLink()) {
+            // This is a genuinely shared link - load it temporarily
             const urlData = this.urlStateManager.loadTemporarily();
             if (urlData) {
                 // Load URL state instead of localStorage
@@ -139,7 +140,7 @@ class MainApp {
             this.showSharedUrlBanner();
             this.loadNormalState();
         } else {
-            // Normal load from localStorage
+            // Normal load from localStorage (includes reload with matching URL)
             this.loadNormalState();
         }
 

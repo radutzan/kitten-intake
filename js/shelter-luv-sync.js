@@ -154,22 +154,100 @@ class ShelterLuvSync {
 
     /**
      * Transform kitten data to ShelterLuv animal format
+     * Based on schema from https://imerge.com/shelterluv-api/
      * @param {object} kitten - Kitten data from extractKittenDataForApi
      * @returns {object} ShelterLuv-formatted animal object
      */
     transformToShelterLuvAnimal(kitten) {
+        const now = Math.floor(Date.now() / 1000); // Unix timestamp
+
         return {
+            // Basic identification
             Name: kitten.name || 'Unnamed Kitten',
             Type: 'Cat',
-            Sex: 'Unknown',
-            IntakeDate: kitten.intakeDate,
-            Weight: {
-                Value: kitten.weightLb,
-                Unit: 'lb'
-            },
-            Status: 'Foster',
-            Notes: `Intake via Kitten Intake App. Weight: ${AppState.formatNumber(kitten.weightGrams)}g`
+            Sex: 'Unknown',  // Could be extended if form captures this
+            Status: 'In Foster',
+
+            // Physical details
+            CurrentWeightPounds: kitten.weightLb,
+            Size: this.getSizeCategory(kitten.weightLb),
+            Altered: false,  // Unknown at intake
+
+            // Timestamps (Unix format as per schema)
+            LastIntakeUnixTime: now,
+            LastUpdatedUnixTime: now,
+
+            // Foster status
+            InFoster: true,
+
+            // Description for kennel card
+            Description: this.buildDescription(kitten),
+
+            // Attributes array for medical notes
+            Attributes: this.buildAttributes(kitten)
         };
+    }
+
+    /**
+     * Determine size category based on weight
+     * @param {number} weightLb - Weight in pounds
+     * @returns {string} Size category
+     */
+    getSizeCategory(weightLb) {
+        if (weightLb < 2) return 'Tiny';
+        if (weightLb < 5) return 'Small';
+        if (weightLb < 10) return 'Medium';
+        return 'Large';
+    }
+
+    /**
+     * Build description text for ShelterLuv
+     * @param {object} kitten - Kitten data
+     * @returns {string} Description text
+     */
+    buildDescription(kitten) {
+        const parts = [
+            `Intake weight: ${AppState.formatNumber(kitten.weightGrams)}g (${AppState.formatNumber(kitten.weightLb, 2)} lb)`
+        ];
+
+        if (kitten.ringwormStatus && kitten.ringwormStatus !== 'none') {
+            parts.push(`Ringworm status: ${kitten.ringwormStatus}`);
+        }
+
+        if (kitten.bathed) {
+            parts.push('Bathed at intake');
+        }
+
+        parts.push('Processed via Kitten Intake App');
+
+        return parts.join('. ');
+    }
+
+    /**
+     * Build attributes array for ShelterLuv
+     * @param {object} kitten - Kitten data
+     * @returns {Array} Attributes array
+     */
+    buildAttributes(kitten) {
+        const attributes = [];
+
+        // Add ringworm attribute if present
+        if (kitten.ringwormStatus && kitten.ringwormStatus !== 'none') {
+            attributes.push({
+                AttributeName: `Ringworm: ${kitten.ringwormStatus}`,
+                Publish: false
+            });
+        }
+
+        // Add bathed attribute
+        if (kitten.bathed) {
+            attributes.push({
+                AttributeName: 'Bathed at intake',
+                Publish: false
+            });
+        }
+
+        return attributes;
     }
 
     /**
@@ -180,61 +258,67 @@ class ShelterLuvSync {
     transformToShelterLuvMedicalRecord(kitten) {
         const medications = [];
         const outOfRangeString = this.appState.getOutOfRangeString();
+        const now = Math.floor(Date.now() / 1000); // Unix timestamp
 
-        // Panacur
+        // Panacur (Fenbendazole) - Dewormer
         if (kitten.day1Given && kitten.day1Given.panacur) {
             medications.push({
-                Name: 'Panacur (Fenbendazole)',
-                Dose: AppState.formatNumber(kitten.doses.panacur, 2),
-                Unit: 'mL',
+                MedicationName: 'Fenbendazole (Panacur)',
+                MedicationType: 'Dewormer',
+                Dosage: `${AppState.formatNumber(kitten.doses.panacur, 2)} mL`,
                 Route: 'Oral',
-                Given: true
+                DateGivenUnixTime: now,
+                Notes: `Weight-based dose: ${AppState.formatNumber(kitten.doses.panacur, 2)} mL for ${AppState.formatNumber(kitten.weightLb, 2)} lb`
             });
         }
 
-        // Ponazuril
+        // Ponazuril - Antiprotozoal (Coccidia)
         if (kitten.day1Given && kitten.day1Given.ponazuril) {
             medications.push({
-                Name: 'Ponazuril',
-                Dose: AppState.formatNumber(kitten.doses.ponazuril, 2),
-                Unit: 'mL',
+                MedicationName: 'Ponazuril',
+                MedicationType: 'Antiprotozoal',
+                Dosage: `${AppState.formatNumber(kitten.doses.ponazuril, 2)} mL`,
                 Route: 'Oral',
-                Given: true
+                DateGivenUnixTime: now,
+                Notes: `Weight-based dose: ${AppState.formatNumber(kitten.doses.ponazuril, 2)} mL for ${AppState.formatNumber(kitten.weightLb, 2)} lb`
             });
         }
 
-        // Drontal
+        // Drontal - Dewormer (Tapeworm)
         if (kitten.day1Given && kitten.day1Given.drontal && kitten.doses.drontal !== outOfRangeString) {
             medications.push({
-                Name: 'Drontal',
-                Dose: kitten.doses.drontal,
-                Unit: 'tablet(s)',
+                MedicationName: 'Drontal',
+                MedicationType: 'Dewormer',
+                Dosage: `${kitten.doses.drontal} tablet(s)`,
                 Route: 'Oral',
-                Given: true
+                DateGivenUnixTime: now,
+                Notes: `Weight-based dose for ${AppState.formatNumber(kitten.weightLb, 2)} lb`
             });
         }
 
-        // Topical (Revolution or Advantage)
+        // Topical (Revolution or Advantage II) - Flea/Parasite Prevention
         if (kitten.fleaGiven && kitten.topical) {
             const topicalDose = kitten.topical === 'revolution'
                 ? kitten.doses.revolution
                 : kitten.doses.advantage;
 
             if (topicalDose !== outOfRangeString) {
+                const medName = kitten.topical === 'revolution' ? 'Revolution' : 'Advantage II';
                 medications.push({
-                    Name: kitten.topical === 'revolution' ? 'Revolution' : 'Advantage II',
-                    Dose: AppState.formatNumber(topicalDose, 2),
-                    Unit: 'mL',
+                    MedicationName: medName,
+                    MedicationType: kitten.topical === 'revolution' ? 'Flea/Heartworm Prevention' : 'Flea Prevention',
+                    Dosage: `${AppState.formatNumber(topicalDose, 2)} mL`,
                     Route: 'Topical',
-                    Given: true
+                    DateGivenUnixTime: now,
+                    Notes: `Applied at intake. Weight: ${AppState.formatNumber(kitten.weightLb, 2)} lb`
                 });
             }
         }
 
         return {
-            Date: kitten.intakeDate,
-            Type: 'Medication',
-            Notes: 'Intake medications administered',
+            RecordType: 'Medication',
+            DateUnixTime: now,
+            Notes: 'Intake medications administered via Kitten Intake App',
             Medications: medications
         };
     }
@@ -303,7 +387,8 @@ class ShelterLuvSync {
             throw new Error('No API key configured');
         }
 
-        console.log('[ShelterLuv] Creating animal:', animalData);
+        console.log('[ShelterLuv] Creating animal:');
+        console.log(JSON.stringify(animalData, null, 2));
 
         // Placeholder: In production, this would POST to ShelterLuv API
         // const response = await fetch(`${this.baseUrl}/animals`, {
@@ -338,7 +423,8 @@ class ShelterLuvSync {
             throw new Error('No API key configured');
         }
 
-        console.log('[ShelterLuv] Adding medical record to', animalId, ':', medicalRecord);
+        console.log(`[ShelterLuv] Adding medical record to ${animalId}:`);
+        console.log(JSON.stringify(medicalRecord, null, 2));
 
         // Placeholder: In production, this would POST to ShelterLuv API
         // const response = await fetch(`${this.baseUrl}/animals/${animalId}/medical`, {

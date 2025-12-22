@@ -41,70 +41,66 @@ class FormManager {
                     </div>
                 </div>
                 
-                <table class="medication-table">
-                    <thead>
-                        <tr>
-                            <th>Medication</th>
-                            <th>Given</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <label>Flea Med</label>
-                                <div class="radio-group">
-                                    <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
-                                    <label for="${kittenId}-topical-revolution">Revolution</label>
-                                    <input type="radio" name="${kittenId}-topical" value="advantage" id="${kittenId}-topical-advantage">
-                                    <label for="${kittenId}-topical-advantage">Advantage II</label>
-                                    <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none">
-                                    <label for="${kittenId}-topical-none">Skip</label>
-                                </div>
-                            </td>
-                            <td class="given-cell">
-                                <input type="checkbox" id="${kittenId}-flea-given" name="flea-given">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Panacur</label>
-                                <div class="radio-group">
-                                    <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
-                                    <label for="${kittenId}-panacur-1">1 day</label>
-                                    <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3">
-                                    <label for="${kittenId}-panacur-3">3 days</label>
-                                    <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5" checked>
-                                    <label for="${kittenId}-panacur-5">5 days</label>
-                                </div>
-                            </td>
-                            <td class="given-cell">
-                                <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1" checked>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Ponazuril</label>
-                                <div class="radio-group">
-                                    <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
-                                    <label for="${kittenId}-ponazuril-1">1 day</label>
-                                    <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
-                                    <label for="${kittenId}-ponazuril-3">3 days</label>
-                                </div>
-                            </td>
-                            <td class="given-cell">
-                                <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1" checked>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="drontal-cell">
-                                <label>Drontal</label>
-                            </td>
-                            <td class="given-cell">
-                                <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="medication-grid">
+                    <div class="medication-row">
+                        <div class="medication-cell">
+                            <label>Flea Med</label>
+                            <div class="radio-group">
+                                <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
+                                <label for="${kittenId}-topical-revolution">Revolution</label>
+                                <input type="radio" name="${kittenId}-topical" value="advantage" id="${kittenId}-topical-advantage">
+                                <label for="${kittenId}-topical-advantage">Advantage II</label>
+                                <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none">
+                                <label for="${kittenId}-topical-none">Skip</label>
+                            </div>
+                        </div>
+                        <div class="given-cell">
+                            <label>Given</label>
+                            <input type="checkbox" id="${kittenId}-flea-given" name="flea-given">
+                        </div>
+                    </div>
+                    <div class="medication-row">
+                        <div class="medication-cell">
+                            <label>Panacur</label>
+                            <div class="radio-group">
+                                <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
+                                <label for="${kittenId}-panacur-1">1 day</label>
+                                <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3">
+                                <label for="${kittenId}-panacur-3">3 days</label>
+                                <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5" checked>
+                                <label for="${kittenId}-panacur-5">5 days</label>
+                            </div>
+                        </div>
+                        <div class="given-cell">
+                            <label>Given</label>
+                            <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1" checked>
+                        </div>
+                    </div>
+                    <div class="medication-row">
+                        <div class="medication-cell">
+                            <label>Ponazuril</label>
+                            <div class="radio-group">
+                                <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
+                                <label for="${kittenId}-ponazuril-1">1 day</label>
+                                <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
+                                <label for="${kittenId}-ponazuril-3">3 days</label>
+                            </div>
+                        </div>
+                        <div class="given-cell">
+                            <label>Given</label>
+                            <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1" checked>
+                        </div>
+                    </div>
+                    <div class="medication-row drontal-row">
+                        <div class="medication-cell">
+                            <label>Drontal</label>
+                        </div>
+                        <div class="given-cell">
+                            <label>Given</label>
+                            <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="form-group ringworm-section">
                     <label>Ringworm</label>

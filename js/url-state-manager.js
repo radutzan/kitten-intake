@@ -6,7 +6,7 @@
  *
  * Version 1 bitfield layout (11 bits, encoded as 2 base64url chars):
  *   Bits 0-1:  topical (0=revolution, 1=advantage, 2=none)
- *   Bit 2:     fleaStatus (0=given, 1=bathed)
+ *   Bit 2:     fleaGiven (0=given/checked, 1=not given/unchecked)
  *   Bits 3-4:  ringwormStatus (0=not-scanned, 1=negative, 2=positive)
  *   Bits 5-6:  panacurDays (0=1, 1=3, 2=5)
  *   Bit 7:     ponazurilDays (0=1, 1=3)
@@ -92,7 +92,7 @@ class UrlStateManager {
             const weight = document.getElementById(`${kittenId}-weight`)?.value || '';
 
             const topical = document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution';
-            const fleaStatus = document.querySelector(`input[name="${kittenId}-flea-status"]:checked`)?.value || 'bathed';
+            const fleaGiven = document.getElementById(`${kittenId}-flea-given`)?.checked ?? false;
             const panacur = document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5';
             const ponazuril = document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3';
             const ringwormStatus = document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned';
@@ -103,7 +103,7 @@ class UrlStateManager {
                 drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true
             };
 
-            const kitten = { topical, fleaStatus, ringwormStatus, panacur, ponazuril, day1Given };
+            const kitten = { topical, fleaGiven, ringwormStatus, panacur, ponazuril, day1Given };
             const flags = this.encodeFlags(kitten);
 
             parts.push(encodeURIComponent(name), weight, flags);
@@ -145,9 +145,8 @@ class UrlStateManager {
         const topicalIndex = this.v1.topical.indexOf(kitten.topical);
         bits |= (topicalIndex >= 0 ? topicalIndex : 0);
 
-        // Bit 2: fleaStatus
-        const fleaIndex = this.v1.fleaStatus.indexOf(kitten.fleaStatus);
-        bits |= (fleaIndex >= 0 ? fleaIndex : 0) << 2;
+        // Bit 2: fleaGiven (0=given/checked, 1=not given/unchecked)
+        bits |= (kitten.fleaGiven ? 0 : 1) << 2;
 
         // Bits 3-4: ringwormStatus
         const ringwormIndex = this.v1.ringwormStatus.indexOf(kitten.ringwormStatus);
@@ -177,7 +176,7 @@ class UrlStateManager {
 
         return {
             topical: this.v1.topical[bits & 0x3] || 'revolution',
-            fleaStatus: this.v1.fleaStatus[(bits >> 2) & 0x1] || 'given',
+            fleaGiven: ((bits >> 2) & 0x1) === 0, // 0=given/true, 1=not given/false
             ringwormStatus: this.v1.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
             panacur: this.v1.panacurDays[(bits >> 5) & 0x3] || '5',
             ponazuril: this.v1.ponazurilDays[(bits >> 7) & 0x1] || '3',
@@ -207,7 +206,7 @@ class UrlStateManager {
             const weight = document.getElementById(`${kittenId}-weight`)?.value || '';
 
             const topical = document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution';
-            const fleaStatus = document.querySelector(`input[name="${kittenId}-flea-status"]:checked`)?.value || 'bathed';
+            const fleaGiven = document.getElementById(`${kittenId}-flea-given`)?.checked ?? false;
             const panacur = document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5';
             const ponazuril = document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3';
             const ringwormStatus = document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned';
@@ -218,7 +217,7 @@ class UrlStateManager {
                 drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true
             };
 
-            const kitten = { topical, fleaStatus, ringwormStatus, panacur, ponazuril, day1Given };
+            const kitten = { topical, fleaGiven, ringwormStatus, panacur, ponazuril, day1Given };
             const flags = this.encodeFlags(kitten);
 
             // URL-encode the name to handle special characters
@@ -443,6 +442,99 @@ class UrlStateManager {
         // The actual form restoration will be handled by the app
         // This just prepares the backup
         return urlData;
+    }
+
+    /**
+     * Check if the current page load is a reload (vs fresh navigation)
+     */
+    isPageReload() {
+        try {
+            const navEntries = performance.getEntriesByType('navigation');
+            if (navEntries.length > 0) {
+                return navEntries[0].type === 'reload';
+            }
+            // Fallback for older browsers
+            if (performance.navigation) {
+                return performance.navigation.type === 1; // TYPE_RELOAD
+            }
+        } catch (e) {
+            // If API not available, fall back to state comparison
+        }
+        return false;
+    }
+
+    /**
+     * Compare URL state with localStorage state
+     * Returns true if they represent the same data
+     */
+    urlMatchesLocalStorage() {
+        try {
+            const urlData = this.decodeFromUrl();
+            if (!urlData) return false;
+
+            const saved = localStorage.getItem('cat-intake-form-data');
+            if (!saved) return false;
+
+            const payload = JSON.parse(saved);
+            const localData = payload.data;
+            if (!localData) return false;
+
+            // Compare kitten counts
+            if (urlData.appState.activeKittens.length !== localData.appState.activeKittens.length) {
+                return false;
+            }
+
+            // Compare each kitten's data
+            for (const kittenId of urlData.appState.activeKittens) {
+                const urlKitten = urlData.kittens[kittenId];
+                const localKitten = localData.kittens[kittenId];
+
+                if (!localKitten) return false;
+
+                // Compare key fields
+                if (urlKitten.name !== localKitten.name) return false;
+                if (urlKitten.weight !== localKitten.weight) return false;
+                if (urlKitten.topical !== localKitten.topical) return false;
+                if (urlKitten.fleaGiven !== localKitten.fleaGiven) return false;
+                if (urlKitten.panacur !== localKitten.panacur) return false;
+                if (urlKitten.ponazuril !== localKitten.ponazuril) return false;
+                if (urlKitten.ringwormStatus !== localKitten.ringwormStatus) return false;
+
+                // Compare day1Given
+                if (urlKitten.day1Given.panacur !== localKitten.day1Given.panacur) return false;
+                if (urlKitten.day1Given.ponazuril !== localKitten.day1Given.ponazuril) return false;
+                if (urlKitten.day1Given.drontal !== localKitten.day1Given.drontal) return false;
+            }
+
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Determine if URL state should be treated as a shared link
+     * Returns false if this is a reload of the user's own data
+     */
+    isSharedLink() {
+        if (!this.hasUrlState()) return false;
+
+        // If already viewing a shared form, it's still shared on reload
+        if (this.isTemporaryStateLoaded()) return true;
+
+        // If this is a reload and URL matches localStorage, it's own data
+        if (this.isPageReload() && this.urlMatchesLocalStorage()) {
+            return false;
+        }
+
+        // If URL matches localStorage (even on fresh nav), it's own data
+        // This handles the case of opening own link in same browser
+        if (this.urlMatchesLocalStorage()) {
+            return false;
+        }
+
+        // Otherwise, treat as shared link
+        return true;
     }
 
     /**

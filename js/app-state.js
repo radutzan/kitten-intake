@@ -128,15 +128,9 @@ class AppState {
                 if (radio.checked) topical = radio.value;
             });
             
-            // Get flea status from radio buttons
-            const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
-            let fleaStatus = 'neither';
-            fleaStatusRadios.forEach(radio => {
-                if (radio.checked) fleaStatus = radio.value;
-            });
-            
-            const fleaGiven = fleaStatus === 'given';
-            const bathed = fleaStatus === 'bathed';
+            // Get flea given status from checkbox
+            const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
+            const fleaGiven = fleaGivenCheckbox && fleaGivenCheckbox.checked;
             
             const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
             let panacurDays = 3;
@@ -168,7 +162,6 @@ class AppState {
                 weightLb,
                 topical,
                 fleaGiven,
-                bathed,
                 panacurDays,
                 ponazurilDays,
                 ringwormStatus,
