@@ -115,16 +115,18 @@ class FormManager {
                 </div>
             </div>
             
-            <div class="result-display empty" id="${kittenId}-result-display">
+            <div class="result-display empty collapsed" id="${kittenId}-result-display">
                 <div class="dose-print-header print-only" id="${kittenId}-result-header">
                     <h3 class="kitten-info"></h3>
                 </div>
-                <div class="dose-section-header">
-                    <strong>Doses</strong>
-                </div>
+                <button type="button" class="result-toggle" onclick="window.KittenApp.formManager.toggleResultDisplay('${kittenId}')">
+                    <span class="toggle-text">Show All Doses</span>
+                </button>
                 <div id="${kittenId}-result-content">
-                    <div class="result-display-content">
-                        <div class="result-item">Enter weight to see calculated doses</div>
+                    <div class="collapsible-section">
+                        <div class="result-display-content">
+                            <div class="result-item">Enter weight to see calculated doses</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -330,7 +332,7 @@ class FormManager {
         
         if (!grams || grams <= 0) {
             doseDisplay.classList.add('empty');
-            doseContent.innerHTML = ' <div class="result-display-content"><div class="result-item">Enter weight to see calculated doses</div></div>';
+            doseContent.innerHTML = '<div class="collapsible-section"><div class="result-display-content"><div class="result-item">Enter weight to see calculated doses</div></div></div>';
             // Clear inline dose displays
             const fleaDoseEl = document.getElementById(`${kittenId}-flea-dose`);
             const panacurDoseEl = document.getElementById(`${kittenId}-panacur-dose`);
@@ -411,18 +413,22 @@ class FormManager {
 
         // Build dose display content
         let content = `
-        <div class="result-display-content">
-            <div class="result-item">
-                <strong>Panacur</strong> ${AppState.formatNumber(panacurDose, 2)} mL/day × ${panacurDays} days
+        <div class="collapsible-section">
+            <div class="dose-section-header">
+                <strong>Doses</strong>
             </div>
-            <div class="result-item">
-                <strong>Ponazuril</strong> ${AppState.formatNumber(ponazurilDose, 2)} mL/day × ${ponazurilDays} days
-            </div>
-            <div class="result-item">
-                <strong>Drontal</strong> ${drontalDose === outOfRangeString ? drontalDose : drontalDose + ' tablet(s)'}
-            </div>
+            <div class="result-display-content">
+                <div class="result-item">
+                    <strong>Panacur</strong> ${AppState.formatNumber(panacurDose, 2)} mL/day × ${panacurDays} days
+                </div>
+                <div class="result-item">
+                    <strong>Ponazuril</strong> ${AppState.formatNumber(ponazurilDose, 2)} mL/day × ${ponazurilDays} days
+                </div>
+                <div class="result-item">
+                    <strong>Drontal</strong> ${drontalDose === outOfRangeString ? drontalDose : drontalDose + ' tablet(s)'}
+                </div>
         `;
-        
+
         if (topical === 'none') {
             // Show both topical options when none is selected
             content += `
@@ -447,6 +453,7 @@ class FormManager {
             `;
         }
         content += `
+            </div>
         </div>
         `;
         
@@ -481,45 +488,52 @@ class FormManager {
             }
         }
         
-        // Add "For Foster" section if there are any remaining medications
+        // Add "For Foster" section (always visible, not collapsible)
         if (remainsForFoster.length > 0) {
             content += `
-                <div class="dose-section-header">
-                    <strong>For Foster</strong>
-                </div>
-                <div class="result-display-content foster">
+                <div class="foster-section">
+                    <div class="dose-section-header">
+                        <strong>For Foster</strong>
+                    </div>
+                    <div class="result-display-content foster">
             `;
             remainsForFoster.forEach(item => {
                 content += `<div class="result-item">${item}</div>`;
             });
+            content += `
+                    </div>
+                </div>
+            `;
         } else {
             content += `
-                <div class="dose-section-header">
-                    <strong>For Foster</strong>
-                </div>
-                <div class="result-display-content">
-                    <div class="result-item">None</div>
+                <div class="foster-section">
+                    <div class="dose-section-header">
+                        <strong>For Foster</strong>
+                    </div>
+                    <div class="result-display-content">
+                        <div class="result-item">None</div>
+                    </div>
                 </div>
             `;
         }
-        
+
         // Get ringworm status
         const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
         let ringwormStatus = 'not-scanned';
         ringwormRadios.forEach(radio => {
             if (radio.checked) ringwormStatus = radio.value;
         });
-        
+
         // Map status to display text
         const ringwormStatusText = {
             'not-scanned': 'Not scanned',
             'negative': 'Negative',
             'positive': 'Positive'
         };
-        
-        // Add "Other" section
+
+        // Add "Other" section (collapsible)
         content += `
-                </div>
+            <div class="collapsible-section">
                 <div class="dose-section-header">
                     <strong>Other</strong>
                 </div>
@@ -528,10 +542,22 @@ class FormManager {
                         <strong>Ringworm</strong> ${ringwormStatusText[ringwormStatus] || ringwormStatus}
                     </div>
                 </div>
+            </div>
         `;
         
         doseDisplay.classList.remove('empty');
         doseContent.innerHTML = content;
+    }
+
+    toggleResultDisplay(kittenId) {
+        const resultDisplay = document.getElementById(`${kittenId}-result-display`);
+        if (!resultDisplay) return;
+
+        const isCollapsed = resultDisplay.classList.toggle('collapsed');
+        const toggleText = resultDisplay.querySelector('.toggle-text');
+        if (toggleText) {
+            toggleText.textContent = isCollapsed ? 'Show All Doses' : 'Hide Doses';
+        }
     }
 
     addMedicationListeners(kittenId) {
