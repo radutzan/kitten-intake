@@ -448,8 +448,84 @@ input[type="radio"]:focus {
     font-size: 10px;
 }
 
-.radio-group-normal .bathed {
-    width: 50%;
+/* #endregion */
+
+/* #region Medication Table */
+.medication-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.medication-table th {
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    padding: 0 0 8px 0;
+    font-size: var(--fs-body-medium);
+}
+
+.medication-table th:last-child {
+    text-align: center;
+    width: 60px;
+}
+
+.medication-table td {
+    padding: 8px 0;
+    vertical-align: middle;
+}
+
+.medication-table tbody tr {
+    border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.medication-table td > label {
+    font-weight: 600;
+    color: #495057;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.medication-table .radio-group {
+    margin-top: 0;
+}
+
+.medication-table .given-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.medication-table .given-cell input[type="checkbox"] {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #999;
+    border-radius: 4px;
+    font-size: 20px;
+}
+
+.medication-table .given-cell input[type="checkbox"]:hover {
+    border-color: var(--blue);
+}
+
+.medication-table .given-cell input[type="checkbox"]:disabled {
+    background-color: transparent;
+    border-color: rgba(0,0,0,0.1);
+    cursor: not-allowed;
+}
+
+.medication-table .drontal-cell {
+    text-align: right;
+    padding-right: 12px;
+}
+
+.medication-table .drontal-cell label {
+    margin-bottom: 0;
+}
+
+.ringworm-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.08);
 }
 /* #endregion */
 
@@ -910,6 +986,184 @@ footer {
 @media print {
     .shared-url-banner {
         display: none !important;
+    }
+}
+/* #endregion */
+
+/* #region ShelterLuv Integration Panel */
+.shelterluv-panel {
+    background-color: var(--green-bg);
+    border: 1px solid #27ae60;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.shelterluv-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    gap: 10px;
+}
+
+.shelterluv-header:hover {
+    background-color: rgba(39, 174, 96, 0.1);
+}
+
+.shelterluv-title {
+    font-weight: 600;
+    color: #1e7e4a;
+    flex-grow: 1;
+}
+
+.shelterluv-status {
+    font-size: var(--fs-body-small);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.shelterluv-status.configured {
+    background-color: #27ae60;
+    color: white;
+}
+
+.shelterluv-status.not-configured {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.shelterluv-expand {
+    font-size: var(--fs-body-small);
+    color: #666;
+}
+
+.shelterluv-settings {
+    padding: 16px;
+    border-top: 1px solid rgba(39, 174, 96, 0.3);
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.shelterluv-form-group {
+    margin-bottom: 12px;
+}
+
+.shelterluv-form-group label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 4px;
+    font-size: var(--fs-body-medium);
+}
+
+.shelterluv-form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: var(--fs-body-medium);
+}
+
+.shelterluv-form-group input:focus {
+    outline: none;
+    border-color: #27ae60;
+    box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+}
+
+.shelterluv-hint {
+    display: block;
+    font-size: var(--fs-body-small);
+    color: #666;
+    margin-top: 4px;
+}
+
+.shelterluv-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.shelterluv-message {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: var(--fs-body-medium);
+}
+
+.shelterluv-message:empty {
+    display: none;
+}
+
+.shelterluv-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.shelterluv-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.shelterluv-sync-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid rgba(39, 174, 96, 0.3);
+}
+
+.shelterluv-sync-row .btn {
+    margin: 0;
+}
+
+.shelterluv-sync-status {
+    font-size: var(--fs-body-medium);
+    font-weight: 500;
+}
+
+.shelterluv-sync-status.syncing {
+    color: #666;
+}
+
+.shelterluv-sync-status.success {
+    color: #27ae60;
+}
+
+.shelterluv-sync-status.error {
+    color: #e74c3c;
+}
+
+@media print {
+    .shelterluv-panel {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .shelterluv-actions {
+        flex-direction: column;
+    }
+
+    .shelterluv-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .shelterluv-sync-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .shelterluv-sync-row .btn {
+        width: 100%;
+    }
+
+    .shelterluv-sync-status {
+        text-align: center;
     }
 }
 /* #endregion */

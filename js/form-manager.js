@@ -41,82 +41,80 @@ class FormManager {
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <div class="">
-                        <label>Flea Med</label>
-                        <div class="radio-group">
-                            <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
-                            <label for="${kittenId}-topical-revolution">Revolution</label>
-                            <input type="radio" name="${kittenId}-topical" value="advantage" id="${kittenId}-topical-advantage">
-                            <label for="${kittenId}-topical-advantage">Advantage II</label>
-                            <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none">
-                            <label for="${kittenId}-topical-none">Skip</label>
-                        </div>
-                    </div>
-                    
-                    <div class="radio-group-normal">
-                        <label for="${kittenId}-flea-given">
-                            <input type="radio" name="${kittenId}-flea-status" value="given" id="${kittenId}-flea-given">
-                            Given
-                        </label>
-                        <label for="${kittenId}-flea-bathed" class="bathed">
-                            <input type="radio" name="${kittenId}-flea-status" value="bathed" id="${kittenId}-flea-bathed" checked>
-                            Delay: Bathed
-                        </label>
-                    </div>
-                </div>
-            
-                <div class="form-group">
-                    <label>Given at Intake</label>
-                    <div class="checkbox-group dayone">
-                        <label>
-                            <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1" checked>
-                            Panacur
-                        </label>
-                        <label>
-                            <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1" checked>
-                            Ponazuril
-                        </label>
-                        <label>
-                            <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
-                            Drontal
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Panacur Treatment</label>
-                    <div class="radio-group">
-                        <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
-                        <label for="${kittenId}-panacur-1">1 day</label>
-                        <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3">
-                        <label for="${kittenId}-panacur-3">3 days</label>
-                        <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5" checked>
-                        <label for="${kittenId}-panacur-5">5 days</label>
-                    </div>
-                </div>
+                <table class="medication-table">
+                    <thead>
+                        <tr>
+                            <th>Medication</th>
+                            <th>Given</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <label>Flea Med</label>
+                                <div class="radio-group">
+                                    <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
+                                    <label for="${kittenId}-topical-revolution">Revolution</label>
+                                    <input type="radio" name="${kittenId}-topical" value="advantage" id="${kittenId}-topical-advantage">
+                                    <label for="${kittenId}-topical-advantage">Advantage II</label>
+                                    <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none">
+                                    <label for="${kittenId}-topical-none">Skip</label>
+                                </div>
+                            </td>
+                            <td class="given-cell">
+                                <input type="checkbox" id="${kittenId}-flea-given" name="flea-given">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Panacur</label>
+                                <div class="radio-group">
+                                    <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
+                                    <label for="${kittenId}-panacur-1">1 day</label>
+                                    <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3">
+                                    <label for="${kittenId}-panacur-3">3 days</label>
+                                    <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5" checked>
+                                    <label for="${kittenId}-panacur-5">5 days</label>
+                                </div>
+                            </td>
+                            <td class="given-cell">
+                                <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1" checked>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Ponazuril</label>
+                                <div class="radio-group">
+                                    <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
+                                    <label for="${kittenId}-ponazuril-1">1 day</label>
+                                    <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
+                                    <label for="${kittenId}-ponazuril-3">3 days</label>
+                                </div>
+                            </td>
+                            <td class="given-cell">
+                                <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1" checked>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="drontal-cell">
+                                <label>Drontal</label>
+                            </td>
+                            <td class="given-cell">
+                                <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                <div class="form-group">
-                    <label>Ponazuril Treatment</label>
+                <div class="form-group ringworm-section">
+                    <label>Ringworm</label>
                     <div class="radio-group">
-                        <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
-                        <label for="${kittenId}-ponazuril-1">1 day</label>
-                        <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
-                        <label for="${kittenId}-ponazuril-3">3 days</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="">
-                        <label>Ringworm</label>
-                        <div class="radio-group">
-                            <input type="radio" name="${kittenId}-ringworm-status" value="not-scanned" id="${kittenId}-ringworm-not-scanned" checked>
-                            <label for="${kittenId}-ringworm-not-scanned">Not scanned</label>
-                            <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
-                            <label for="${kittenId}-ringworm-negative">Negative</label>
-                            <input type="radio" name="${kittenId}-ringworm-status" value="positive" id="${kittenId}-ringworm-positive">
-                            <label for="${kittenId}-ringworm-positive">Positive</label>
-                        </div>
+                        <input type="radio" name="${kittenId}-ringworm-status" value="not-scanned" id="${kittenId}-ringworm-not-scanned" checked>
+                        <label for="${kittenId}-ringworm-not-scanned">Not scanned</label>
+                        <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
+                        <label for="${kittenId}-ringworm-negative">Negative</label>
+                        <input type="radio" name="${kittenId}-ringworm-status" value="positive" id="${kittenId}-ringworm-positive">
+                        <label for="${kittenId}-ringworm-positive">Positive</label>
                     </div>
                 </div>
             </div>
@@ -241,11 +239,11 @@ class FormManager {
             if (targetTopical) targetTopical.checked = true;
         }
 
-        // Copy Flea Status
-        const sourceFleaStatus = document.querySelector(`input[name="${sourceId}-flea-status"]:checked`);
-        if (sourceFleaStatus) {
-            const targetFleaStatus = document.getElementById(`${targetId}-flea-${sourceFleaStatus.value}`);
-            if (targetFleaStatus) targetFleaStatus.checked = true;
+        // Copy Flea Given
+        const sourceFleaGiven = document.getElementById(`${sourceId}-flea-given`);
+        const targetFleaGiven = document.getElementById(`${targetId}-flea-given`);
+        if (sourceFleaGiven && targetFleaGiven) {
+            targetFleaGiven.checked = sourceFleaGiven.checked;
         }
 
         // Copy Day 1 Meds
@@ -349,15 +347,9 @@ class FormManager {
             if (radio.checked) topical = radio.value;
         });
         
-        // Get flea status from radio buttons
-        const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
-        let fleaStatus = 'neither';
-        fleaStatusRadios.forEach(radio => {
-            if (radio.checked) fleaStatus = radio.value;
-        });
-        
-        const fleaGiven = fleaStatus === 'given';
-        const bathed = fleaStatus === 'bathed';
+        // Get flea status from checkbox
+        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
+        const fleaGiven = fleaGivenCheckbox && fleaGivenCheckbox.checked;
         
         // Get panacur regimen
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
@@ -401,28 +393,26 @@ class FormManager {
             </div>
         `;
         
-        const bathDelayString = ' (delay 2d, bathed)';
-        const timing = bathed ? bathDelayString : '';
         if (topical === 'none') {
             // Show both topical options when none is selected
             content += `
                 <div class="result-item">
-                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}${timing}
+                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}
                 </div>
                 <div class="result-item">
-                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}${timing}
+                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}
                 </div>
             `;
         } else if (topical === 'revolution') {
             content += `
                 <div class="result-item">
-                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}${timing}
+                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}
                 </div>
             `;
         } else if (topical === 'advantage') {
             content += `
                 <div class="result-item">
-                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}${timing}
+                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}
                 </div>
             `;
         }
@@ -455,18 +445,9 @@ class FormManager {
         if (topical !== 'none') {
             const topicalName = topical === 'revolution' ? 'Revolution' : 'Advantage II';
             const topicalDose = topical === 'revolution' ? revolutionDose : advantageDose;
-            if (topicalDose !== outOfRangeString) {
-                if (!fleaGiven) {
-                    // Flea med not given at intake
-                    if (bathed) {
-                        // Cat was bathed - delay flea med by 2 days
-                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose on Day +2 = ${AppState.formatNumber(topicalDose, 2)} mL`);
-                    } else {
-                        // Cat was not bathed - give flea med today
-                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose today = ${AppState.formatNumber(topicalDose, 2)} mL`);
-                    }
-                }
-                // If fleaGiven, nothing for foster (already given at intake)
+            if (topicalDose !== outOfRangeString && !fleaGiven) {
+                // Flea med not given at intake - foster needs to give it
+                remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose = ${AppState.formatNumber(topicalDose, 2)} mL`);
             }
         }
         
@@ -549,17 +530,17 @@ class FormManager {
             });
         });
         
-        // Listen for flea status changes (radio buttons)
-        const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
-        fleaStatusRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
+        // Listen for flea given checkbox changes
+        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
+        if (fleaGivenCheckbox) {
+            fleaGivenCheckbox.addEventListener('change', () => {
                 this.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
                 }
                 this.autoSaveFormData();
             });
-        });
+        }
         
         // Listen for panacur regimen changes
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
@@ -606,44 +587,27 @@ class FormManager {
 
     updateFleaCheckboxStates(kittenId) {
         const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-        const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
-        
-        // Get the radio group container - add safety check
-        if (fleaStatusRadios.length === 0) {
-            console.error(`No flea status radios found for ${kittenId}`);
+        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
+
+        if (!fleaGivenCheckbox) {
+            console.error(`No flea given checkbox found for ${kittenId}`);
             return;
         }
-        
-        const radioGroup = fleaStatusRadios[0].closest('.radio-group-normal');
-        if (!radioGroup) {
-            console.error(`No radio group found for ${kittenId}`);
-            return;
-        }
-        
+
         let selectedTopical = 'none';
         topicalRadios.forEach(radio => {
             if (radio.checked) selectedTopical = radio.value;
         });
-        
+
         const isNoneSelected = selectedTopical === 'none';
-        
+
         if (isNoneSelected) {
-            // Hide flea status radio group when 'None' is selected
-            radioGroup.style.display = 'none';
-            
-            // Reset to 'neither' when hidden
-            const neitherRadio = document.getElementById(`${kittenId}-flea-neither`);
-            if (neitherRadio && !neitherRadio.checked) {
-                neitherRadio.checked = true;
-                // Update results when we change the flea status
-                this.updateResultDisplay(kittenId);
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-            }
+            // Disable and uncheck flea given checkbox when 'Skip' is selected
+            fleaGivenCheckbox.disabled = true;
+            fleaGivenCheckbox.checked = false;
         } else {
-            // Show flea status radio group when flea medication is selected
-            radioGroup.style.display = 'flex';
+            // Enable flea given checkbox when flea medication is selected
+            fleaGivenCheckbox.disabled = false;
         }
     }
 

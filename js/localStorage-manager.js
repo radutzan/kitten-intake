@@ -129,7 +129,7 @@ class LocalStorageManager {
                 name: this.getInputValue(`${kittenId}-name`),
                 weight: this.getInputValue(`${kittenId}-weight`),
                 topical: this.getRadioValue(`${kittenId}-topical`),
-                fleaStatus: this.getRadioValue(`${kittenId}-flea-status`),
+                fleaGiven: this.getCheckboxValue(`${kittenId}-flea-given`),
                 panacur: this.getRadioValue(`${kittenId}-panacur`),
                 ponazuril: this.getRadioValue(`${kittenId}-ponazuril`),
                 ringwormStatus: this.getRadioValue(`${kittenId}-ringworm-status`),
@@ -226,7 +226,7 @@ class LocalStorageManager {
         this.setInputValue(`${kittenId}-name`, kittenData.name);
         this.setInputValue(`${kittenId}-weight`, kittenData.weight);
         this.setRadioValue(`${kittenId}-topical`, kittenData.topical);
-        this.setRadioValue(`${kittenId}-flea-status`, kittenData.fleaStatus);
+        this.setCheckboxValue(`${kittenId}-flea-given`, kittenData.fleaGiven);
         this.setRadioValue(`${kittenId}-panacur`, kittenData.panacur);
         this.setRadioValue(`${kittenId}-ponazuril`, kittenData.ponazuril || '3');
         this.setRadioValue(`${kittenId}-ringworm-status`, kittenData.ringwormStatus || 'not-scanned');
@@ -321,10 +321,10 @@ class LocalStorageManager {
             });
         });
 
-        // Add other change listeners for flea status, panacur, day1 checkboxes
-        const fleaStatusRadios = document.querySelectorAll(`input[name="${kittenId}-flea-status"]`);
-        fleaStatusRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
+        // Add flea given checkbox listener
+        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
+        if (fleaGivenCheckbox) {
+            fleaGivenCheckbox.addEventListener('change', () => {
                 if (typeof window.updateResultDisplay === 'function') {
                     window.updateResultDisplay(kittenId);
                 }
@@ -335,7 +335,7 @@ class LocalStorageManager {
                     window.localStorageManager.saveFormData();
                 }
             });
-        });
+        }
 
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
         panacurRadios.forEach(radio => {
