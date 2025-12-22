@@ -55,6 +55,22 @@ class AppState {
         return grams / 453.59237;
     }
 
+    /**
+     * Format a number with thousands separators and optional decimal places
+     * @param {number} num - The number to format
+     * @param {number} decimals - Number of decimal places (default: 0 for integers)
+     * @returns {string} Formatted number string
+     */
+    static formatNumber(num, decimals = 0) {
+        if (typeof num !== 'number' || isNaN(num)) {
+            return String(num);
+        }
+        return num.toLocaleString('en-US', {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        });
+    }
+
     static updateDateTime() {
         const now = new Date();
         
@@ -127,7 +143,13 @@ class AppState {
             panacurRadios.forEach(radio => {
                 if (radio.checked) panacurDays = parseInt(radio.value);
             });
-            
+
+            const ponazurilRadios = document.querySelectorAll(`input[name="${kittenId}-ponazuril"]`);
+            let ponazurilDays = 3;
+            ponazurilRadios.forEach(radio => {
+                if (radio.checked) ponazurilDays = parseInt(radio.value);
+            });
+
             const panacurDay1Given = document.getElementById(`${kittenId}-panacur-day1`).checked;
             const ponazurilDay1Given = document.getElementById(`${kittenId}-ponazuril-day1`).checked;
             const drontalDay1Given = document.getElementById(`${kittenId}-drontal-day1`).checked;
@@ -148,7 +170,7 @@ class AppState {
                 fleaGiven,
                 bathed,
                 panacurDays,
-                ponazurilDays: 3,
+                ponazurilDays,
                 ringwormStatus,
                 day1Given: {
                     panacur: panacurDay1Given,

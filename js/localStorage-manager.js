@@ -125,6 +125,7 @@ class LocalStorageManager {
                 topical: this.getRadioValue(`${kittenId}-topical`),
                 fleaStatus: this.getRadioValue(`${kittenId}-flea-status`),
                 panacur: this.getRadioValue(`${kittenId}-panacur`),
+                ponazuril: this.getRadioValue(`${kittenId}-ponazuril`),
                 ringwormStatus: this.getRadioValue(`${kittenId}-ringworm-status`),
                 day1Given: {
                     panacur: this.getCheckboxValue(`${kittenId}-panacur-day1`),
@@ -221,6 +222,7 @@ class LocalStorageManager {
         this.setRadioValue(`${kittenId}-topical`, kittenData.topical);
         this.setRadioValue(`${kittenId}-flea-status`, kittenData.fleaStatus);
         this.setRadioValue(`${kittenId}-panacur`, kittenData.panacur);
+        this.setRadioValue(`${kittenId}-ponazuril`, kittenData.ponazuril || '3');
         this.setRadioValue(`${kittenId}-ringworm-status`, kittenData.ringwormStatus || 'not-scanned');
         this.setCheckboxValue(`${kittenId}-panacur-day1`, kittenData.day1Given.panacur);
         this.setCheckboxValue(`${kittenId}-ponazuril-day1`, kittenData.day1Given.ponazuril);
@@ -331,6 +333,21 @@ class LocalStorageManager {
 
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
         panacurRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (typeof window.updateResultDisplay === 'function') {
+                    window.updateResultDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                if (window.localStorageManager) {
+                    window.localStorageManager.saveFormData();
+                }
+            });
+        });
+
+        const ponazurilRadios = document.querySelectorAll(`input[name="${kittenId}-ponazuril"]`);
+        ponazurilRadios.forEach(radio => {
             radio.addEventListener('change', () => {
                 if (typeof window.updateResultDisplay === 'function') {
                     window.updateResultDisplay(kittenId);

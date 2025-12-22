@@ -33,7 +33,8 @@ class ScheduleManager {
             }
             
             // Ponazuril schedule
-            const ponazurilRemainingDays = kitten.day1Given.ponazuril ? 2 : 3;
+            const ponazurilRemainingDays = kitten.day1Given.ponazuril ?
+                (kitten.ponazurilDays - 1) : kitten.ponazurilDays;
             
             if (ponazurilRemainingDays > 0) {
                 schedule.medications.ponazuril = {
@@ -117,7 +118,8 @@ class ScheduleManager {
     calculateRemainingMedications(kitten) {
         const panacurRemaining = kitten.day1Given.panacur ?
             (kitten.panacurDays - 1) : kitten.panacurDays;
-        const ponazurilRemaining = kitten.day1Given.ponazuril ? 2 : 3;
+        const ponazurilRemaining = kitten.day1Given.ponazuril ?
+            (kitten.ponazurilDays - 1) : kitten.ponazurilDays;
         
         const panacurTotal = kitten.doses.panacur * panacurRemaining;
         const ponazurilTotal = kitten.doses.ponazuril * ponazurilRemaining;
@@ -162,18 +164,18 @@ class ScheduleManager {
         if (remaining.panacur.remaining > 0) {
             summary.push({
                 medication: 'Panacur',
-                dose: kitten.doses.panacur.toFixed(2) + ' mL',
+                dose: AppState.formatNumber(kitten.doses.panacur, 2) + ' mL',
                 days: remaining.panacur.remaining,
-                total: remaining.panacur.total.toFixed(2) + ' mL total'
+                total: AppState.formatNumber(remaining.panacur.total, 2) + ' mL total'
             });
         }
-        
+
         if (remaining.ponazuril.remaining > 0) {
             summary.push({
                 medication: 'Ponazuril',
-                dose: kitten.doses.ponazuril.toFixed(2) + ' mL',
+                dose: AppState.formatNumber(kitten.doses.ponazuril, 2) + ' mL',
                 days: remaining.ponazuril.remaining,
-                total: remaining.ponazuril.total.toFixed(2) + ' mL total'
+                total: AppState.formatNumber(remaining.ponazuril.total, 2) + ' mL total'
             });
         }
         
@@ -192,7 +194,7 @@ class ScheduleManager {
             const timing = kitten.bathed ? 'on Day +2' : 'today';
             summary.push({
                 medication: topicalName,
-                dose: remaining.topical.amount.toFixed(2) + ' mL',
+                dose: AppState.formatNumber(remaining.topical.amount, 2) + ' mL',
                 days: 1,
                 timing: timing
             });

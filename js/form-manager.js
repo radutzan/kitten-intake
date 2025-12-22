@@ -83,10 +83,22 @@ class FormManager {
                 <div class="form-group">
                     <label>Panacur Treatment</label>
                     <div class="radio-group">
+                        <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
+                        <label for="${kittenId}-panacur-1">1 day</label>
                         <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3">
                         <label for="${kittenId}-panacur-3">3 days</label>
                         <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5" checked>
                         <label for="${kittenId}-panacur-5">5 days</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ponazuril Treatment</label>
+                    <div class="radio-group">
+                        <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
+                        <label for="${kittenId}-ponazuril-1">1 day</label>
+                        <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
+                        <label for="${kittenId}-ponazuril-3">3 days</label>
                     </div>
                 </div>
 
@@ -249,6 +261,13 @@ class FormManager {
             if (targetPanacur) targetPanacur.checked = true;
         }
 
+        // Copy Ponazuril Duration
+        const sourcePonazuril = document.querySelector(`input[name="${sourceId}-ponazuril"]:checked`);
+        if (sourcePonazuril) {
+            const targetPonazuril = document.getElementById(`${targetId}-ponazuril-${sourcePonazuril.value}`);
+            if (targetPonazuril) targetPonazuril.checked = true;
+        }
+
         // Copy Ringworm Settings
         const sourceRingworm = document.querySelector(`input[name="${sourceId}-ringworm-status"]:checked`);
         if (sourceRingworm) {
@@ -285,7 +304,7 @@ class FormManager {
         const grams = parseFloat(weightInput.value);
         if (grams > 0) {
             const pounds = this.appState.constructor.convertToPounds(grams);
-            display.textContent = `${grams}g = ${pounds.toFixed(2)} lb`;
+            display.textContent = `${AppState.formatNumber(grams)}g = ${AppState.formatNumber(pounds, 2)} lb`;
             display.style.display = 'block';
         } else {
             display.style.display = 'none';
@@ -306,7 +325,7 @@ class FormManager {
         const headerElement = doseHeader.querySelector('.kitten-info');
         if (grams > 0) {
             const weightLb = this.appState.constructor.convertToPounds(grams);
-            headerElement.textContent = `${kittenName} - ${grams}g (${weightLb.toFixed(2)} lb)`;
+            headerElement.textContent = `${kittenName} - ${AppState.formatNumber(grams)}g (${AppState.formatNumber(weightLb, 2)} lb)`;
         } else {
             headerElement.textContent = `${kittenName}`;
         }
@@ -342,7 +361,14 @@ class FormManager {
         panacurRadios.forEach(radio => {
             if (radio.checked) panacurDays = parseInt(radio.value);
         });
-        
+
+        // Get ponazuril regimen
+        const ponazurilRadios = document.querySelectorAll(`input[name="${kittenId}-ponazuril"]`);
+        let ponazurilDays = 3;
+        ponazurilRadios.forEach(radio => {
+            if (radio.checked) ponazurilDays = parseInt(radio.value);
+        });
+
         // Get day 1 given status
         const panacurDay1Given = document.getElementById(`${kittenId}-panacur-day1`).checked;
         const ponazurilDay1Given = document.getElementById(`${kittenId}-ponazuril-day1`).checked;
@@ -361,10 +387,10 @@ class FormManager {
         let content = `
         <div class="result-display-content">
             <div class="result-item">
-                <strong>Panacur</strong> ${panacurDose.toFixed(2)} mL/day × ${panacurDays} days
+                <strong>Panacur</strong> ${AppState.formatNumber(panacurDose, 2)} mL/day × ${panacurDays} days
             </div>
             <div class="result-item">
-                <strong>Ponazuril</strong> ${ponazurilDose.toFixed(2)} mL/day × 3 days
+                <strong>Ponazuril</strong> ${AppState.formatNumber(ponazurilDose, 2)} mL/day × ${ponazurilDays} days
             </div>
             <div class="result-item">
                 <strong>Drontal</strong> ${drontalDose === outOfRangeString ? drontalDose : drontalDose + ' tablet(s)'}
@@ -377,22 +403,22 @@ class FormManager {
             // Show both topical options when none is selected
             content += `
                 <div class="result-item">
-                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
+                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}${timing}
                 </div>
                 <div class="result-item">
-                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
+                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}${timing}
                 </div>
             `;
         } else if (topical === 'revolution') {
             content += `
                 <div class="result-item">
-                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : revolutionDose.toFixed(2) + ' mL'}${timing}
+                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}${timing}
                 </div>
             `;
         } else if (topical === 'advantage') {
             content += `
                 <div class="result-item">
-                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : advantageDose.toFixed(2) + ' mL'}${timing}
+                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}${timing}
                 </div>
             `;
         }
@@ -402,7 +428,7 @@ class FormManager {
         
         // Calculate remaining doses for foster care
         const panacurRemaining = panacurDay1Given ? (panacurDays - 1) : panacurDays;
-        const ponazurilRemaining = ponazurilDay1Given ? 2 : 3;
+        const ponazurilRemaining = ponazurilDay1Given ? (ponazurilDays - 1) : ponazurilDays;
         const panacurTotal = panacurDose * panacurRemaining;
         const ponazurilTotal = ponazurilDose * ponazurilRemaining;
         
@@ -414,11 +440,11 @@ class FormManager {
         }
         
         if (panacurRemaining > 0) {
-            remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${panacurDose.toFixed(2)} mL = ${panacurTotal.toFixed(2)} mL`);
+            remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${AppState.formatNumber(panacurDose, 2)} mL = ${AppState.formatNumber(panacurTotal, 2)} mL`);
         }
-        
+
         if (ponazurilRemaining > 0) {
-            remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${ponazurilDose.toFixed(2)} mL = ${ponazurilTotal.toFixed(2)} mL`);
+            remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${AppState.formatNumber(ponazurilDose, 2)} mL = ${AppState.formatNumber(ponazurilTotal, 2)} mL`);
         }
         
         // Handle topical medication for foster care
@@ -430,10 +456,10 @@ class FormManager {
                     // Flea med not given at intake
                     if (bathed) {
                         // Cat was bathed - delay flea med by 2 days
-                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose on Day +2 = ${topicalDose.toFixed(2) + ' mL'}`);
+                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose on Day +2 = ${AppState.formatNumber(topicalDose, 2)} mL`);
                     } else {
                         // Cat was not bathed - give flea med today
-                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose today = ${topicalDose.toFixed(2) + ' mL'}`);
+                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose today = ${AppState.formatNumber(topicalDose, 2)} mL`);
                     }
                 }
                 // If fleaGiven, nothing for foster (already given at intake)
@@ -542,7 +568,19 @@ class FormManager {
                 this.autoSaveFormData();
             });
         });
-        
+
+        // Listen for ponazuril regimen changes
+        const ponazurilRadios = document.querySelectorAll(`input[name="${kittenId}-ponazuril"]`);
+        ponazurilRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+
         // Listen for day 1 medication checkbox changes
         const day1Checkboxes = [
             document.getElementById(`${kittenId}-panacur-day1`),

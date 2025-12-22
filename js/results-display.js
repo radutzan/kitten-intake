@@ -109,7 +109,7 @@ class ResultsDisplay {
                 kittenHeader.colSpan = medCount;
                 kittenHeader.className = 'kitten-header';
                 const displayName = kitten.name || 'Unnamed Kitten';
-                kittenHeader.innerHTML = `<strong>${displayName}</strong> <span>${kitten.weightGrams}g (${kitten.weightLb.toFixed(2)} lb)</span>`;
+                kittenHeader.innerHTML = `<strong>${displayName}</strong> <span>${AppState.formatNumber(kitten.weightGrams)}g (${AppState.formatNumber(kitten.weightLb, 2)} lb)</span>`;
                 headerRow1.appendChild(kittenHeader);
                 
                 // Medication sub-headers
@@ -126,11 +126,11 @@ class ResultsDisplay {
                     let doseDisplay = '';
                     if (medType === 'panacur') {
                         medName = 'Panacur';
-                        doseDisplay = `${medData.dose.toFixed(2)} mL`;
+                        doseDisplay = `${AppState.formatNumber(medData.dose, 2)} mL`;
                     }
                     else if (medType === 'ponazuril') {
                         medName = 'Ponazuril';
-                        doseDisplay = `${medData.dose.toFixed(2)} mL`;
+                        doseDisplay = `${AppState.formatNumber(medData.dose, 2)} mL`;
                     }
                     else if (medType === 'drontal') {
                         medName = 'Drontal';
@@ -138,7 +138,7 @@ class ResultsDisplay {
                     }
                     else if (medType === 'topical') {
                         medName = medData.type === 'revolution' ? 'Revolution' : 'Advantage II';
-                        doseDisplay = `${medData.dose.toFixed(2)} mL`;
+                        doseDisplay = `${AppState.formatNumber(medData.dose, 2)} mL`;
                     }
                     
                     medHeader.innerHTML = `${medName}<br><small>${doseDisplay}</small>`;
@@ -251,22 +251,22 @@ class ResultsDisplay {
         aggregateSection.innerHTML = `
             <div class="total-item">
                 <span>Panacur</span>
-                <strong>${totals.panacur.toFixed(2)} mL</strong>
+                <strong>${AppState.formatNumber(totals.panacur, 2)} mL</strong>
             </div>
             <div class="total-item">
                 <span>Ponazuril</span>
-                <strong>${totals.ponazuril.toFixed(2)} mL</strong>
+                <strong>${AppState.formatNumber(totals.ponazuril, 2)} mL</strong>
             </div>
             ${totals.revolution > 0 ? `
             <div class="total-item">
                 <span>Revolution</span>
-                <strong>${totals.revolution.toFixed(2)} mL</strong>
+                <strong>${AppState.formatNumber(totals.revolution, 2)} mL</strong>
             </div>
             ` : ''}
             ${totals.advantage > 0 ? `
             <div class="total-item">
                 <span>Advantage II</span>
-                <strong>${totals.advantage.toFixed(2)} mL</strong>
+                <strong>${AppState.formatNumber(totals.advantage, 2)} mL</strong>
             </div>
             ` : ''}
             ${totals.drontal > 0 ? `
