@@ -794,7 +794,16 @@ footer {
     .no-print, header, nav, .kitten-form-content, footer {
         display: none !important;
     }
-    
+
+    /* Always show result sections when printing (even if collapsed on mobile) */
+    .result-toggle {
+        display: none !important;
+    }
+
+    .result-display.collapsed .collapsible-section {
+        display: block !important;
+    }
+
     body {
         padding: 0;
         min-height: auto;
