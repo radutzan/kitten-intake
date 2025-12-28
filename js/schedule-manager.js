@@ -55,11 +55,12 @@ class ScheduleManager {
             // Topical schedule logic
             if (kitten.topical !== 'none' && kitten.doses.topical !== outOfRangeString && kitten.doses.topical > 0) {
                 if (!kitten.fleaGiven) {
-                    // Flea med not given at intake - foster needs to give it
+                    // Flea med not given at intake - delay by 2 days
+                    const fleaDelayOffset = 2;
                     schedule.medications.topical = {
                         type: kitten.topical,
                         dose: kitten.doses.topical,
-                        days: this.generateDaysFromToday(1, standardStartOffset)
+                        days: this.generateDaysFromToday(1, fleaDelayOffset)
                     };
                 }
                 // If fleaGiven, no schedule entry (med already given at intake)
