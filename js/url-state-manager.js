@@ -4,7 +4,7 @@
  *
  * Format: ?k=VERSION|name|weight|flags|name|weight|flags|...
  *
- * Version 1 bitfield layout (11 bits, encoded as 2 base64url chars):
+ * Version 1 bitfield layout (12 bits, encoded as 2 base64url chars):
  *   Bits 0-1:  topical (0=revolution, 1=advantage, 2=none)
  *   Bit 2:     fleaGiven (0=given/checked, 1=not given/unchecked)
  *   Bits 3-4:  ringwormStatus (0=not-scanned, 1=negative, 2=positive)
@@ -13,6 +13,7 @@
  *   Bit 8:     day1Given.panacur
  *   Bit 9:     day1Given.ponazuril
  *   Bit 10:    day1Given.drontal
+ *   Bit 11:    day1Given.capstar
  */
 
 class UrlStateManager {
@@ -100,7 +101,8 @@ class UrlStateManager {
             const day1Given = {
                 panacur: document.getElementById(`${kittenId}-panacur-day1`)?.checked ?? true,
                 ponazuril: document.getElementById(`${kittenId}-ponazuril-day1`)?.checked ?? true,
-                drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true
+                drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true,
+                capstar: document.getElementById(`${kittenId}-capstar-day1`)?.checked ?? false
             };
 
             const kitten = { topical, fleaGiven, ringwormStatus, panacur, ponazuril, day1Given };
@@ -160,10 +162,11 @@ class UrlStateManager {
         const ponazurilIndex = this.v1.ponazurilDays.indexOf(kitten.ponazuril);
         bits |= (ponazurilIndex >= 0 ? ponazurilIndex : 1) << 7; // default to 3 days
 
-        // Bits 8-10: day1Given
+        // Bits 8-11: day1Given
         bits |= (kitten.day1Given?.panacur ? 1 : 0) << 8;
         bits |= (kitten.day1Given?.ponazuril ? 1 : 0) << 9;
         bits |= (kitten.day1Given?.drontal ? 1 : 0) << 10;
+        bits |= (kitten.day1Given?.capstar ? 1 : 0) << 11;
 
         return this.toBase64Url(bits, 2);
     }
@@ -183,7 +186,8 @@ class UrlStateManager {
             day1Given: {
                 panacur: !!((bits >> 8) & 0x1),
                 ponazuril: !!((bits >> 9) & 0x1),
-                drontal: !!((bits >> 10) & 0x1)
+                drontal: !!((bits >> 10) & 0x1),
+                capstar: !!((bits >> 11) & 0x1)
             }
         };
     }
@@ -214,7 +218,8 @@ class UrlStateManager {
             const day1Given = {
                 panacur: document.getElementById(`${kittenId}-panacur-day1`)?.checked ?? true,
                 ponazuril: document.getElementById(`${kittenId}-ponazuril-day1`)?.checked ?? true,
-                drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true
+                drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true,
+                capstar: document.getElementById(`${kittenId}-capstar-day1`)?.checked ?? false
             };
 
             const kitten = { topical, fleaGiven, ringwormStatus, panacur, ponazuril, day1Given };
@@ -504,6 +509,10 @@ class UrlStateManager {
                 if (urlKitten.day1Given.panacur !== localKitten.day1Given.panacur) return false;
                 if (urlKitten.day1Given.ponazuril !== localKitten.day1Given.ponazuril) return false;
                 if (urlKitten.day1Given.drontal !== localKitten.day1Given.drontal) return false;
+                // Handle legacy data that may not have capstar
+                const urlCapstar = urlKitten.day1Given.capstar ?? false;
+                const localCapstar = localKitten.day1Given?.capstar ?? false;
+                if (urlCapstar !== localCapstar) return false;
             }
 
             return true;

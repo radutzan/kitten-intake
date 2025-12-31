@@ -91,13 +91,24 @@ class FormManager {
                             <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1" checked>
                         </div>
                     </div>
-                    <div class="medication-row drontal-row">
-                        <div class="medication-cell">
-                            <label>Drontal <span class="inline-dose" id="${kittenId}-drontal-dose"></span></label>
+                    <div class="tablet-meds-row">
+                        <div class="medication-row drontal-row">
+                            <div class="medication-cell">
+                                <label>Drontal <span class="inline-dose" id="${kittenId}-drontal-dose"></span></label>
+                            </div>
+                            <div class="given-cell">
+                                <label>Given</label>
+                                <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
+                            </div>
                         </div>
-                        <div class="given-cell">
-                            <label>Given</label>
-                            <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
+                        <div class="medication-row capstar-row">
+                            <div class="medication-cell">
+                                <label>Capstar <span class="inline-dose">1 tablet</span></label>
+                            </div>
+                            <div class="given-cell">
+                                <label>Given</label>
+                                <input type="checkbox" id="${kittenId}-capstar-day1" name="capstar-day1">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -245,7 +256,7 @@ class FormManager {
         }
 
         // Copy Day 1 Meds
-        const meds = ['panacur', 'ponazuril', 'drontal'];
+        const meds = ['panacur', 'ponazuril', 'drontal', 'capstar'];
         meds.forEach(med => {
             const sourceCheckbox = document.getElementById(`${sourceId}-${med}-day1`);
             const targetCheckbox = document.getElementById(`${targetId}-${med}-day1`);
@@ -517,6 +528,9 @@ class FormManager {
             `;
         }
 
+        // Get Capstar status
+        const capstarGiven = document.getElementById(`${kittenId}-capstar-day1`)?.checked || false;
+
         // Get ringworm status
         const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
         let ringwormStatus = 'not-scanned';
@@ -538,6 +552,9 @@ class FormManager {
                     <strong>Other</strong>
                 </div>
                 <div class="result-display-content">
+                    <div class="result-item">
+                        <strong>Capstar</strong> ${capstarGiven ? '1 tablet' : 'Not given'}
+                    </div>
                     <div class="result-item">
                         <strong>Ringworm</strong> ${ringwormStatusText[ringwormStatus] || ringwormStatus}
                     </div>
@@ -626,7 +643,8 @@ class FormManager {
         const day1Checkboxes = [
             document.getElementById(`${kittenId}-panacur-day1`),
             document.getElementById(`${kittenId}-ponazuril-day1`),
-            document.getElementById(`${kittenId}-drontal-day1`)
+            document.getElementById(`${kittenId}-drontal-day1`),
+            document.getElementById(`${kittenId}-capstar-day1`)
         ];
         day1Checkboxes.forEach(checkbox => {
             if (checkbox) {

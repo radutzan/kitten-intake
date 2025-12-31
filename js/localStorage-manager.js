@@ -136,7 +136,8 @@ class LocalStorageManager {
                 day1Given: {
                     panacur: this.getCheckboxValue(`${kittenId}-panacur-day1`),
                     ponazuril: this.getCheckboxValue(`${kittenId}-ponazuril-day1`),
-                    drontal: this.getCheckboxValue(`${kittenId}-drontal-day1`)
+                    drontal: this.getCheckboxValue(`${kittenId}-drontal-day1`),
+                    capstar: this.getCheckboxValue(`${kittenId}-capstar-day1`)
                 }
             };
 
@@ -233,6 +234,7 @@ class LocalStorageManager {
         this.setCheckboxValue(`${kittenId}-panacur-day1`, kittenData.day1Given.panacur);
         this.setCheckboxValue(`${kittenId}-ponazuril-day1`, kittenData.day1Given.ponazuril);
         this.setCheckboxValue(`${kittenId}-drontal-day1`, kittenData.day1Given.drontal);
+        this.setCheckboxValue(`${kittenId}-capstar-day1`, kittenData.day1Given?.capstar);
 
         // Trigger updates for this kitten
         if (typeof window.updateWeightDisplay === 'function') {
@@ -380,7 +382,8 @@ class LocalStorageManager {
         const day1Checkboxes = [
             document.getElementById(`${kittenId}-panacur-day1`),
             document.getElementById(`${kittenId}-ponazuril-day1`),
-            document.getElementById(`${kittenId}-drontal-day1`)
+            document.getElementById(`${kittenId}-drontal-day1`),
+            document.getElementById(`${kittenId}-capstar-day1`)
         ];
         day1Checkboxes.forEach(checkbox => {
             if (checkbox) {

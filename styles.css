@@ -524,11 +524,19 @@ input[type="radio"]:focus {
     cursor: not-allowed;
 }
 
-.drontal-row {
+.tablet-meds-row {
+    display: flex;
+    gap: 16px;
+}
+
+.tablet-meds-row .drontal-row,
+.tablet-meds-row .capstar-row {
+    flex: 1;
     align-items: center;
 }
 
-.drontal-row .medication-cell > label {
+.drontal-row .medication-cell > label,
+.capstar-row .medication-cell > label {
     padding-top: 10px;
 }
 
