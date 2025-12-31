@@ -49,7 +49,6 @@ class FormManager {
                                 <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
                                 <label for="${kittenId}-topical-revolution">Revolution</label>
                                 <input type="radio" name="${kittenId}-topical" value="advantage" id="${kittenId}-topical-advantage">
-                                <label for="${kittenId}-topical-advantage">Advantage II</label>
                                 <label for="${kittenId}-topical-advantage">Advantage</label>
                                 <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none">
                                 <label for="${kittenId}-topical-none">Skip</label>
