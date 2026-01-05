@@ -867,6 +867,10 @@ footer {
     .checkbox-group input[type="checkbox"]:checked::after {
         color: black;
     }
+
+    .remove {
+        display: none;
+    }
     
     .result-section {
         background-color: white;
