@@ -160,7 +160,7 @@ class ResultsDisplay {
             // Date cell
             const dateCell = document.createElement('td');
             dateCell.className = 'date-col';
-            dateCell.textContent = day;
+            dateCell.textContent = AppState.formatDateForDisplay(day);
             row.appendChild(dateCell);
             
             // Medication cells - only show cells for kittens that have medications

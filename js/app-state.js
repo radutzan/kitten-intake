@@ -107,8 +107,15 @@ class AppState {
     static formatDate(date) {
         return date.toLocaleDateString('en-US', {
             month: 'numeric',
-            day: '2-digit'
+            day: 'numeric',
+            year: 'numeric'
         });
+    }
+
+    // Format date for display (without year)
+    static formatDateForDisplay(dateString) {
+        const parts = dateString.split('/');
+        return `${parts[0]}/${parts[1]}`;
     }
 
     // Data Collection

@@ -29,11 +29,13 @@ The application manages **5 medications** with various controls that determine w
 | ✓ checked | 5 days | 4 days starting tomorrow | dose × 4 days |
 | ✓ checked | 3 days | 2 days starting tomorrow | dose × 2 days |
 | ✓ checked | 1 day | 0 days (nothing scheduled) | 0 mL |
-| ☐ unchecked | 5 days | 5 days starting tomorrow | dose × 5 days |
-| ☐ unchecked | 3 days | 3 days starting tomorrow | dose × 3 days |
-| ☐ unchecked | 1 day | 1 day starting tomorrow | dose × 1 day |
+| ☐ unchecked | 5 days | 5 days starting **today** | dose × 5 days |
+| ☐ unchecked | 3 days | 3 days starting **today** | dose × 3 days |
+| ☐ unchecked | 1 day | 1 day starting **today** | dose × 1 day |
 
-**Formula:** `remaining_days = given ? (duration - 1) : duration`
+**Formulas:**
+- `remaining_days = given ? (duration - 1) : duration`
+- `start_offset = given ? 1 (tomorrow) : 0 (today)`
 
 ---
 
@@ -51,8 +53,8 @@ The application manages **5 medications** with various controls that determine w
 |----------------|----------|-----------------|------------------|
 | ✓ checked | 3 days | 2 days starting tomorrow | dose × 2 days |
 | ✓ checked | 1 day | 0 days (nothing scheduled) | 0 mL |
-| ☐ unchecked | 3 days | 3 days starting tomorrow | dose × 3 days |
-| ☐ unchecked | 1 day | 1 day starting tomorrow | dose × 1 day |
+| ☐ unchecked | 3 days | 3 days starting **today** | dose × 3 days |
+| ☐ unchecked | 1 day | 1 day starting **today** | dose × 1 day |
 
 ---
 
@@ -78,10 +80,10 @@ The application manages **5 medications** with various controls that determine w
 | Given checkbox | Weight valid | Foster schedule | Dispense summary |
 |----------------|--------------|-----------------|------------------|
 | ✓ checked | Any | Not included | 0 tablets |
-| ☐ unchecked | In range | 1 dose on first foster day* | 1 tablet(s) |
+| ☐ unchecked | In range | 1 dose starting **today*** | 1 tablet(s) |
 | ☐ unchecked | Out of range | Not included | Not shown |
 
-*Drontal is optimized to the first day that has other medications scheduled (`optimizeDrontalScheduling` in `results-display.js:202`).
+*Drontal is then optimized to the first day that has other medications scheduled (`optimizeDrontalScheduling` in `results-display.js:202`).
 
 ---
 
@@ -150,10 +152,10 @@ Topical = Revolution/Advantage  →  fleaGiven.disabled = false
 
 | Medication | Start offset | Condition to appear in foster schedule |
 |------------|--------------|----------------------------------------|
-| Panacur | Tomorrow (+1) | `remaining_days > 0` |
-| Ponazuril | Tomorrow (+1) | `remaining_days > 0` |
-| Drontal | First med day | `!given && dose ≠ "Out of range"` |
-| Topical | +2 days | `selection ≠ "none" && !given && dose valid && dose > 0` |
+| Panacur | Today if not given, Tomorrow if given | `remaining_days > 0` |
+| Ponazuril | Today if not given, Tomorrow if given | `remaining_days > 0` |
+| Drontal | Today (only appears when not given) | `!given && dose ≠ "Out of range"` |
+| Topical | +2 days (unchanged by Given checkbox) | `selection ≠ "none" && !given && dose valid && dose > 0` |
 
 See `schedule-manager.js:11-73` for the full schedule generation logic.
 
@@ -186,7 +188,7 @@ See `results-display.js:216-281` for the dispense summary logic.
 | Flea Given | ☐ unchecked |
 | Ringworm status | Not scanned |
 
-This means with defaults: foster receives 4 days Panacur, 2 days Ponazuril, and 1 dose Revolution (delayed 2 days). No Drontal for foster.
+This means with defaults: foster receives 4 days Panacur (starting tomorrow), 2 days Ponazuril (starting tomorrow), and 1 dose Revolution (delayed 2 days). No Drontal for foster.
 
 ---
 

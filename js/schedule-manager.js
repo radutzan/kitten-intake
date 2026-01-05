@@ -18,37 +18,41 @@ class ScheduleManager {
                 medications: {}
             };
             
-            // ALL medications start tomorrow (simplified approach)
-            const standardStartOffset = 1;
-            
+            // Medications start tomorrow if given at intake, today if not given
+            const givenStartOffset = 1;  // Start tomorrow if given at intake
+            const notGivenStartOffset = 0;  // Start today if not given at intake
+
             // Panacur schedule
             const panacurRemainingDays = kitten.day1Given.panacur ?
                 (kitten.panacurDays - 1) : kitten.panacurDays;
-            
+            const panacurOffset = kitten.day1Given.panacur ? givenStartOffset : notGivenStartOffset;
+
             if (panacurRemainingDays > 0) {
                 schedule.medications.panacur = {
                     dose: kitten.doses.panacur,
-                    days: this.generateDaysFromToday(panacurRemainingDays, standardStartOffset)
+                    days: this.generateDaysFromToday(panacurRemainingDays, panacurOffset)
                 };
             }
-            
+
             // Ponazuril schedule
             const ponazurilRemainingDays = kitten.day1Given.ponazuril ?
                 (kitten.ponazurilDays - 1) : kitten.ponazurilDays;
-            
+            const ponazurilOffset = kitten.day1Given.ponazuril ? givenStartOffset : notGivenStartOffset;
+
             if (ponazurilRemainingDays > 0) {
                 schedule.medications.ponazuril = {
                     dose: kitten.doses.ponazuril,
-                    days: this.generateDaysFromToday(ponazurilRemainingDays, standardStartOffset)
+                    days: this.generateDaysFromToday(ponazurilRemainingDays, ponazurilOffset)
                 };
             }
-            
+
             // Drontal schedule (only if not given at center and dose is not out of range)
+            // Always starts today since it only appears when not given
             const outOfRangeString = this.appState.getOutOfRangeString();
             if (!kitten.day1Given.drontal && kitten.doses.drontal !== outOfRangeString) {
                 schedule.medications.drontal = {
                     dose: kitten.doses.drontal,
-                    days: this.generateDaysFromToday(1, standardStartOffset)
+                    days: this.generateDaysFromToday(1, notGivenStartOffset)
                 };
             }
             
