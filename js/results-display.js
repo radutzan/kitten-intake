@@ -136,6 +136,10 @@ class ResultsDisplay {
                         medName = 'Drontal';
                         doseDisplay = `${medData.dose} tablet(s)`;
                     }
+                    else if (medType === 'capstar') {
+                        medName = 'Capstar';
+                        doseDisplay = medData.dose;
+                    }
                     else if (medType === 'topical') {
                         medName = medData.type === 'revolution' ? 'Revolution' : 'Advantage II';
                         doseDisplay = `${AppState.formatNumber(medData.dose, 2)} mL`;
@@ -216,24 +220,25 @@ class ResultsDisplay {
     displayDispenseSummary(kittens) {
         const container = document.getElementById('dispense-summary-content');
         container.innerHTML = '';
-        
+
         const totals = {
             panacur: 0,
             ponazuril: 0,
             revolution: 0,
             advantage: 0,
-            drontal: 0
+            drontal: 0,
+            capstar: 0
         };
-        
+
         const outOfRangeString = this.appState.getOutOfRangeString();
-        
+
         kittens.forEach(kitten => {
             const remaining = this.scheduleManager.calculateRemainingMedications(kitten);
-            
+
             // Add to totals
             totals.panacur += remaining.panacur.total;
             totals.ponazuril += remaining.ponazuril.total;
-            
+
             if (kitten.topical === 'revolution' && kitten.doses.topical !== outOfRangeString) {
                 totals.revolution += remaining.topical.amount;
             }
@@ -243,8 +248,11 @@ class ResultsDisplay {
             if (kitten.doses.drontal !== outOfRangeString) {
                 totals.drontal += remaining.drontal.amount;
             }
+            if (remaining.capstar) {
+                totals.capstar += remaining.capstar.amount;
+            }
         });
-        
+
         // Aggregate totals only
         const aggregateSection = document.createElement('div');
         aggregateSection.className = 'med-totals';
@@ -275,8 +283,14 @@ class ResultsDisplay {
                 <strong>${totals.drontal} tablet(s)</strong>
             </div>
             ` : ''}
+            ${totals.capstar > 0 ? `
+            <div class="total-item">
+                <span>Capstar</span>
+                <strong>${totals.capstar} tablet(s)</strong>
+            </div>
+            ` : ''}
         `;
-        
+
         container.appendChild(aggregateSection);
     }
 

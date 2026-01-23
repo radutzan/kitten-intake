@@ -118,27 +118,48 @@ class AppState {
         return `${parts[0]}/${parts[1]}`;
     }
 
+    // Helper to get medication status
+    getMedicationStatus(kittenId, medType) {
+        const toggleCheckbox = document.getElementById(`${kittenId}-${medType}-enabled`);
+        if (toggleCheckbox && !toggleCheckbox.checked) {
+            return 'skip';
+        }
+
+        const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${medType}-status"]`);
+        let status = 'todo';
+        statusRadios.forEach(radio => {
+            if (radio.checked) status = radio.value;
+        });
+        return status;
+    }
+
     // Data Collection
     collectKittenData() {
         const kittenForms = document.querySelectorAll('.kitten-form');
         const collectedKittens = [];
-        
+
         kittenForms.forEach(form => {
             const kittenId = form.id;
             const name = document.getElementById(`${kittenId}-name`).value.trim();
             const weightGrams = parseFloat(document.getElementById(`${kittenId}-weight`).value);
             const weightLb = AppState.convertToPounds(weightGrams);
-            
+
             const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-            let topical = 'none';
+            let topical = 'revolution'; // Default to revolution since we removed "none" option
             topicalRadios.forEach(radio => {
                 if (radio.checked) topical = radio.value;
             });
-            
-            // Get flea given status from checkbox
-            const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
-            const fleaGiven = fleaGivenCheckbox && fleaGivenCheckbox.checked;
-            
+
+            // Get medication statuses using new system
+            const fleaStatus = this.getMedicationStatus(kittenId, 'flea');
+            const capstarStatus = this.getMedicationStatus(kittenId, 'capstar');
+            const panacurStatus = this.getMedicationStatus(kittenId, 'panacur');
+            const ponazurilStatus = this.getMedicationStatus(kittenId, 'ponazuril');
+            const drontalStatus = this.getMedicationStatus(kittenId, 'drontal');
+
+            // Convert status to boolean for backward compatibility
+            const fleaGiven = fleaStatus === 'done';
+
             const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
             let panacurDays = 3;
             panacurRadios.forEach(radio => {
@@ -151,10 +172,12 @@ class AppState {
                 if (radio.checked) ponazurilDays = parseInt(radio.value);
             });
 
-            const panacurDay1Given = document.getElementById(`${kittenId}-panacur-day1`).checked;
-            const ponazurilDay1Given = document.getElementById(`${kittenId}-ponazuril-day1`).checked;
-            const drontalDay1Given = document.getElementById(`${kittenId}-drontal-day1`).checked;
-            
+            // Convert status to boolean for backward compatibility with schedule system
+            const panacurDay1Given = panacurStatus === 'done';
+            const ponazurilDay1Given = ponazurilStatus === 'done';
+            const drontalDay1Given = drontalStatus === 'done';
+            const capstarDay1Given = capstarStatus === 'done';
+
             // Get ringworm data
             const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
             let ringwormStatus = 'not-scanned';
@@ -167,21 +190,30 @@ class AppState {
                 name,
                 weightGrams,
                 weightLb,
-                topical,
+                topical: fleaStatus === 'skip' ? 'none' : topical, // Set to 'none' if flea med disabled
                 fleaGiven,
-                panacurDays,
-                ponazurilDays,
+                panacurDays: panacurStatus === 'skip' ? 0 : panacurDays,
+                ponazurilDays: ponazurilStatus === 'skip' ? 0 : ponazurilDays,
                 ringwormStatus,
                 day1Given: {
                     panacur: panacurDay1Given,
                     ponazuril: ponazurilDay1Given,
-                    drontal: drontalDay1Given
+                    drontal: drontalDay1Given,
+                    capstar: capstarDay1Given
+                },
+                // New medication status fields
+                medicationStatus: {
+                    flea: fleaStatus,
+                    capstar: capstarStatus,
+                    panacur: panacurStatus,
+                    ponazuril: ponazurilStatus,
+                    drontal: drontalStatus
                 }
             };
-            
+
             collectedKittens.push(kitten);
         });
-        
+
         this.setKittens(collectedKittens);
         return collectedKittens;
     }

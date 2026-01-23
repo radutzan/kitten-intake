@@ -7,6 +7,166 @@ class FormManager {
     constructor(appState, doseCalculator) {
         this.appState = appState;
         this.doseCalculator = doseCalculator;
+        this.currentPageIndex = 0;
+        this.scrollTimeout = null;
+
+        // Set up scroll listener for pagination on mobile
+        this.setupScrollListener();
+        this.setupDotsOverflowListeners();
+    }
+
+    // Pagination Methods
+    setupScrollListener() {
+        const container = document.getElementById('kittens-container');
+        if (!container) return;
+
+        container.addEventListener('scroll', () => {
+            // Debounce scroll updates
+            if (this.scrollTimeout) {
+                clearTimeout(this.scrollTimeout);
+            }
+            this.scrollTimeout = setTimeout(() => {
+                this.updateActiveDotFromScroll();
+            }, 50);
+        });
+    }
+
+    updatePaginationDots() {
+        const dotsContainer = document.getElementById('pagination-dots');
+        if (!dotsContainer) return;
+
+        const kittenForms = document.querySelectorAll('.kitten-form');
+        const formCount = kittenForms.length;
+
+        // Clear existing dots
+        dotsContainer.innerHTML = '';
+
+        // Only show dots if there's more than one form
+        if (formCount <= 1) {
+            this.updateDotsOverflow();
+            return;
+        }
+
+        // Create dots
+        for (let i = 0; i < formCount; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'pagination-dot';
+            dot.setAttribute('aria-label', `Go to cat ${i + 1}`);
+            dot.setAttribute('type', 'button');
+
+            if (i === this.currentPageIndex) {
+                dot.classList.add('active');
+            }
+
+            dot.addEventListener('click', () => {
+                this.scrollToPage(i);
+            });
+
+            dotsContainer.appendChild(dot);
+        }
+
+        // Check for overflow after dots are added
+        this.updateDotsOverflow();
+    }
+
+    updateDotsOverflow() {
+        const navCenter = document.getElementById('nav-center');
+        const dotsContainer = document.getElementById('pagination-dots');
+        if (!navCenter || !dotsContainer) return;
+
+        navCenter.classList.remove('overflow-left', 'overflow-right', 'overflow-both');
+
+        const { scrollLeft, scrollWidth, clientWidth } = dotsContainer;
+        const hasOverflow = scrollWidth > clientWidth;
+
+        if (!hasOverflow) return;
+
+        const atStart = scrollLeft <= 1;
+        const atEnd = scrollLeft + clientWidth >= scrollWidth - 1;
+
+        if (atStart && !atEnd) {
+            navCenter.classList.add('overflow-right');
+        } else if (!atStart && atEnd) {
+            navCenter.classList.add('overflow-left');
+        } else if (!atStart && !atEnd) {
+            navCenter.classList.add('overflow-both');
+        }
+    }
+
+    setupDotsOverflowListeners() {
+        const dotsContainer = document.getElementById('pagination-dots');
+        if (!dotsContainer) return;
+
+        dotsContainer.addEventListener('scroll', () => {
+            this.updateDotsOverflow();
+        });
+
+        window.addEventListener('resize', () => {
+            this.updateDotsOverflow();
+        });
+    }
+
+    scrollToPage(index) {
+        const container = document.getElementById('kittens-container');
+        const kittenForms = document.querySelectorAll('.kitten-form');
+
+        if (!container || index < 0 || index >= kittenForms.length) return;
+
+        const targetForm = kittenForms[index];
+        const scrollLeft = targetForm.offsetLeft;
+
+        container.scrollTo({
+            left: scrollLeft,
+            behavior: 'smooth'
+        });
+
+        this.currentPageIndex = index;
+        this.updateActiveDot();
+    }
+
+    updateActiveDotFromScroll() {
+        const container = document.getElementById('kittens-container');
+        const kittenForms = document.querySelectorAll('.kitten-form');
+
+        if (!container || kittenForms.length === 0) return;
+
+        const scrollLeft = container.scrollLeft;
+        const containerWidth = container.offsetWidth;
+
+        // Find which form is most visible
+        let newIndex = 0;
+        let minDistance = Infinity;
+
+        kittenForms.forEach((form, index) => {
+            const formCenter = form.offsetLeft + (form.offsetWidth / 2);
+            const viewCenter = scrollLeft + (containerWidth / 2);
+            const distance = Math.abs(formCenter - viewCenter);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                newIndex = index;
+            }
+        });
+
+        if (newIndex !== this.currentPageIndex) {
+            this.currentPageIndex = newIndex;
+            this.updateActiveDot();
+        }
+    }
+
+    updateActiveDot() {
+        const dots = document.querySelectorAll('.pagination-dot');
+        dots.forEach((dot, index) => {
+            if (index === this.currentPageIndex) {
+                dot.classList.add('active');
+                // Scroll active dot into view
+                dot.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+        // Update overflow state after scroll
+        setTimeout(() => this.updateDotsOverflow(), 300);
     }
 
     // Auto-save helper function
@@ -32,7 +192,7 @@ class FormManager {
                         <input type="text" id="${kittenId}-name" name="name" placeholder="Name" required>
                         <div class="error" id="${kittenId}-name-error"></div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="${kittenId}-weight">Weight (grams)</label>
                         <input type="text" inputmode="decimal" pattern="[0-9.]*" id="${kittenId}-weight" placeholder="Weight (grams)" name="weight" min="1" step="0.1" required>
@@ -40,81 +200,182 @@ class FormManager {
                         <div class="weight-display" id="${kittenId}-weight-display" style="display: none;"></div>
                     </div>
                 </div>
-                
+
                 <div class="medication-grid">
-                    <div class="medication-row">
-                        <div class="medication-cell">
-                            <label>Flea Med <span class="inline-dose" id="${kittenId}-flea-dose"></span></label>
+                    <!-- Flea Med Row -->
+                    <div class="medication-row" id="${kittenId}-flea-row">
+                        <div class="medication-labels">
+                            <div class="left">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="${kittenId}-flea-enabled" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="med-name">Flea Med</span>
+                            </div>
+                            <div class="right">
+                                <span class="status-light hidden" id="${kittenId}-flea-status-light"></span>
+                                <span class="dose-display" id="${kittenId}-flea-dose"></span>
+                            </div>
+                        </div>
+                        <div class="medication-choices">
                             <div class="radio-group">
                                 <input type="radio" name="${kittenId}-topical" value="revolution" id="${kittenId}-topical-revolution" checked>
-                                <label for="${kittenId}-topical-revolution">Revolution</label>
+                                <label for="${kittenId}-topical-revolution">Rev</label>
                                 <input type="radio" name="${kittenId}-topical" value="advantage" id="${kittenId}-topical-advantage">
-                                <label for="${kittenId}-topical-advantage">Advantage</label>
-                                <input type="radio" name="${kittenId}-topical" value="none" id="${kittenId}-topical-none">
-                                <label for="${kittenId}-topical-none">Skip</label>
+                                <label for="${kittenId}-topical-advantage">Adv II</label>
+                            </div>
+                            <div class="radio-group status-control">
+                                <input type="radio" name="${kittenId}-flea-status" value="todo" id="${kittenId}-flea-status-todo" checked>
+                                <label for="${kittenId}-flea-status-todo">To Do</label>
+                                <input type="radio" name="${kittenId}-flea-status" value="delay" id="${kittenId}-flea-status-delay">
+                                <label for="${kittenId}-flea-status-delay">Delay</label>
+                                <input type="radio" name="${kittenId}-flea-status" value="done" id="${kittenId}-flea-status-done">
+                                <label for="${kittenId}-flea-status-done">Done</label>
                             </div>
                         </div>
-                        <div class="given-cell">
-                            <label>Given</label>
-                            <input type="checkbox" id="${kittenId}-flea-given" name="flea-given">
+                    </div>
+
+                    <!-- Capstar Row -->
+                    <div class="medication-row" id="${kittenId}-capstar-row">
+                        <div class="medication-labels">
+                            <div class="left">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="${kittenId}-capstar-enabled" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="med-name">Capstar</span>
+                            </div>
+                            <div class="right">
+                                <span class="status-light hidden" id="${kittenId}-capstar-status-light"></span>
+                                <span class="dose-display" id="${kittenId}-capstar-dose"></span>
+                            </div>
+                        </div>
+                        <div class="medication-choices">
+                            <div class="single-option">
+                                <span class="option-label">Single Dose</span>
+                            </div>
+                            <div class="radio-group status-control">
+                                <input type="radio" name="${kittenId}-capstar-status" value="todo" id="${kittenId}-capstar-status-todo" checked>
+                                <label for="${kittenId}-capstar-status-todo">To Do</label>
+                                <input type="radio" name="${kittenId}-capstar-status" value="done" id="${kittenId}-capstar-status-done">
+                                <label for="${kittenId}-capstar-status-done">Done</label>
+                            </div>
                         </div>
                     </div>
-                    <div class="medication-row">
-                        <div class="medication-cell">
-                            <label>Panacur <span class="inline-dose" id="${kittenId}-panacur-dose"></span></label>
+
+                    <!-- Panacur Row -->
+                    <div class="medication-row" id="${kittenId}-panacur-row">
+                        <div class="medication-labels">
+                            <div class="left">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="${kittenId}-panacur-enabled" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="med-name">Panacur</span>
+                            </div>
+                            <div class="right">
+                                <span class="status-light hidden" id="${kittenId}-panacur-status-light"></span>
+                                <span class="dose-display" id="${kittenId}-panacur-dose"></span>
+                            </div>
+                        </div>
+                        <div class="medication-choices">
                             <div class="radio-group">
                                 <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
-                                <label for="${kittenId}-panacur-1">1 day</label>
-                                <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3">
-                                <label for="${kittenId}-panacur-3">3 days</label>
-                                <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5" checked>
-                                <label for="${kittenId}-panacur-5">5 days</label>
+                                <label for="${kittenId}-panacur-1">1d</label>
+                                <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3" checked>
+                                <label for="${kittenId}-panacur-3">3d</label>
+                                <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5">
+                                <label for="${kittenId}-panacur-5">5d</label>
+                            </div>
+                            <div class="radio-group status-control">
+                                <input type="radio" name="${kittenId}-panacur-status" value="todo" id="${kittenId}-panacur-status-todo">
+                                <label for="${kittenId}-panacur-status-todo">To Do</label>
+                                <input type="radio" name="${kittenId}-panacur-status" value="done" id="${kittenId}-panacur-status-done" checked>
+                                <label for="${kittenId}-panacur-status-done">Done</label>
                             </div>
                         </div>
-                        <div class="given-cell">
-                            <label>Given</label>
-                            <input type="checkbox" id="${kittenId}-panacur-day1" name="panacur-day1" checked>
-                        </div>
                     </div>
-                    <div class="medication-row">
-                        <div class="medication-cell">
-                            <label>Ponazuril <span class="inline-dose" id="${kittenId}-ponazuril-dose"></span></label>
+
+                    <!-- Ponazuril Row -->
+                    <div class="medication-row" id="${kittenId}-ponazuril-row">
+                        <div class="medication-labels">
+                            <div class="left">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="${kittenId}-ponazuril-enabled" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="med-name">Ponazuril</span>
+                            </div>
+                            <div class="right">
+                                <span class="status-light hidden" id="${kittenId}-ponazuril-status-light"></span>
+                                <span class="dose-display" id="${kittenId}-ponazuril-dose"></span>
+                            </div>
+                        </div>
+                        <div class="medication-choices">
                             <div class="radio-group">
                                 <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
-                                <label for="${kittenId}-ponazuril-1">1 day</label>
+                                <label for="${kittenId}-ponazuril-1">1d</label>
                                 <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
-                                <label for="${kittenId}-ponazuril-3">3 days</label>
+                                <label for="${kittenId}-ponazuril-3">3d</label>
+                            </div>
+                            <div class="radio-group status-control">
+                                <input type="radio" name="${kittenId}-ponazuril-status" value="todo" id="${kittenId}-ponazuril-status-todo">
+                                <label for="${kittenId}-ponazuril-status-todo">To Do</label>
+                                <input type="radio" name="${kittenId}-ponazuril-status" value="done" id="${kittenId}-ponazuril-status-done" checked>
+                                <label for="${kittenId}-ponazuril-status-done">Done</label>
                             </div>
                         </div>
-                        <div class="given-cell">
-                            <label>Given</label>
-                            <input type="checkbox" id="${kittenId}-ponazuril-day1" name="ponazuril-day1" checked>
-                        </div>
                     </div>
-                    <div class="medication-row drontal-row">
-                        <div class="medication-cell">
-                            <label>Drontal <span class="inline-dose" id="${kittenId}-drontal-dose"></span></label>
+
+                    <!-- Drontal Row -->
+                    <div class="medication-row" id="${kittenId}-drontal-row">
+                        <div class="medication-labels">
+                            <div class="left">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="${kittenId}-drontal-enabled" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="med-name">Drontal</span>
+                            </div>
+                            <div class="right">
+                                <span class="status-light hidden" id="${kittenId}-drontal-status-light"></span>
+                                <span class="dose-display" id="${kittenId}-drontal-dose"></span>
+                            </div>
                         </div>
-                        <div class="given-cell">
-                            <label>Given</label>
-                            <input type="checkbox" id="${kittenId}-drontal-day1" name="drontal-day1" checked>
+                        <div class="medication-choices">
+                            <div class="single-option">
+                                <span class="option-label">Single Dose</span>
+                            </div>
+                            <div class="radio-group status-control">
+                                <input type="radio" name="${kittenId}-drontal-status" value="todo" id="${kittenId}-drontal-status-todo" checked>
+                                <label for="${kittenId}-drontal-status-todo">To Do</label>
+                                <input type="radio" name="${kittenId}-drontal-status" value="done" id="${kittenId}-drontal-status-done">
+                                <label for="${kittenId}-drontal-status-done">Done</label>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <div class="medication-separator"></div>
+
                 <div class="form-group ringworm-section">
-                    <label>Ringworm</label>
+                    <div class="medication-labels">
+                        <div class="left">
+                            <span class="status-light hidden" id="${kittenId}-ringworm-status-light"></span>
+                            <span class="med-name">Ringworm</span>
+                        </div>
+                    </div>
                     <div class="radio-group">
                         <input type="radio" name="${kittenId}-ringworm-status" value="not-scanned" id="${kittenId}-ringworm-not-scanned" checked>
-                        <label for="${kittenId}-ringworm-not-scanned">Not scanned</label>
-                        <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
-                        <label for="${kittenId}-ringworm-negative">Negative</label>
+                        <label for="${kittenId}-ringworm-not-scanned">Not Scanned</label>
                         <input type="radio" name="${kittenId}-ringworm-status" value="positive" id="${kittenId}-ringworm-positive">
                         <label for="${kittenId}-ringworm-positive">Positive</label>
+                        <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
+                        <label for="${kittenId}-ringworm-negative">Negative</label>
                     </div>
                 </div>
             </div>
-            
+
             <div class="result-display empty collapsed" id="${kittenId}-result-display">
                 <div class="dose-print-header print-only" id="${kittenId}-result-header">
                     <h3 class="kitten-info"></h3>
@@ -146,25 +407,37 @@ class FormManager {
         kittenForm.innerHTML = this.generateKittenFormHTML(kittenId, kittenCounter);
         
         container.appendChild(kittenForm);
-        
+
+        // Update pagination dots
+        this.updatePaginationDots();
+
         // Only scroll to the new kitten form if it's not the first one
         if (kittenCounter > 1) {
-            // Scroll to the new kitten form, accounting for sticky nav height
-            const nav = document.querySelector('nav');
-            const navHeight = nav ? nav.offsetHeight : 0;
-            
-            // Get the position of the new form
-            const formRect = kittenForm.getBoundingClientRect();
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
-            // Calculate the target scroll position (form top minus nav height)
-            const targetScrollPosition = formRect.top + scrollTop - navHeight;
-            
-            // Smooth scroll to the adjusted position
-            window.scrollTo({
-                top: targetScrollPosition,
-                behavior: 'smooth'
-            });
+            // Check if we're on mobile (pagination dots visible)
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+            if (isMobile) {
+                // On mobile, use horizontal scroll pagination
+                const newIndex = document.querySelectorAll('.kitten-form').length - 1;
+                // Use setTimeout to ensure the DOM has updated
+                setTimeout(() => {
+                    this.scrollToPage(newIndex);
+                }, 50);
+            } else {
+                // On desktop, scroll vertically to the new form
+                const nav = document.querySelector('nav');
+                const navHeight = nav ? nav.offsetHeight : 0;
+
+                const formRect = kittenForm.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                const targetScrollPosition = formRect.top + scrollTop - navHeight;
+
+                window.scrollTo({
+                    top: targetScrollPosition,
+                    behavior: 'smooth'
+                });
+            }
         }
         
         // Add weight conversion and dose calculation listeners
@@ -174,7 +447,7 @@ class FormManager {
         weightInput.addEventListener('input', (e) => {
             // Remove any characters that aren't digits or periods
             const filteredValue = e.target.value.replace(/[^0-9.]/g, '');
-            
+
             // Ensure only one decimal point is allowed
             const parts = filteredValue.split('.');
             if (parts.length > 2) {
@@ -182,9 +455,11 @@ class FormManager {
             } else {
                 e.target.value = filteredValue;
             }
-            
+
             this.updateWeightDisplay(kittenId);
             this.updateResultDisplay(kittenId);
+            // Update all status lights when weight changes
+            this.updateAllStatusLights(kittenId);
             if (window.KittenApp && window.KittenApp.resultsDisplay) {
                 window.KittenApp.resultsDisplay.updateResultsAutomatically();
             }
@@ -196,14 +471,16 @@ class FormManager {
             e.preventDefault();
             const paste = (e.clipboardData || window.clipboardData).getData('text');
             const filteredPaste = paste.replace(/[^0-9.]/g, '');
-            
+
             // Handle multiple decimal points in pasted content
             const parts = filteredPaste.split('.');
             const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
-            
+
             e.target.value = validPaste;
             this.updateWeightDisplay(kittenId);
             this.updateResultDisplay(kittenId);
+            // Update all status lights when weight changes
+            this.updateAllStatusLights(kittenId);
             if (window.KittenApp && window.KittenApp.resultsDisplay) {
                 window.KittenApp.resultsDisplay.updateResultsAutomatically();
             }
@@ -215,9 +492,13 @@ class FormManager {
         
         // Add listeners for medication changes
         this.addMedicationListeners(kittenId);
-        
-        // Set initial checkbox states (None is selected by default)
-        this.updateFleaCheckboxStates(kittenId);
+
+        // Initialize status lights
+        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
+        medications.forEach(med => {
+            this.updateStatusLight(kittenId, med);
+        });
+        this.updateRingwormStatusLight(kittenId);
 
         // Copy settings from the first kitten if available
         const allKittens = document.querySelectorAll('.kitten-form');
@@ -230,29 +511,36 @@ class FormManager {
     }
 
     copySettingsFromKitten(sourceId, targetId) {
-        // Copy Topical
+        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
+
+        // Copy medication toggle states (enabled/disabled)
+        medications.forEach(med => {
+            const sourceToggle = document.getElementById(`${sourceId}-${med}-enabled`);
+            const targetToggle = document.getElementById(`${targetId}-${med}-enabled`);
+            if (sourceToggle && targetToggle) {
+                targetToggle.checked = sourceToggle.checked;
+                this.updateMedicationRowState(targetId, med);
+            }
+        });
+
+        // Copy medication status (To Do / Delay / Done)
+        medications.forEach(med => {
+            const sourceStatus = document.querySelector(`input[name="${sourceId}-${med}-status"]:checked`);
+            if (sourceStatus) {
+                const targetStatus = document.getElementById(`${targetId}-${med}-status-${sourceStatus.value}`);
+                if (targetStatus) {
+                    targetStatus.checked = true;
+                    this.updateStatusLight(targetId, med);
+                }
+            }
+        });
+
+        // Copy Topical type (Revolution / Advantage)
         const sourceTopical = document.querySelector(`input[name="${sourceId}-topical"]:checked`);
         if (sourceTopical) {
             const targetTopical = document.getElementById(`${targetId}-topical-${sourceTopical.value}`);
             if (targetTopical) targetTopical.checked = true;
         }
-
-        // Copy Flea Given
-        const sourceFleaGiven = document.getElementById(`${sourceId}-flea-given`);
-        const targetFleaGiven = document.getElementById(`${targetId}-flea-given`);
-        if (sourceFleaGiven && targetFleaGiven) {
-            targetFleaGiven.checked = sourceFleaGiven.checked;
-        }
-
-        // Copy Day 1 Meds
-        const meds = ['panacur', 'ponazuril', 'drontal'];
-        meds.forEach(med => {
-            const sourceCheckbox = document.getElementById(`${sourceId}-${med}-day1`);
-            const targetCheckbox = document.getElementById(`${targetId}-${med}-day1`);
-            if (sourceCheckbox && targetCheckbox) {
-                targetCheckbox.checked = sourceCheckbox.checked;
-            }
-        });
 
         // Copy Panacur Duration
         const sourcePanacur = document.querySelector(`input[name="${sourceId}-panacur"]:checked`);
@@ -272,11 +560,13 @@ class FormManager {
         const sourceRingworm = document.querySelector(`input[name="${sourceId}-ringworm-status"]:checked`);
         if (sourceRingworm) {
             const targetRingworm = document.getElementById(`${targetId}-ringworm-${sourceRingworm.value}`);
-            if (targetRingworm) targetRingworm.checked = true;
+            if (targetRingworm) {
+                targetRingworm.checked = true;
+                this.updateRingwormStatusLight(targetId);
+            }
         }
 
         // Update UI
-        this.updateFleaCheckboxStates(targetId);
         this.updateResultDisplay(targetId);
     }
 
@@ -291,6 +581,14 @@ class FormManager {
         }
         
         element.remove();
+
+        // Update pagination dots
+        const kittenForms = document.querySelectorAll('.kitten-form');
+        if (this.currentPageIndex >= kittenForms.length) {
+            this.currentPageIndex = Math.max(0, kittenForms.length - 1);
+        }
+        this.updatePaginationDots();
+
         if (window.KittenApp && window.KittenApp.resultsDisplay) {
             window.KittenApp.resultsDisplay.updateResultsAutomatically();
         }
@@ -315,11 +613,11 @@ class FormManager {
         const doseDisplay = document.getElementById(`${kittenId}-result-display`);
         const doseContent = document.getElementById(`${kittenId}-result-content`);
         const doseHeader = document.getElementById(`${kittenId}-result-header`);
-        
+
         const nameInput = document.getElementById(`${kittenId}-name`);
         const weightInput = document.getElementById(`${kittenId}-weight`);
         const grams = parseFloat(weightInput.value);
-        
+
         // Update the print header with current name and weight
         const kittenName = nameInput.value.trim() || 'Unnamed Cat';
         const headerElement = doseHeader.querySelector('.kitten-info');
@@ -329,35 +627,40 @@ class FormManager {
         } else {
             headerElement.textContent = `${kittenName}`;
         }
-        
+
         if (!grams || grams <= 0) {
             doseDisplay.classList.add('empty');
             doseContent.innerHTML = '<div class="collapsible-section"><div class="result-display-content"><div class="result-item">Enter weight to see calculated doses</div></div></div>';
             // Clear inline dose displays
             const fleaDoseEl = document.getElementById(`${kittenId}-flea-dose`);
+            const capstarDoseEl = document.getElementById(`${kittenId}-capstar-dose`);
             const panacurDoseEl = document.getElementById(`${kittenId}-panacur-dose`);
             const ponazurilDoseEl = document.getElementById(`${kittenId}-ponazuril-dose`);
             const drontalDoseEl = document.getElementById(`${kittenId}-drontal-dose`);
             if (fleaDoseEl) fleaDoseEl.textContent = '';
+            if (capstarDoseEl) capstarDoseEl.textContent = '';
             if (panacurDoseEl) panacurDoseEl.textContent = '';
             if (ponazurilDoseEl) ponazurilDoseEl.textContent = '';
             if (drontalDoseEl) drontalDoseEl.textContent = '';
             return;
         }
-        
+
         const weightLb = this.appState.constructor.convertToPounds(grams);
-        
-        // Get selected topical
+
+        // Get selected topical type (Revolution or Advantage)
         const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-        let topical = 'none';
+        let topical = 'revolution';
         topicalRadios.forEach(radio => {
             if (radio.checked) topical = radio.value;
         });
-        
-        // Get flea status from checkbox
-        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
-        const fleaGiven = fleaGivenCheckbox && fleaGivenCheckbox.checked;
-        
+
+        // Get medication statuses using new system
+        const fleaStatus = this.getMedicationStatus(kittenId, 'flea');
+        const capstarStatus = this.getMedicationStatus(kittenId, 'capstar');
+        const panacurStatus = this.getMedicationStatus(kittenId, 'panacur');
+        const ponazurilStatus = this.getMedicationStatus(kittenId, 'ponazuril');
+        const drontalStatus = this.getMedicationStatus(kittenId, 'drontal');
+
         // Get panacur regimen
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
         let panacurDays = 3;
@@ -372,40 +675,39 @@ class FormManager {
             if (radio.checked) ponazurilDays = parseInt(radio.value);
         });
 
-        // Get day 1 given status
-        const panacurDay1Given = document.getElementById(`${kittenId}-panacur-day1`).checked;
-        const ponazurilDay1Given = document.getElementById(`${kittenId}-ponazuril-day1`).checked;
-        const drontalDay1Given = document.getElementById(`${kittenId}-drontal-day1`).checked;
-        
         // Calculate doses
         const panacurDose = this.doseCalculator.calculatePanacurDose(weightLb);
         const ponazurilDose = this.doseCalculator.calculatePonazurilDose(weightLb);
         const drontalDose = this.doseCalculator.calculateDrontalDose(weightLb);
         const revolutionDose = this.doseCalculator.calculateRevolutionDose(weightLb);
         const advantageDose = this.doseCalculator.calculateAdvantageIIDose(weightLb);
-        
+        const capstarDose = this.doseCalculator.calculateCapstarDose ? this.doseCalculator.calculateCapstarDose(weightLb) : '1 tablet';
+
         const outOfRangeString = this.appState.getOutOfRangeString();
 
         // Update inline dose displays
         const fleaDoseEl = document.getElementById(`${kittenId}-flea-dose`);
+        const capstarDoseEl = document.getElementById(`${kittenId}-capstar-dose`);
         const panacurDoseEl = document.getElementById(`${kittenId}-panacur-dose`);
         const ponazurilDoseEl = document.getElementById(`${kittenId}-ponazuril-dose`);
         const drontalDoseEl = document.getElementById(`${kittenId}-drontal-dose`);
 
+        // Update inline dose displays (always show dose even when disabled)
         if (fleaDoseEl) {
-            if (topical === 'none') {
-                fleaDoseEl.textContent = '';
-            } else if (topical === 'revolution') {
-                fleaDoseEl.textContent = revolutionDose === outOfRangeString ? outOfRangeString : `${AppState.formatNumber(revolutionDose, 2)} mL`;
+            if (topical === 'revolution') {
+                fleaDoseEl.textContent = revolutionDose === outOfRangeString ? outOfRangeString : `${AppState.formatNumber(revolutionDose, 2)}ml`;
             } else if (topical === 'advantage') {
-                fleaDoseEl.textContent = advantageDose === outOfRangeString ? outOfRangeString : `${AppState.formatNumber(advantageDose, 2)} mL`;
+                fleaDoseEl.textContent = advantageDose === outOfRangeString ? outOfRangeString : `${AppState.formatNumber(advantageDose, 2)}ml`;
             }
         }
+        if (capstarDoseEl) {
+            capstarDoseEl.textContent = '1 tablet';
+        }
         if (panacurDoseEl) {
-            panacurDoseEl.textContent = `${AppState.formatNumber(panacurDose, 2)} mL/day`;
+            panacurDoseEl.textContent = `${AppState.formatNumber(panacurDose, 2)}ml/day`;
         }
         if (ponazurilDoseEl) {
-            ponazurilDoseEl.textContent = `${AppState.formatNumber(ponazurilDose, 2)} mL/day`;
+            ponazurilDoseEl.textContent = `${AppState.formatNumber(ponazurilDose, 2)}ml/day`;
         }
         if (drontalDoseEl) {
             drontalDoseEl.textContent = drontalDose === outOfRangeString ? outOfRangeString : `${drontalDose} tablet(s)`;
@@ -418,58 +720,76 @@ class FormManager {
                 <strong>Doses</strong>
             </div>
             <div class="result-display-content">
+        `;
+
+        // Show enabled medications
+        if (panacurStatus !== 'skip') {
+            content += `
                 <div class="result-item">
                     <strong>Panacur</strong> ${AppState.formatNumber(panacurDose, 2)} mL/day × ${panacurDays} days
                 </div>
+            `;
+        }
+        if (ponazurilStatus !== 'skip') {
+            content += `
                 <div class="result-item">
                     <strong>Ponazuril</strong> ${AppState.formatNumber(ponazurilDose, 2)} mL/day × ${ponazurilDays} days
                 </div>
+            `;
+        }
+        if (drontalStatus !== 'skip') {
+            content += `
                 <div class="result-item">
                     <strong>Drontal</strong> ${drontalDose === outOfRangeString ? drontalDose : drontalDose + ' tablet(s)'}
                 </div>
-        `;
-
-        if (topical === 'none') {
-            // Show both topical options when none is selected
-            content += `
-                <div class="result-item">
-                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}
-                </div>
-                <div class="result-item">
-                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}
-                </div>
             `;
-        } else if (topical === 'revolution') {
+        }
+        if (capstarStatus !== 'skip') {
             content += `
                 <div class="result-item">
-                    <strong>Revolution</strong> ${revolutionDose === outOfRangeString ? revolutionDose : AppState.formatNumber(revolutionDose, 2) + ' mL'}
-                </div>
-            `;
-        } else if (topical === 'advantage') {
-            content += `
-                <div class="result-item">
-                    <strong>Advantage II</strong> ${advantageDose === outOfRangeString ? advantageDose : AppState.formatNumber(advantageDose, 2) + ' mL'}
+                    <strong>Capstar</strong> 1 tablet
                 </div>
             `;
         }
+        if (fleaStatus !== 'skip') {
+            const topicalName = topical === 'revolution' ? 'Revolution' : 'Advantage II';
+            const topicalDose = topical === 'revolution' ? revolutionDose : advantageDose;
+            content += `
+                <div class="result-item">
+                    <strong>${topicalName}</strong> ${topicalDose === outOfRangeString ? topicalDose : AppState.formatNumber(topicalDose, 2) + ' mL'}
+                </div>
+            `;
+        }
+
         content += `
             </div>
         </div>
         `;
-        
-        // Calculate remaining doses for foster care
-        const panacurRemaining = panacurDay1Given ? (panacurDays - 1) : panacurDays;
-        const ponazurilRemaining = ponazurilDay1Given ? (ponazurilDays - 1) : ponazurilDays;
+
+        // Calculate remaining doses for foster care based on new status system
+        // Status "done" = given at intake, "todo" or "delay" = for foster
+        const panacurDay1Given = panacurStatus === 'done';
+        const ponazurilDay1Given = ponazurilStatus === 'done';
+        const drontalDay1Given = drontalStatus === 'done';
+        const capstarDay1Given = capstarStatus === 'done';
+        const fleaGiven = fleaStatus === 'done';
+
+        const panacurRemaining = panacurStatus === 'skip' ? 0 : (panacurDay1Given ? (panacurDays - 1) : panacurDays);
+        const ponazurilRemaining = ponazurilStatus === 'skip' ? 0 : (ponazurilDay1Given ? (ponazurilDays - 1) : ponazurilDays);
         const panacurTotal = panacurDose * panacurRemaining;
         const ponazurilTotal = ponazurilDose * ponazurilRemaining;
-        
+
         // Build "For Foster" section
         const remainsForFoster = [];
-        
-        if (!drontalDay1Given && drontalDose !== outOfRangeString) {
+
+        if (drontalStatus !== 'skip' && !drontalDay1Given && drontalDose !== outOfRangeString) {
             remainsForFoster.push(`<strong>Drontal</strong> ${drontalDose + ' tablet(s)'}`);
         }
-        
+
+        if (capstarStatus !== 'skip' && !capstarDay1Given) {
+            remainsForFoster.push(`<strong>Capstar</strong> 1 tablet`);
+        }
+
         if (panacurRemaining > 0) {
             remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${AppState.formatNumber(panacurDose, 2)} mL = ${AppState.formatNumber(panacurTotal, 2)} mL`);
         }
@@ -477,9 +797,9 @@ class FormManager {
         if (ponazurilRemaining > 0) {
             remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${AppState.formatNumber(ponazurilDose, 2)} mL = ${AppState.formatNumber(ponazurilTotal, 2)} mL`);
         }
-        
+
         // Handle topical medication for foster care
-        if (topical !== 'none') {
+        if (fleaStatus !== 'skip') {
             const topicalName = topical === 'revolution' ? 'Revolution' : 'Advantage II';
             const topicalDose = topical === 'revolution' ? revolutionDose : advantageDose;
             if (topicalDose !== outOfRangeString && !fleaGiven) {
@@ -487,7 +807,7 @@ class FormManager {
                 remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose = ${AppState.formatNumber(topicalDose, 2)} mL`);
             }
         }
-        
+
         // Add "For Foster" section (always visible, not collapsible)
         if (remainsForFoster.length > 0) {
             content += `
@@ -544,7 +864,7 @@ class FormManager {
                 </div>
             </div>
         `;
-        
+
         doseDisplay.classList.remove('empty');
         doseContent.innerHTML = content;
     }
@@ -561,43 +881,52 @@ class FormManager {
     }
 
     addMedicationListeners(kittenId) {
-        // Listen for topical medication changes
+        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
+
+        // Listen for toggle switch changes (enable/disable medication)
+        medications.forEach(med => {
+            const toggleCheckbox = document.getElementById(`${kittenId}-${med}-enabled`);
+            if (toggleCheckbox) {
+                toggleCheckbox.addEventListener('change', () => {
+                    this.updateMedicationRowState(kittenId, med);
+                    this.updateResultDisplay(kittenId);
+                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                    }
+                    this.autoSaveFormData();
+                });
+            }
+        });
+
+        // Listen for status control changes (To Do / Delay / Done)
+        medications.forEach(med => {
+            const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${med}-status"]`);
+            statusRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    this.updateStatusLight(kittenId, med);
+                    this.updateResultDisplay(kittenId);
+                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                    }
+                    this.autoSaveFormData();
+                });
+            });
+        });
+
+        // Listen for topical medication type changes (Revolution / Advantage)
         const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
         topicalRadios.forEach(radio => {
             radio.addEventListener('change', () => {
-                this.updateFleaCheckboxStates(kittenId);
                 this.updateResultDisplay(kittenId);
+                // Update flea status light (out-of-range may change between Revolution and Advantage)
+                this.updateStatusLight(kittenId, 'flea');
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
                 }
                 this.autoSaveFormData();
             });
         });
-        
-        // Listen for ringworm status changes
-        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
-        ringwormRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                this.updateResultDisplay(kittenId);
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                this.autoSaveFormData();
-            });
-        });
-        
-        // Listen for flea given checkbox changes
-        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
-        if (fleaGivenCheckbox) {
-            fleaGivenCheckbox.addEventListener('change', () => {
-                this.updateResultDisplay(kittenId);
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                this.autoSaveFormData();
-            });
-        }
-        
+
         // Listen for panacur regimen changes
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
         panacurRadios.forEach(radio => {
@@ -622,49 +951,155 @@ class FormManager {
             });
         });
 
-        // Listen for day 1 medication checkbox changes
-        const day1Checkboxes = [
-            document.getElementById(`${kittenId}-panacur-day1`),
-            document.getElementById(`${kittenId}-ponazuril-day1`),
-            document.getElementById(`${kittenId}-drontal-day1`)
-        ];
-        day1Checkboxes.forEach(checkbox => {
-            if (checkbox) {
-                checkbox.addEventListener('change', () => {
-                    this.updateResultDisplay(kittenId);
-                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                    }
-                    this.autoSaveFormData();
-                });
-            }
+        // Listen for ringworm status changes
+        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+        ringwormRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateRingwormStatusLight(kittenId);
+                this.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
         });
     }
 
-    updateFleaCheckboxStates(kittenId) {
-        const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
+    // Update medication row visual state based on toggle
+    updateMedicationRowState(kittenId, medType) {
+        const toggleCheckbox = document.getElementById(`${kittenId}-${medType}-enabled`);
+        const row = document.getElementById(`${kittenId}-${medType}-row`);
 
-        if (!fleaGivenCheckbox) {
-            console.error(`No flea given checkbox found for ${kittenId}`);
+        if (!toggleCheckbox || !row) return;
+
+        if (toggleCheckbox.checked) {
+            row.classList.remove('disabled');
+        } else {
+            row.classList.add('disabled');
+        }
+    }
+
+    // Update status light color based on status selection
+    updateStatusLight(kittenId, medType) {
+        const statusLight = document.getElementById(`${kittenId}-${medType}-status-light`);
+        const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${medType}-status"]`);
+        const toggleCheckbox = document.getElementById(`${kittenId}-${medType}-enabled`);
+
+        if (!statusLight) return;
+
+        // Check if there's a valid weight
+        const weightInput = document.getElementById(`${kittenId}-weight`);
+        const grams = weightInput ? parseFloat(weightInput.value) : 0;
+
+        // If no weight, hide the status light
+        if (!grams || grams <= 0) {
+            statusLight.className = 'status-light hidden';
             return;
         }
 
-        let selectedTopical = 'none';
-        topicalRadios.forEach(radio => {
-            if (radio.checked) selectedTopical = radio.value;
+        // Check if this medication is out of range
+        const weightLb = this.appState.constructor.convertToPounds(grams);
+        const outOfRangeString = this.appState.getOutOfRangeString();
+        let isOutOfRange = false;
+
+        if (medType === 'flea') {
+            // Check both Revolution and Advantage based on selection
+            const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
+            let topical = 'revolution';
+            topicalRadios.forEach(radio => {
+                if (radio.checked) topical = radio.value;
+            });
+            const dose = topical === 'revolution'
+                ? DoseCalculator.calculateRevolutionDose(weightLb)
+                : DoseCalculator.calculateAdvantageIIDose(weightLb);
+            isOutOfRange = dose === outOfRangeString || dose === 0;
+        } else if (medType === 'drontal') {
+            const dose = DoseCalculator.calculateDrontalDose(weightLb);
+            isOutOfRange = dose === outOfRangeString;
+        } else if (medType === 'capstar') {
+            const dose = DoseCalculator.calculateCapstarDose(weightLb);
+            isOutOfRange = dose === outOfRangeString;
+        }
+
+        // If out of range, show gray
+        if (isOutOfRange) {
+            statusLight.className = 'status-light out-of-range';
+            return;
+        }
+
+        // If medication is disabled, show skip color
+        if (toggleCheckbox && !toggleCheckbox.checked) {
+            statusLight.className = 'status-light skip';
+            return;
+        }
+
+        let status = 'todo';
+        statusRadios.forEach(radio => {
+            if (radio.checked) status = radio.value;
         });
 
-        const isNoneSelected = selectedTopical === 'none';
+        statusLight.className = `status-light ${status}`;
+    }
 
-        if (isNoneSelected) {
-            // Disable and uncheck flea given checkbox when 'Skip' is selected
-            fleaGivenCheckbox.disabled = true;
-            fleaGivenCheckbox.checked = false;
-        } else {
-            // Enable flea given checkbox when flea medication is selected
-            fleaGivenCheckbox.disabled = false;
+    // Update ringworm status light
+    updateRingwormStatusLight(kittenId) {
+        const statusLight = document.getElementById(`${kittenId}-ringworm-status-light`);
+        const statusRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+
+        if (!statusLight) return;
+
+        // Check if there's a valid weight
+        const weightInput = document.getElementById(`${kittenId}-weight`);
+        const grams = weightInput ? parseFloat(weightInput.value) : 0;
+
+        // If no weight, hide the status light
+        if (!grams || grams <= 0) {
+            statusLight.className = 'status-light hidden';
+            return;
         }
+
+        let status = 'not-scanned';
+        statusRadios.forEach(radio => {
+            if (radio.checked) status = radio.value;
+        });
+
+        // Map ringworm status to light color
+        if (status === 'negative') {
+            statusLight.className = 'status-light done';
+        } else if (status === 'positive') {
+            statusLight.className = 'status-light delay'; // amber/warning color
+        } else {
+            statusLight.className = 'status-light todo';
+        }
+    }
+
+    // Update all status lights for a kitten (called when weight changes)
+    updateAllStatusLights(kittenId) {
+        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
+        medications.forEach(med => {
+            this.updateStatusLight(kittenId, med);
+        });
+        this.updateRingwormStatusLight(kittenId);
+    }
+
+    // Get medication status (todo, delay, done) - replaces checkbox logic
+    getMedicationStatus(kittenId, medType) {
+        const toggleCheckbox = document.getElementById(`${kittenId}-${medType}-enabled`);
+        if (toggleCheckbox && !toggleCheckbox.checked) {
+            return 'skip';
+        }
+
+        const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${medType}-status"]`);
+        let status = 'todo';
+        statusRadios.forEach(radio => {
+            if (radio.checked) status = radio.value;
+        });
+        return status;
+    }
+
+    updateFleaCheckboxStates(kittenId) {
+        // Legacy method - now handled by updateMedicationRowState and toggle switches
+        // Keeping for backwards compatibility during transition
     }
 
     // Validation

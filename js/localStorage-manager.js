@@ -6,7 +6,7 @@
 class LocalStorageManager {
     constructor() {
         this.storageKey = 'cat-intake-form-data';
-        this.version = '1.0';
+        this.version = '2.0'; // Bumped for new medication status system
         this.isAvailable = this.checkStorageAvailability();
     }
 
@@ -124,19 +124,36 @@ class LocalStorageManager {
             const kittenId = form.id;
             formData.appState.activeKittens.push(kittenId);
 
-            // Collect all form data for this kitten
+            // Collect all form data for this kitten (new v2.0 format)
             const kittenData = {
                 name: this.getInputValue(`${kittenId}-name`),
                 weight: this.getInputValue(`${kittenId}-weight`),
                 topical: this.getRadioValue(`${kittenId}-topical`),
-                fleaGiven: this.getCheckboxValue(`${kittenId}-flea-given`),
-                panacur: this.getRadioValue(`${kittenId}-panacur`),
-                ponazuril: this.getRadioValue(`${kittenId}-ponazuril`),
+                panacurDays: this.getRadioValue(`${kittenId}-panacur`),
+                ponazurilDays: this.getRadioValue(`${kittenId}-ponazuril`),
                 ringwormStatus: this.getRadioValue(`${kittenId}-ringworm-status`),
-                day1Given: {
-                    panacur: this.getCheckboxValue(`${kittenId}-panacur-day1`),
-                    ponazuril: this.getCheckboxValue(`${kittenId}-ponazuril-day1`),
-                    drontal: this.getCheckboxValue(`${kittenId}-drontal-day1`)
+                // New medication enabled states
+                medications: {
+                    flea: {
+                        enabled: this.getCheckboxValue(`${kittenId}-flea-enabled`),
+                        status: this.getRadioValue(`${kittenId}-flea-status`)
+                    },
+                    capstar: {
+                        enabled: this.getCheckboxValue(`${kittenId}-capstar-enabled`),
+                        status: this.getRadioValue(`${kittenId}-capstar-status`)
+                    },
+                    panacur: {
+                        enabled: this.getCheckboxValue(`${kittenId}-panacur-enabled`),
+                        status: this.getRadioValue(`${kittenId}-panacur-status`)
+                    },
+                    ponazuril: {
+                        enabled: this.getCheckboxValue(`${kittenId}-ponazuril-enabled`),
+                        status: this.getRadioValue(`${kittenId}-ponazuril-status`)
+                    },
+                    drontal: {
+                        enabled: this.getCheckboxValue(`${kittenId}-drontal-enabled`),
+                        status: this.getRadioValue(`${kittenId}-drontal-status`)
+                    }
                 }
             };
 
@@ -197,7 +214,7 @@ class LocalStorageManager {
     restoreKittenForm(kittenId, kittenData, isFirst = false) {
         // Extract kitten number from ID for display and counter management
         const kittenNumber = parseInt(kittenId.split('-')[1]);
-        
+
         // Update global counter to this kitten's number (important for subsequent operations)
         if (window.kittenCounter < kittenNumber) {
             window.kittenCounter = kittenNumber;
@@ -208,7 +225,7 @@ class LocalStorageManager {
         const kittenForm = document.createElement('div');
         kittenForm.className = 'kitten-form';
         kittenForm.id = kittenId;
-        
+
         // Use FormManager's HTML template generator (single source of truth)
         if (window.KittenApp && window.KittenApp.formManager) {
             kittenForm.innerHTML = window.KittenApp.formManager.generateKittenFormHTML(kittenId, kittenNumber);
@@ -216,41 +233,53 @@ class LocalStorageManager {
             console.error('FormManager not available, cannot restore kitten form');
             return;
         }
-        
+
         container.appendChild(kittenForm);
 
         // Add event listeners like the original addKitten function would
         this.addFormEventListeners(kittenId);
 
-        // Set the saved values immediately - no setTimeout needed
+        // Set the saved values immediately
         this.setInputValue(`${kittenId}-name`, kittenData.name);
         this.setInputValue(`${kittenId}-weight`, kittenData.weight);
         this.setRadioValue(`${kittenId}-topical`, kittenData.topical);
-        this.setCheckboxValue(`${kittenId}-flea-given`, kittenData.fleaGiven);
-        this.setRadioValue(`${kittenId}-panacur`, kittenData.panacur);
-        this.setRadioValue(`${kittenId}-ponazuril`, kittenData.ponazuril || '3');
+        this.setRadioValue(`${kittenId}-panacur`, kittenData.panacurDays || '3');
+        this.setRadioValue(`${kittenId}-ponazuril`, kittenData.ponazurilDays || '3');
         this.setRadioValue(`${kittenId}-ringworm-status`, kittenData.ringwormStatus || 'not-scanned');
-        this.setCheckboxValue(`${kittenId}-panacur-day1`, kittenData.day1Given.panacur);
-        this.setCheckboxValue(`${kittenId}-ponazuril-day1`, kittenData.day1Given.ponazuril);
-        this.setCheckboxValue(`${kittenId}-drontal-day1`, kittenData.day1Given.drontal);
+
+        // Restore medication enabled states and statuses (v2.0 format)
+        if (kittenData.medications) {
+            const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
+            medications.forEach(med => {
+                const medData = kittenData.medications[med];
+                if (medData) {
+                    this.setCheckboxValue(`${kittenId}-${med}-enabled`, medData.enabled !== false);
+                    this.setRadioValue(`${kittenId}-${med}-status`, medData.status || 'todo');
+                }
+            });
+        }
 
         // Trigger updates for this kitten
-        if (typeof window.updateWeightDisplay === 'function') {
-            window.updateWeightDisplay(kittenId);
+        if (window.KittenApp && window.KittenApp.formManager) {
+            window.KittenApp.formManager.updateWeightDisplay(kittenId);
+            window.KittenApp.formManager.updateResultDisplay(kittenId);
+
+            // Update medication row states and status lights
+            const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
+            medications.forEach(med => {
+                window.KittenApp.formManager.updateMedicationRowState(kittenId, med);
+                window.KittenApp.formManager.updateStatusLight(kittenId, med);
+            });
+            window.KittenApp.formManager.updateRingwormStatusLight(kittenId);
         }
-        if (typeof window.updateResultDisplay === 'function') {
-            window.updateResultDisplay(kittenId);
-        }
-        if (typeof window.updateFleaCheckboxStates === 'function') {
-            window.updateFleaCheckboxStates(kittenId);
-        }
-        
     }
 
     /**
      * Add event listeners to a restored form (replaces FormManager.addValidationListeners + addMedicationListeners)
      */
     addFormEventListeners(kittenId) {
+        const formManager = window.KittenApp && window.KittenApp.formManager;
+
         // Add weight input filtering and validation
         const weightInput = document.getElementById(`${kittenId}-weight`);
         if (weightInput) {
@@ -263,12 +292,11 @@ class LocalStorageManager {
                 } else {
                     e.target.value = filteredValue;
                 }
-                
-                if (typeof window.updateWeightDisplay === 'function') {
-                    window.updateWeightDisplay(kittenId);
-                }
-                if (typeof window.updateResultDisplay === 'function') {
-                    window.updateResultDisplay(kittenId);
+
+                if (formManager) {
+                    formManager.updateWeightDisplay(kittenId);
+                    formManager.updateResultDisplay(kittenId);
+                    formManager.updateAllStatusLights(kittenId);
                 }
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -285,13 +313,12 @@ class LocalStorageManager {
                 const filteredPaste = paste.replace(/[^0-9.]/g, '');
                 const parts = filteredPaste.split('.');
                 const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
-                
+
                 e.target.value = validPaste;
-                if (typeof window.updateWeightDisplay === 'function') {
-                    window.updateWeightDisplay(kittenId);
-                }
-                if (typeof window.updateResultDisplay === 'function') {
-                    window.updateResultDisplay(kittenId);
+                if (formManager) {
+                    formManager.updateWeightDisplay(kittenId);
+                    formManager.updateResultDisplay(kittenId);
+                    formManager.updateAllStatusLights(kittenId);
                 }
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -302,15 +329,51 @@ class LocalStorageManager {
             });
         }
 
-        // Add medication change listeners
+        // Add medication toggle switch listeners
+        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
+        medications.forEach(med => {
+            const toggleCheckbox = document.getElementById(`${kittenId}-${med}-enabled`);
+            if (toggleCheckbox) {
+                toggleCheckbox.addEventListener('change', () => {
+                    if (formManager) {
+                        formManager.updateMedicationRowState(kittenId, med);
+                        formManager.updateStatusLight(kittenId, med);
+                        formManager.updateResultDisplay(kittenId);
+                    }
+                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                    }
+                    if (window.localStorageManager) {
+                        window.localStorageManager.saveFormData();
+                    }
+                });
+            }
+
+            // Add status control listeners
+            const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${med}-status"]`);
+            statusRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (formManager) {
+                        formManager.updateStatusLight(kittenId, med);
+                        formManager.updateResultDisplay(kittenId);
+                    }
+                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                    }
+                    if (window.localStorageManager) {
+                        window.localStorageManager.saveFormData();
+                    }
+                });
+            });
+        });
+
+        // Add topical type change listeners (Revolution / Advantage)
         const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
         topicalRadios.forEach(radio => {
             radio.addEventListener('change', () => {
-                if (typeof window.updateFleaCheckboxStates === 'function') {
-                    window.updateFleaCheckboxStates(kittenId);
-                }
-                if (typeof window.updateResultDisplay === 'function') {
-                    window.updateResultDisplay(kittenId);
+                if (formManager) {
+                    formManager.updateResultDisplay(kittenId);
+                    formManager.updateStatusLight(kittenId, 'flea');
                 }
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -321,27 +384,12 @@ class LocalStorageManager {
             });
         });
 
-        // Add flea given checkbox listener
-        const fleaGivenCheckbox = document.getElementById(`${kittenId}-flea-given`);
-        if (fleaGivenCheckbox) {
-            fleaGivenCheckbox.addEventListener('change', () => {
-                if (typeof window.updateResultDisplay === 'function') {
-                    window.updateResultDisplay(kittenId);
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
-        }
-
+        // Add panacur regimen listeners
         const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
         panacurRadios.forEach(radio => {
             radio.addEventListener('change', () => {
-                if (typeof window.updateResultDisplay === 'function') {
-                    window.updateResultDisplay(kittenId);
+                if (formManager) {
+                    formManager.updateResultDisplay(kittenId);
                 }
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -352,11 +400,12 @@ class LocalStorageManager {
             });
         });
 
+        // Add ponazuril regimen listeners
         const ponazurilRadios = document.querySelectorAll(`input[name="${kittenId}-ponazuril"]`);
         ponazurilRadios.forEach(radio => {
             radio.addEventListener('change', () => {
-                if (typeof window.updateResultDisplay === 'function') {
-                    window.updateResultDisplay(kittenId);
+                if (formManager) {
+                    formManager.updateResultDisplay(kittenId);
                 }
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -371,39 +420,25 @@ class LocalStorageManager {
         const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
         ringwormRadios.forEach(radio => {
             radio.addEventListener('change', () => {
+                if (formManager) {
+                    formManager.updateRingwormStatusLight(kittenId);
+                    formManager.updateResultDisplay(kittenId);
+                }
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
                 if (window.localStorageManager) {
                     window.localStorageManager.saveFormData();
                 }
             });
         });
 
-        const day1Checkboxes = [
-            document.getElementById(`${kittenId}-panacur-day1`),
-            document.getElementById(`${kittenId}-ponazuril-day1`),
-            document.getElementById(`${kittenId}-drontal-day1`)
-        ];
-        day1Checkboxes.forEach(checkbox => {
-            if (checkbox) {
-                checkbox.addEventListener('change', () => {
-                    if (typeof window.updateResultDisplay === 'function') {
-                        window.updateResultDisplay(kittenId);
-                    }
-                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                    }
-                    if (window.localStorageManager) {
-                        window.localStorageManager.saveFormData();
-                    }
-                });
-            }
-        });
-
         // Add name validation listeners
         const nameInput = document.getElementById(`${kittenId}-name`);
         if (nameInput) {
             nameInput.addEventListener('input', () => {
-                if (typeof window.updateResultDisplay === 'function') {
-                    window.updateResultDisplay(kittenId);
+                if (formManager) {
+                    formManager.updateResultDisplay(kittenId);
                 }
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();

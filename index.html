@@ -12,53 +12,30 @@
     </header>
     <nav>
         <div class="header-buttons" id="header-buttons">
-            <button type="button" id="clear-all-btn" class="btn btn-warning">Clear All</button>
-            <button type="button" id="share-btn" class="btn btn-secondary">Share</button>
-            <button type="button" onclick="window.print()" class="btn btn-secondary" id="print-checklist-btn">Print</button>
-            <!-- <button type="button" onclick="printSection('checklist')" class="btn btn-secondary" id="print-checklist-btn" disabled>🖨️  Checklist</button>
-            <button type="button" onclick="printSection('dispense')" class="btn btn-secondary" id="print-dosages-btn" disabled>🖨️  Records</button> -->
-            <button type="button" id="add-kitten-btn" class="btn btn-primary">Add Cat</button>
+            <div class="nav-menu-container">
+                <button type="button" id="nav-menu-btn" class="nav-btn nav-menu-btn">&#x22EF;</button>
+                <div id="nav-menu-dropdown" class="nav-menu-dropdown">
+                    <button type="button" data-action="share">Share</button>
+                    <button type="button" data-action="print">Print</button>
+                    <hr>
+                    <button type="button" data-action="clear" class="destructive">Clear All</button>
+                </div>
+            </div>
+            <div class="nav-center" id="nav-center">
+                <div id="pagination-dots" class="pagination-dots">
+                    <!-- Pagination dots will be added here dynamically -->
+                </div>
+            </div>
+            <button type="button" id="add-kitten-btn" class="nav-btn nav-btn-primary">Add Cat</button>
         </div>
     </nav>
 
     <!-- Banner for shared URL state -->
     <div id="shared-url-banner" class="shared-url-banner" style="display: none;">
-        <div class="shared-url-banner-content">
-            <span class="shared-url-message">Viewing shared form</span>
-            <div class="shared-url-actions">
-                <button type="button" id="eject-btn" class="btn btn-secondary btn-small">Eject</button>
-                <button type="button" id="keep-btn" class="btn btn-primary btn-small">Keep</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ShelterLuv Integration Panel (hidden by default, enable with ?shelterluv=1) -->
-    <div id="shelterluv-panel" class="shelterluv-panel" style="display: none;">
-        <div class="shelterluv-header" id="shelterluv-toggle">
-            <span class="shelterluv-title">ShelterLuv Integration</span>
-            <span class="shelterluv-status" id="shelterluv-status-badge"></span>
-            <span class="shelterluv-expand">Settings</span>
-        </div>
-        <div class="shelterluv-settings" id="shelterluv-settings" style="display: none;">
-            <div class="shelterluv-form-group">
-                <label for="shelterluv-api-key">API Key</label>
-                <input type="password" id="shelterluv-api-key" placeholder="Enter your ShelterLuv API key">
-                <small class="shelterluv-hint">API key is stored locally in your browser</small>
-            </div>
-            <div class="shelterluv-form-group">
-                <label for="shelterluv-slug">Shelter Slug (optional)</label>
-                <input type="text" id="shelterluv-slug" placeholder="e.g., my-shelter">
-            </div>
-            <div class="shelterluv-actions">
-                <button type="button" id="shelterluv-test-btn" class="btn btn-secondary btn-small">Test Connection</button>
-                <button type="button" id="shelterluv-save-btn" class="btn btn-primary btn-small">Save</button>
-                <button type="button" id="shelterluv-clear-btn" class="btn btn-warning btn-small">Clear</button>
-            </div>
-            <div class="shelterluv-message" id="shelterluv-message"></div>
-        </div>
-        <div class="shelterluv-sync-row">
-            <button type="button" id="shelterluv-sync-btn" class="btn btn-success" disabled>Sync to ShelterLuv</button>
-            <span class="shelterluv-sync-status" id="shelterluv-sync-status"></span>
+        <span class="shared-url-message">📋 Shared Link</span>
+        <div class="shared-url-actions">
+            <button type="button" id="eject-btn" class="btn btn-secondary btn-small">Back To Yours</button>
+            <button type="button" id="keep-btn" class="btn btn-primary btn-small">Use This Data</button>
         </div>
     </div>
 
@@ -94,7 +71,6 @@
     <script src="js/schedule-manager.js"></script>
     <script src="js/results-display.js"></script>
     <script src="js/print-manager.js"></script>
-    <script src="js/shelter-luv-sync.js"></script>
     <script src="js/main-app.js"></script>
     <script src="js/localStorage-manager.js"></script>
     <script src="js/url-state-manager.js"></script>

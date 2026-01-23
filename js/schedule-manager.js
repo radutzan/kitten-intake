@@ -56,20 +56,37 @@ class ScheduleManager {
                 };
             }
             
+            // Capstar schedule (only if not given at center)
+            if (kitten.day1Given && kitten.day1Given.capstar === false) {
+                schedule.medications.capstar = {
+                    dose: '1 tablet',
+                    days: this.generateDaysFromToday(1, notGivenStartOffset)
+                };
+            }
+
             // Topical schedule logic
             if (kitten.topical !== 'none' && kitten.doses.topical !== outOfRangeString && kitten.doses.topical > 0) {
-                if (!kitten.fleaGiven) {
-                    // Flea med not given at intake - delay by 2 days
+                const fleaStatus = kitten.medicationStatus ? kitten.medicationStatus.flea : (kitten.fleaGiven ? 'done' : 'todo');
+
+                if (fleaStatus === 'delay') {
+                    // "Delay" status - delay by 2 days
                     const fleaDelayOffset = 2;
                     schedule.medications.topical = {
                         type: kitten.topical,
                         dose: kitten.doses.topical,
                         days: this.generateDaysFromToday(1, fleaDelayOffset)
                     };
+                } else if (fleaStatus === 'todo') {
+                    // "To Do" status - start today
+                    schedule.medications.topical = {
+                        type: kitten.topical,
+                        dose: kitten.doses.topical,
+                        days: this.generateDaysFromToday(1, notGivenStartOffset)
+                    };
                 }
-                // If fleaGiven, no schedule entry (med already given at intake)
+                // If fleaStatus === 'done' or 'skip', no schedule entry
             }
-            
+
             schedules.push(schedule);
         });
         
@@ -127,7 +144,8 @@ class ScheduleManager {
         }
         
         const drontalAmount = kitten.day1Given.drontal ? 0 : 1; // 1 dose if not given at center
-        
+        const capstarAmount = (kitten.day1Given && kitten.day1Given.capstar === false) ? 1 : 0; // 1 tablet if not given at center
+
         return {
             panacur: {
                 remaining: panacurRemaining,
@@ -143,6 +161,9 @@ class ScheduleManager {
             },
             drontal: {
                 amount: drontalAmount
+            },
+            capstar: {
+                amount: capstarAmount
             }
         };
     }
@@ -183,7 +204,16 @@ class ScheduleManager {
                 total: kitten.doses.drontal + ' tablet(s)'
             });
         }
-        
+
+        if (remaining.capstar && remaining.capstar.amount > 0) {
+            summary.push({
+                medication: 'Capstar',
+                dose: '1 tablet',
+                days: 1,
+                total: '1 tablet'
+            });
+        }
+
         if (remaining.topical.amount > 0) {
             const topicalName = remaining.topical.type === 'revolution' ? 'Revolution' : 'Advantage II';
             summary.push({
@@ -192,7 +222,7 @@ class ScheduleManager {
                 days: 1
             });
         }
-        
+
         return summary;
     }
 }

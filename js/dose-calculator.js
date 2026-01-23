@@ -38,6 +38,12 @@ class DoseCalculator {
         return 'Out of range';
     }
 
+    static calculateCapstarDose(weightLb) {
+        // Capstar (nitenpyram) - 1 tablet for cats 2-25 lbs
+        if (weightLb >= 2 && weightLb <= 25) return '1';
+        return 'Out of range';
+    }
+
     /**
      * Calculate all doses for a kitten based on weight
      * @param {number} weightLb - Weight in pounds
@@ -49,7 +55,8 @@ class DoseCalculator {
             ponazuril: this.calculatePonazurilDose(weightLb),
             revolution: this.calculateRevolutionDose(weightLb),
             advantage: this.calculateAdvantageIIDose(weightLb),
-            drontal: this.calculateDrontalDose(weightLb)
+            drontal: this.calculateDrontalDose(weightLb),
+            capstar: this.calculateCapstarDose(weightLb)
         };
     }
 
@@ -60,7 +67,7 @@ class DoseCalculator {
      */
     static addDosesToKitten(kitten) {
         const doses = this.calculateAllDoses(kitten.weightLb);
-        
+
         // Determine topical dose based on selected medication
         let topicalDose = 0;
         if (kitten.topical === 'revolution') {
@@ -75,7 +82,8 @@ class DoseCalculator {
                 panacur: doses.panacur,
                 ponazuril: doses.ponazuril,
                 topical: topicalDose,
-                drontal: doses.drontal
+                drontal: doses.drontal,
+                capstar: doses.capstar
             }
         };
     }
