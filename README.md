@@ -9,4 +9,4 @@ This is a single-page HTML/JS application to assist in rescued cat and kitten in
 It runs in a browser, with no server setup — just open index.html.
 
 ## Credits
-The logic is written by Anthropic's [Claude](https://claude.ai/). Product management by [Anti](https://antoniayunge.cl), UI design and LLM management by [Radu](https://radu.cl).
+Code by Anthropic's [Claude](https://claude.ai/). Product management & design by [Anti](https://antoniayunge.cl) and [Radu](https://radu.cl), LLM management and CSS tuning by Radu.
