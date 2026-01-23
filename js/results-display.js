@@ -1,6 +1,11 @@
 /**
  * Results Display Module - Foster checklist and dispense summary rendering
- * Handles rendering and updating of results sections
+ * Separates data preparation from rendering for better testability
+ *
+ * Pattern:
+ *   1. prepareXxxData() - Pure function, returns data object
+ *   2. renderXxxHtml() - Pure function, returns HTML/DOM
+ *   3. displayXxx() - Orchestrates above and updates DOM
  */
 
 class ResultsDisplay {
@@ -10,217 +15,76 @@ class ResultsDisplay {
         this.doseCalculator = doseCalculator;
     }
 
+    // ==========================================
+    // Main Entry Point
+    // ==========================================
+
     updateResultsAutomatically() {
         // Check if we have any kittens with valid basic data
         const kittenForms = document.querySelectorAll('.kitten-form');
-        
+
         if (kittenForms.length === 0) {
-            // No kittens, hide results
-            document.getElementById('results-section').style.display = 'none';
-            this.updateHeaderButtons();
+            this._hideResults();
             return;
         }
-        
+
         // Check if at least one kitten has weight
         let hasValidKitten = false;
         kittenForms.forEach(form => {
             const kittenId = form.id;
             const weight = parseFloat(document.getElementById(`${kittenId}-weight`).value);
-            
             if (weight > 0) {
                 hasValidKitten = true;
             }
         });
-        
+
         if (!hasValidKitten) {
-            // No valid kittens, hide results
-            document.getElementById('results-section').style.display = 'none';
-            this.updateHeaderButtons();
+            this._hideResults();
             return;
         }
-        
+
         // We have at least one valid kitten, update results
         try {
             const kittens = this.appState.collectKittenData();
-            
+
             // Add doses to kittens and filter out invalid ones
             const validKittens = kittens
                 .map(kitten => this.doseCalculator.addDosesToKitten(kitten))
                 .filter(kitten => kitten.weightGrams > 0);
-            
+
             if (validKittens.length > 0) {
                 const schedules = this.scheduleManager.generateSchedule(validKittens);
                 this.displayFosterChecklist(validKittens, schedules);
                 this.displayDispenseSummary(validKittens);
-                
-                document.getElementById('results-section').style.display = 'block';
+
+                document.getElementById(Constants.ELEMENTS.RESULTS_SECTION).style.display = 'block';
             } else {
-                document.getElementById('results-section').style.display = 'none';
+                this._hideResults();
             }
-            
+
             this.updateHeaderButtons();
         } catch (error) {
-            // If there's an error in calculations, hide results
             console.error('Error updating results:', error);
-            document.getElementById('results-section').style.display = 'none';
-            this.updateHeaderButtons();
+            this._hideResults();
         }
     }
 
-    displayFosterChecklist(kittens, schedules) {
-        const container = document.getElementById('foster-checklist-content');
-        
-        // Get all unique dates across all schedules
-        const allDays = this.scheduleManager.getAllScheduleDays(schedules);
-        
-        // Optimize Drontal scheduling - move it to first available day with other medications
-        this.optimizeDrontalScheduling(kittens, schedules, allDays);
-        
-        // Recalculate all days after optimizing Drontal
-        const updatedAllDays = this.scheduleManager.getAllScheduleDays(schedules);
-        
-        if (updatedAllDays.length === 0) {
-            container.innerHTML = '<p>No medications needed for foster care.</p>';
-            return;
-        }
-        
-        // Create table
-        const table = document.createElement('table');
-        table.className = 'checklist-table';
-        
-        // Create header
-        const thead = document.createElement('thead');
-        const headerRow1 = document.createElement('tr');
-        const headerRow2 = document.createElement('tr');
-        
-        // Date column
-        const dateHeader = document.createElement('th');
-        dateHeader.rowSpan = 2;
-        dateHeader.className = 'date-col';
-        headerRow1.appendChild(dateHeader);
-        
-        // Kitten columns
-        kittens.forEach(kitten => {
-            const schedule = schedules.find(s => s.kittenId === kitten.id);
-            const medCount = Object.keys(schedule.medications).length;
-            
-            if (medCount > 0) {
-                const kittenHeader = document.createElement('th');
-                kittenHeader.colSpan = medCount;
-                kittenHeader.className = 'kitten-header';
-                const displayName = kitten.name || 'Unnamed Kitten';
-                kittenHeader.innerHTML = `<strong>${displayName}</strong> <span>${AppState.formatNumber(kitten.weightGrams)}g (${AppState.formatNumber(kitten.weightLb, 2)} lb)</span>`;
-                headerRow1.appendChild(kittenHeader);
-                
-                // Medication sub-headers
-                const medEntries = Object.entries(schedule.medications);
-                medEntries.forEach(([medType, medData], medIndex) => {
-                    const medHeader = document.createElement('th');
-                    let className = 'med-header';
-                    if (medIndex === 0) {
-                        className += ' first-kitten-col';
-                    }
-                    medHeader.className = className;
-                    
-                    let medName = '';
-                    let doseDisplay = '';
-                    if (medType === 'panacur') {
-                        medName = 'Panacur';
-                        doseDisplay = `${AppState.formatNumber(medData.dose, 2)} mL`;
-                    }
-                    else if (medType === 'ponazuril') {
-                        medName = 'Ponazuril';
-                        doseDisplay = `${AppState.formatNumber(medData.dose, 2)} mL`;
-                    }
-                    else if (medType === 'drontal') {
-                        medName = 'Drontal';
-                        doseDisplay = `${medData.dose} tablet(s)`;
-                    }
-                    else if (medType === 'capstar') {
-                        medName = 'Capstar';
-                        doseDisplay = medData.dose;
-                    }
-                    else if (medType === 'topical') {
-                        medName = medData.type === 'revolution' ? 'Revolution' : 'Advantage II';
-                        doseDisplay = `${AppState.formatNumber(medData.dose, 2)} mL`;
-                    }
-                    
-                    medHeader.innerHTML = `${medName}<br><small>${doseDisplay}</small>`;
-                    headerRow2.appendChild(medHeader);
-                });
-            }
-        });
-        
-        thead.appendChild(headerRow1);
-        thead.appendChild(headerRow2);
-        table.appendChild(thead);
-        
-        // Create body
-        const tbody = document.createElement('tbody');
-        
-        updatedAllDays.forEach(day => {
-            const row = document.createElement('tr');
-            
-            // Date cell
-            const dateCell = document.createElement('td');
-            dateCell.className = 'date-col';
-            dateCell.textContent = AppState.formatDateForDisplay(day);
-            row.appendChild(dateCell);
-            
-            // Medication cells - only show cells for kittens that have medications
-            kittens.forEach(kitten => {
-                const schedule = schedules.find(s => s.kittenId === kitten.id);
-                const medCount = Object.keys(schedule.medications).length;
-                
-                // Only add cells if this kitten has medications
-                if (medCount > 0) {
-                    const medEntries = Object.entries(schedule.medications);
-                    medEntries.forEach(([medType, medData], medIndex) => {
-                        const cell = document.createElement('td');
-                        if (medIndex === 0) {
-                            cell.className = 'first-kitten-col';
-                        }
-                        
-                        if (medData.days.includes(day)) {
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-                            checkbox.name = `${kitten.id}-${medType}-${day}`;
-                            cell.appendChild(checkbox);
-                        } else {
-                            cell.innerHTML = '—';
-                        }
-                        
-                        row.appendChild(cell);
-                    });
-                }
-            });
-            
-            tbody.appendChild(row);
-        });
-        
-        table.appendChild(tbody);
-        container.innerHTML = '';
-        container.appendChild(table);
+    _hideResults() {
+        document.getElementById(Constants.ELEMENTS.RESULTS_SECTION).style.display = 'none';
+        this.updateHeaderButtons();
     }
 
-    optimizeDrontalScheduling(kittens, schedules, allDays) {
-        // Since all medications now start tomorrow by default,
-        // Drontal optimization is simplified to just assign to first available day
-        if (allDays.length === 0) return;
+    // ==========================================
+    // Dispense Summary - Data Preparation
+    // ==========================================
 
-        kittens.forEach(kitten => {
-            const schedule = schedules.find(s => s.kittenId === kitten.id);
-            if (!schedule || !schedule.medications.drontal) return;
-            
-            // Assign Drontal to the first available day with other medications
-            schedule.medications.drontal.days = [allDays[0]];
-        });
-    }
-
-    displayDispenseSummary(kittens) {
-        const container = document.getElementById('dispense-summary-content');
-        container.innerHTML = '';
-
+    /**
+     * Prepare dispense summary data from kittens
+     * Pure function - no DOM access
+     * @param {Array} kittens - Array of kitten objects with doses
+     * @returns {Object} Totals object with medication amounts
+     */
+    prepareDispenseSummaryData(kittens) {
         const totals = {
             panacur: 0,
             ponazuril: 0,
@@ -230,7 +94,7 @@ class ResultsDisplay {
             capstar: 0
         };
 
-        const outOfRangeString = this.appState.getOutOfRangeString();
+        const outOfRangeString = Constants.MESSAGES.OUT_OF_RANGE;
 
         kittens.forEach(kitten => {
             const remaining = this.scheduleManager.calculateRemainingMedications(kitten);
@@ -239,10 +103,10 @@ class ResultsDisplay {
             totals.panacur += remaining.panacur.total;
             totals.ponazuril += remaining.ponazuril.total;
 
-            if (kitten.topical === 'revolution' && kitten.doses.topical !== outOfRangeString) {
+            if (kitten.topical === Constants.TOPICAL.REVOLUTION && kitten.doses.topical !== outOfRangeString) {
                 totals.revolution += remaining.topical.amount;
             }
-            if (kitten.topical === 'advantage' && kitten.doses.topical !== outOfRangeString) {
+            if (kitten.topical === Constants.TOPICAL.ADVANTAGE && kitten.doses.topical !== outOfRangeString) {
                 totals.advantage += remaining.topical.amount;
             }
             if (kitten.doses.drontal !== outOfRangeString) {
@@ -253,69 +117,362 @@ class ResultsDisplay {
             }
         });
 
-        // Aggregate totals only
+        return totals;
+    }
+
+    // ==========================================
+    // Dispense Summary - HTML Rendering
+    // ==========================================
+
+    /**
+     * Render dispense summary HTML from prepared data
+     * Pure function - returns HTML string
+     * @param {Object} totals - Totals object from prepareDispenseSummaryData
+     * @returns {string} HTML string
+     */
+    renderDispenseSummaryHtml(totals) {
+        const items = [];
+
+        if (totals.panacur > 0) {
+            items.push(`
+                <div class="total-item">
+                    <span>Panacur</span>
+                    <strong>${AppState.formatNumber(totals.panacur, 2)} mL</strong>
+                </div>
+            `);
+        }
+
+        if (totals.ponazuril > 0) {
+            items.push(`
+                <div class="total-item">
+                    <span>Ponazuril</span>
+                    <strong>${AppState.formatNumber(totals.ponazuril, 2)} mL</strong>
+                </div>
+            `);
+        }
+
+        if (totals.revolution > 0) {
+            items.push(`
+                <div class="total-item">
+                    <span>Revolution</span>
+                    <strong>${AppState.formatNumber(totals.revolution, 2)} mL</strong>
+                </div>
+            `);
+        }
+
+        if (totals.advantage > 0) {
+            items.push(`
+                <div class="total-item">
+                    <span>Advantage II</span>
+                    <strong>${AppState.formatNumber(totals.advantage, 2)} mL</strong>
+                </div>
+            `);
+        }
+
+        if (totals.drontal > 0) {
+            items.push(`
+                <div class="total-item">
+                    <span>Drontal</span>
+                    <strong>${totals.drontal} tablet(s)</strong>
+                </div>
+            `);
+        }
+
+        if (totals.capstar > 0) {
+            items.push(`
+                <div class="total-item">
+                    <span>Capstar</span>
+                    <strong>${totals.capstar} tablet(s)</strong>
+                </div>
+            `);
+        }
+
+        return items.join('');
+    }
+
+    // ==========================================
+    // Dispense Summary - DOM Update
+    // ==========================================
+
+    /**
+     * Display dispense summary - orchestrates data prep, rendering, and DOM update
+     * @param {Array} kittens - Array of kitten objects
+     */
+    displayDispenseSummary(kittens) {
+        const container = document.getElementById(Constants.ELEMENTS.DISPENSE_SUMMARY_CONTENT);
+
+        // Step 1: Prepare data
+        const totals = this.prepareDispenseSummaryData(kittens);
+
+        // Step 2: Render HTML
+        const html = this.renderDispenseSummaryHtml(totals);
+
+        // Step 3: Update DOM
+        container.innerHTML = '';
         const aggregateSection = document.createElement('div');
         aggregateSection.className = 'med-totals';
-        aggregateSection.innerHTML = `
-            <div class="total-item">
-                <span>Panacur</span>
-                <strong>${AppState.formatNumber(totals.panacur, 2)} mL</strong>
-            </div>
-            <div class="total-item">
-                <span>Ponazuril</span>
-                <strong>${AppState.formatNumber(totals.ponazuril, 2)} mL</strong>
-            </div>
-            ${totals.revolution > 0 ? `
-            <div class="total-item">
-                <span>Revolution</span>
-                <strong>${AppState.formatNumber(totals.revolution, 2)} mL</strong>
-            </div>
-            ` : ''}
-            ${totals.advantage > 0 ? `
-            <div class="total-item">
-                <span>Advantage II</span>
-                <strong>${AppState.formatNumber(totals.advantage, 2)} mL</strong>
-            </div>
-            ` : ''}
-            ${totals.drontal > 0 ? `
-            <div class="total-item">
-                <span>Drontal</span>
-                <strong>${totals.drontal} tablet(s)</strong>
-            </div>
-            ` : ''}
-            ${totals.capstar > 0 ? `
-            <div class="total-item">
-                <span>Capstar</span>
-                <strong>${totals.capstar} tablet(s)</strong>
-            </div>
-            ` : ''}
-        `;
-
+        aggregateSection.innerHTML = html;
         container.appendChild(aggregateSection);
     }
 
+    // ==========================================
+    // Foster Checklist - Data Preparation
+    // ==========================================
+
+    /**
+     * Prepare foster checklist data
+     * Pure function - no DOM access
+     * @param {Array} kittens - Array of kitten objects
+     * @param {Array} schedules - Array of schedule objects
+     * @returns {Object} Checklist data structure
+     */
+    prepareFosterChecklistData(kittens, schedules) {
+        // Get all unique dates across all schedules
+        const allDays = this.scheduleManager.getAllScheduleDays(schedules);
+
+        // Optimize Drontal scheduling
+        this._optimizeDrontalScheduling(kittens, schedules, allDays);
+
+        // Recalculate days after optimization
+        const updatedAllDays = this.scheduleManager.getAllScheduleDays(schedules);
+
+        // Build kitten header data
+        const kittenHeaders = kittens
+            .map(kitten => {
+                const schedule = schedules.find(s => s.kittenId === kitten.id);
+                const medications = Object.entries(schedule.medications).map(([medType, medData]) => ({
+                    type: medType,
+                    name: this._getMedicationDisplayName(medType, medData),
+                    dose: this._getMedicationDoseDisplay(medType, medData)
+                }));
+
+                return {
+                    id: kitten.id,
+                    name: kitten.name || 'Unnamed Kitten',
+                    weightGrams: kitten.weightGrams,
+                    weightLb: kitten.weightLb,
+                    medications,
+                    hasMedications: medications.length > 0
+                };
+            })
+            .filter(k => k.hasMedications);
+
+        // Build row data
+        const rows = updatedAllDays.map(day => ({
+            date: day,
+            displayDate: AppState.formatDateForDisplay(day),
+            cells: kittenHeaders.flatMap(kitten => {
+                const schedule = schedules.find(s => s.kittenId === kitten.id);
+                return Object.entries(schedule.medications).map(([medType, medData], index) => ({
+                    kittenId: kitten.id,
+                    medType,
+                    hasCheckbox: medData.days.includes(day),
+                    isFirstCol: index === 0
+                }));
+            })
+        }));
+
+        return {
+            days: updatedAllDays,
+            kittenHeaders,
+            rows,
+            isEmpty: updatedAllDays.length === 0
+        };
+    }
+
+    /**
+     * Get display name for medication type
+     */
+    _getMedicationDisplayName(medType, medData) {
+        const names = {
+            panacur: 'Panacur',
+            ponazuril: 'Ponazuril',
+            drontal: 'Drontal',
+            capstar: 'Capstar',
+            topical: medData.type === 'revolution' ? 'Revolution' : 'Advantage II'
+        };
+        return names[medType] || medType;
+    }
+
+    /**
+     * Get dose display string for medication
+     */
+    _getMedicationDoseDisplay(medType, medData) {
+        if (medType === 'panacur' || medType === 'ponazuril') {
+            return `${AppState.formatNumber(medData.dose, 2)} mL`;
+        }
+        if (medType === 'drontal') {
+            return `${medData.dose} tablet(s)`;
+        }
+        if (medType === 'capstar') {
+            return medData.dose;
+        }
+        if (medType === 'topical') {
+            return `${AppState.formatNumber(medData.dose, 2)} mL`;
+        }
+        return '';
+    }
+
+    /**
+     * Optimize Drontal scheduling to first available day
+     */
+    _optimizeDrontalScheduling(kittens, schedules, allDays) {
+        if (allDays.length === 0) return;
+
+        kittens.forEach(kitten => {
+            const schedule = schedules.find(s => s.kittenId === kitten.id);
+            if (!schedule || !schedule.medications.drontal) return;
+            schedule.medications.drontal.days = [allDays[0]];
+        });
+    }
+
+    // ==========================================
+    // Foster Checklist - HTML Rendering
+    // ==========================================
+
+    /**
+     * Render foster checklist table from prepared data
+     * @param {Object} checklistData - Data from prepareFosterChecklistData
+     * @returns {HTMLElement} Table element
+     */
+    renderFosterChecklistTable(checklistData) {
+        if (checklistData.isEmpty) {
+            const p = document.createElement('p');
+            p.textContent = 'No medications needed for foster care.';
+            return p;
+        }
+
+        const table = document.createElement('table');
+        table.className = 'checklist-table';
+
+        // Build header
+        const thead = document.createElement('thead');
+        const headerRow1 = document.createElement('tr');
+        const headerRow2 = document.createElement('tr');
+
+        // Date column header
+        const dateHeader = document.createElement('th');
+        dateHeader.rowSpan = 2;
+        dateHeader.className = 'date-col';
+        headerRow1.appendChild(dateHeader);
+
+        // Kitten headers
+        checklistData.kittenHeaders.forEach(kitten => {
+            const kittenHeader = document.createElement('th');
+            kittenHeader.colSpan = kitten.medications.length;
+            kittenHeader.className = 'kitten-header';
+            kittenHeader.innerHTML = `<strong>${kitten.name}</strong> <span>${AppState.formatNumber(kitten.weightGrams)}g (${AppState.formatNumber(kitten.weightLb, 2)} lb)</span>`;
+            headerRow1.appendChild(kittenHeader);
+
+            // Medication sub-headers
+            kitten.medications.forEach((med, index) => {
+                const medHeader = document.createElement('th');
+                medHeader.className = index === 0 ? 'med-header first-kitten-col' : 'med-header';
+                medHeader.innerHTML = `${med.name}<br><small>${med.dose}</small>`;
+                headerRow2.appendChild(medHeader);
+            });
+        });
+
+        thead.appendChild(headerRow1);
+        thead.appendChild(headerRow2);
+        table.appendChild(thead);
+
+        // Build body
+        const tbody = document.createElement('tbody');
+        checklistData.rows.forEach(row => {
+            const tr = document.createElement('tr');
+
+            // Date cell
+            const dateCell = document.createElement('td');
+            dateCell.className = 'date-col';
+            dateCell.textContent = row.displayDate;
+            tr.appendChild(dateCell);
+
+            // Medication cells
+            row.cells.forEach(cell => {
+                const td = document.createElement('td');
+                if (cell.isFirstCol) {
+                    td.className = 'first-kitten-col';
+                }
+
+                if (cell.hasCheckbox) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = `${cell.kittenId}-${cell.medType}-${row.date}`;
+                    td.appendChild(checkbox);
+                } else {
+                    td.innerHTML = '—';
+                }
+
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        return table;
+    }
+
+    // ==========================================
+    // Foster Checklist - DOM Update
+    // ==========================================
+
+    /**
+     * Display foster checklist - orchestrates data prep, rendering, and DOM update
+     * @param {Array} kittens - Array of kitten objects
+     * @param {Array} schedules - Array of schedule objects
+     */
+    displayFosterChecklist(kittens, schedules) {
+        const container = document.getElementById(Constants.ELEMENTS.FOSTER_CHECKLIST_CONTENT);
+
+        // Step 1: Prepare data
+        const checklistData = this.prepareFosterChecklistData(kittens, schedules);
+
+        // Step 2: Render table
+        const table = this.renderFosterChecklistTable(checklistData);
+
+        // Step 3: Update DOM
+        container.innerHTML = '';
+        container.appendChild(table);
+    }
+
+    // ==========================================
+    // Header Buttons
+    // ==========================================
+
     updateHeaderButtons() {
-        const resultsSection = document.getElementById('results-section');
+        const resultsSection = document.getElementById(Constants.ELEMENTS.RESULTS_SECTION);
         const kittens = this.appState.getKittens();
         const hasResults = resultsSection && resultsSection.style.display !== 'none' && kittens.length > 0;
-        
+
         const printChecklistBtn = document.getElementById('print-checklist-btn');
         const printDosagesBtn = document.getElementById('print-dosages-btn');
-        
+
         if (printChecklistBtn) {
             printChecklistBtn.disabled = !hasResults;
             printChecklistBtn.style.opacity = hasResults ? '1' : '0.5';
         }
-        
+
         if (printDosagesBtn) {
             printDosagesBtn.disabled = !hasResults;
             printDosagesBtn.style.opacity = hasResults ? '1' : '0.5';
         }
     }
 
+    // ==========================================
+    // Legacy / Compatibility
+    // ==========================================
+
     /**
-     * Legacy function - kept for compatibility but no longer used
-     * Results now update automatically via updateResultsAutomatically()
+     * @deprecated Use optimizeDrontalScheduling prefix convention
+     */
+    optimizeDrontalScheduling(kittens, schedules, allDays) {
+        this._optimizeDrontalScheduling(kittens, schedules, allDays);
+    }
+
+    /**
+     * Legacy function - kept for compatibility
      */
     calculateAndDisplay() {
         this.updateResultsAutomatically();

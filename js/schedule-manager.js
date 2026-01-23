@@ -10,54 +10,61 @@ class ScheduleManager {
 
     generateSchedule(kittens) {
         const schedules = [];
-        
+
         kittens.forEach(kitten => {
             const schedule = {
                 kittenId: kitten.id,
                 kittenName: kitten.name,
                 medications: {}
             };
-            
+
             // Medications start tomorrow if given at intake, today if not given
             const givenStartOffset = 1;  // Start tomorrow if given at intake
             const notGivenStartOffset = 0;  // Start today if not given at intake
 
-            // Panacur schedule
-            const panacurRemainingDays = kitten.day1Given.panacur ?
-                (kitten.panacurDays - 1) : kitten.panacurDays;
-            const panacurOffset = kitten.day1Given.panacur ? givenStartOffset : notGivenStartOffset;
+            // Helper to check if medication is skipped (disabled)
+            const medStatus = kitten.medicationStatus || {};
+            const isSkipped = (med) => medStatus[med] === Constants.STATUS.SKIP;
 
-            if (panacurRemainingDays > 0) {
-                schedule.medications.panacur = {
-                    dose: kitten.doses.panacur,
-                    days: this.generateDaysFromToday(panacurRemainingDays, panacurOffset)
-                };
+            // Panacur schedule (skip if disabled)
+            if (!isSkipped('panacur')) {
+                const panacurRemainingDays = kitten.day1Given.panacur ?
+                    (kitten.panacurDays - 1) : kitten.panacurDays;
+                const panacurOffset = kitten.day1Given.panacur ? givenStartOffset : notGivenStartOffset;
+
+                if (panacurRemainingDays > 0) {
+                    schedule.medications.panacur = {
+                        dose: kitten.doses.panacur,
+                        days: this.generateDaysFromToday(panacurRemainingDays, panacurOffset)
+                    };
+                }
             }
 
-            // Ponazuril schedule
-            const ponazurilRemainingDays = kitten.day1Given.ponazuril ?
-                (kitten.ponazurilDays - 1) : kitten.ponazurilDays;
-            const ponazurilOffset = kitten.day1Given.ponazuril ? givenStartOffset : notGivenStartOffset;
+            // Ponazuril schedule (skip if disabled)
+            if (!isSkipped('ponazuril')) {
+                const ponazurilRemainingDays = kitten.day1Given.ponazuril ?
+                    (kitten.ponazurilDays - 1) : kitten.ponazurilDays;
+                const ponazurilOffset = kitten.day1Given.ponazuril ? givenStartOffset : notGivenStartOffset;
 
-            if (ponazurilRemainingDays > 0) {
-                schedule.medications.ponazuril = {
-                    dose: kitten.doses.ponazuril,
-                    days: this.generateDaysFromToday(ponazurilRemainingDays, ponazurilOffset)
-                };
+                if (ponazurilRemainingDays > 0) {
+                    schedule.medications.ponazuril = {
+                        dose: kitten.doses.ponazuril,
+                        days: this.generateDaysFromToday(ponazurilRemainingDays, ponazurilOffset)
+                    };
+                }
             }
 
-            // Drontal schedule (only if not given at center and dose is not out of range)
-            // Always starts today since it only appears when not given
+            // Drontal schedule (only if not skipped, not given at center, and dose is not out of range)
             const outOfRangeString = this.appState.getOutOfRangeString();
-            if (!kitten.day1Given.drontal && kitten.doses.drontal !== outOfRangeString) {
+            if (!isSkipped('drontal') && !kitten.day1Given.drontal && kitten.doses.drontal !== outOfRangeString) {
                 schedule.medications.drontal = {
                     dose: kitten.doses.drontal,
                     days: this.generateDaysFromToday(1, notGivenStartOffset)
                 };
             }
-            
-            // Capstar schedule (only if not given at center)
-            if (kitten.day1Given && kitten.day1Given.capstar === false) {
+
+            // Capstar schedule (only if not skipped and not given at center)
+            if (!isSkipped('capstar') && kitten.day1Given && kitten.day1Given.capstar === false) {
                 schedule.medications.capstar = {
                     dose: '1 tablet',
                     days: this.generateDaysFromToday(1, notGivenStartOffset)
@@ -128,23 +135,35 @@ class ScheduleManager {
      * @returns {object} Object containing remaining amounts for each medication
      */
     calculateRemainingMedications(kitten) {
-        const panacurRemaining = kitten.day1Given.panacur ?
-            (kitten.panacurDays - 1) : kitten.panacurDays;
-        const ponazurilRemaining = kitten.day1Given.ponazuril ?
-            (kitten.ponazurilDays - 1) : kitten.ponazurilDays;
-        
+        // Helper to check if medication is skipped (disabled)
+        const medStatus = kitten.medicationStatus || {};
+        const isSkipped = (med) => medStatus[med] === Constants.STATUS.SKIP;
+
+        // Panacur: 0 if skipped, otherwise calculate remaining
+        const panacurRemaining = isSkipped('panacur') ? 0 :
+            (kitten.day1Given.panacur ? (kitten.panacurDays - 1) : kitten.panacurDays);
+
+        // Ponazuril: 0 if skipped, otherwise calculate remaining
+        const ponazurilRemaining = isSkipped('ponazuril') ? 0 :
+            (kitten.day1Given.ponazuril ? (kitten.ponazurilDays - 1) : kitten.ponazurilDays);
+
         const panacurTotal = kitten.doses.panacur * panacurRemaining;
         const ponazurilTotal = kitten.doses.ponazuril * ponazurilRemaining;
-        
+
+        // Topical: 0 if skipped, otherwise calculate if not given at intake
         let topicalAmount = 0;
-        if (kitten.topical !== 'none' && !kitten.fleaGiven) {
-            // Only count topical medication if it wasn't given at intake
+        if (!isSkipped('flea') && kitten.topical !== 'none' && !kitten.fleaGiven) {
             const outOfRangeString = this.appState.getOutOfRangeString();
             topicalAmount = kitten.doses.topical === outOfRangeString ? 0 : kitten.doses.topical;
         }
-        
-        const drontalAmount = kitten.day1Given.drontal ? 0 : 1; // 1 dose if not given at center
-        const capstarAmount = (kitten.day1Given && kitten.day1Given.capstar === false) ? 1 : 0; // 1 tablet if not given at center
+
+        // Drontal: 0 if skipped, otherwise 1 dose if not given at center
+        const drontalAmount = isSkipped('drontal') ? 0 :
+            (kitten.day1Given.drontal ? 0 : 1);
+
+        // Capstar: 0 if skipped, otherwise 1 tablet if not given at center
+        const capstarAmount = isSkipped('capstar') ? 0 :
+            ((kitten.day1Given && kitten.day1Given.capstar === false) ? 1 : 0);
 
         return {
             panacur: {

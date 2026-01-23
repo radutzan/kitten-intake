@@ -10,10 +10,196 @@ class AppState {
             kittenCounter: 0
         };
 
+        // Track previous state values for change detection
+        this._previousState = new Map();
+
+        // Change listeners for pub/sub notifications
+        this._changeListeners = [];
+
         // Legacy support - use Constants.MESSAGES.OUT_OF_RANGE instead
         this.constants = {
             outOfRangeString: Constants.MESSAGES.OUT_OF_RANGE
         };
+    }
+
+    // ==========================================
+    // Change Detection & Notification System
+    // ==========================================
+
+    /**
+     * Subscribe to state changes
+     * @param {Function} listener - Callback function(changedFields, kittenId)
+     * @returns {Function} Unsubscribe function
+     */
+    subscribe(listener) {
+        this._changeListeners.push(listener);
+        return () => {
+            const index = this._changeListeners.indexOf(listener);
+            if (index > -1) {
+                this._changeListeners.splice(index, 1);
+            }
+        };
+    }
+
+    /**
+     * Notify all listeners of state changes
+     * @param {string[]} changedFields - Array of field names that changed
+     * @param {string} kittenId - Optional kitten ID for kitten-specific changes
+     */
+    _notifyListeners(changedFields, kittenId = null) {
+        this._changeListeners.forEach(listener => {
+            try {
+                listener(changedFields, kittenId);
+            } catch (e) {
+                console.error('State change listener error:', e);
+            }
+        });
+    }
+
+    /**
+     * Check if a value has changed and update tracking
+     * @param {string} key - Unique key for the value (e.g., "kitten-1-weightGrams")
+     * @param {*} newValue - The new value to compare
+     * @returns {boolean} True if value changed, false otherwise
+     */
+    hasChanged(key, newValue) {
+        const previousValue = this._previousState.get(key);
+
+        // Handle special cases for comparison
+        if (previousValue === newValue) return false;
+        if (typeof previousValue === 'number' && typeof newValue === 'number') {
+            // Use epsilon comparison for floats
+            if (Math.abs(previousValue - newValue) < 0.0001) return false;
+        }
+
+        // Value has changed - update tracking
+        this._previousState.set(key, newValue);
+        return true;
+    }
+
+    /**
+     * Get the previous value for a key
+     * @param {string} key - Unique key
+     * @returns {*} Previous value or undefined
+     */
+    getPreviousValue(key) {
+        return this._previousState.get(key);
+    }
+
+    /**
+     * Clear change tracking for a specific kitten (useful when kitten is removed)
+     * @param {string} kittenId - The kitten ID to clear
+     */
+    clearKittenTracking(kittenId) {
+        const keysToDelete = [];
+        for (const key of this._previousState.keys()) {
+            if (key.startsWith(kittenId + '-')) {
+                keysToDelete.push(key);
+            }
+        }
+        keysToDelete.forEach(key => this._previousState.delete(key));
+    }
+
+    // ==========================================
+    // Kitten CRUD Methods (State as Source of Truth)
+    // ==========================================
+
+    /**
+     * Add a new kitten to state
+     * @param {Object} kittenData - Initial kitten data
+     * @returns {Object} The added kitten with ID
+     */
+    addKitten(kittenData) {
+        const kitten = {
+            id: kittenData.id || `kitten-${this.incrementKittenCounter()}`,
+            name: kittenData.name || '',
+            weightGrams: kittenData.weightGrams || 0,
+            weightLb: kittenData.weightLb || 0,
+            topical: kittenData.topical || Constants.DEFAULTS.TOPICAL,
+            panacurDays: kittenData.panacurDays ?? Constants.DEFAULTS.PANACUR_DAYS,
+            ponazurilDays: kittenData.ponazurilDays ?? Constants.DEFAULTS.PONAZURIL_DAYS,
+            ringwormStatus: kittenData.ringwormStatus || Constants.RINGWORM_STATUS.NOT_SCANNED,
+            medicationStatus: kittenData.medicationStatus || {
+                flea: Constants.STATUS.TODO,
+                capstar: Constants.STATUS.TODO,
+                panacur: Constants.STATUS.DONE,
+                ponazuril: Constants.STATUS.DONE,
+                drontal: Constants.STATUS.TODO
+            },
+            medicationEnabled: kittenData.medicationEnabled || {
+                flea: true,
+                capstar: true,
+                panacur: true,
+                ponazuril: true,
+                drontal: true
+            },
+            ...kittenData
+        };
+
+        this.state.kittens.push(kitten);
+        this._notifyListeners(['kittens', 'kittenAdded'], kitten.id);
+        return kitten;
+    }
+
+    /**
+     * Update a kitten's data with change detection
+     * @param {string} kittenId - The kitten ID to update
+     * @param {Object} updates - Object with fields to update
+     * @returns {string[]} Array of field names that actually changed
+     */
+    updateKitten(kittenId, updates) {
+        const kitten = this.getKitten(kittenId);
+        if (!kitten) return [];
+
+        const changedFields = [];
+
+        for (const [field, value] of Object.entries(updates)) {
+            const trackingKey = `${kittenId}-${field}`;
+
+            if (this.hasChanged(trackingKey, value)) {
+                kitten[field] = value;
+                changedFields.push(field);
+            }
+        }
+
+        if (changedFields.length > 0) {
+            this._notifyListeners(changedFields, kittenId);
+        }
+
+        return changedFields;
+    }
+
+    /**
+     * Remove a kitten from state
+     * @param {string} kittenId - The kitten ID to remove
+     * @returns {boolean} True if removed, false if not found
+     */
+    removeKitten(kittenId) {
+        const index = this.state.kittens.findIndex(k => k.id === kittenId);
+        if (index === -1) return false;
+
+        this.state.kittens.splice(index, 1);
+        this.clearKittenTracking(kittenId);
+        this._notifyListeners(['kittens', 'kittenRemoved'], kittenId);
+        return true;
+    }
+
+    /**
+     * Get a kitten by ID
+     * @param {string} kittenId - The kitten ID
+     * @returns {Object|undefined} The kitten object or undefined
+     */
+    getKitten(kittenId) {
+        return this.state.kittens.find(k => k.id === kittenId);
+    }
+
+    /**
+     * Check if a kitten exists
+     * @param {string} kittenId - The kitten ID
+     * @returns {boolean} True if exists
+     */
+    hasKitten(kittenId) {
+        return this.state.kittens.some(k => k.id === kittenId);
     }
 
     /**
