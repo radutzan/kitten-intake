@@ -35,14 +35,6 @@
     --bg-medium: var(--gray-100);
     --bg-yellow: #fff3cd;
     --bg-green: #e8f5e8;
-    --bg-red: #f8d7da;
-
-    /* Legacy aliases (for compatibility) */
-    --dark-gray: var(--gray-700);
-    --box-bg: var(--bg-light);
-    --box-bg-2: var(--bg-medium);
-    --yellow-bg: var(--bg-yellow);
-    --green-bg: var(--bg-green);
 
     /* Spacing & sizing */
     --container-radius: 20px;
@@ -55,7 +47,6 @@
     --fs-body-large: 16px;
     --fs-body: var(--fs-body-large);
     --fs-header-small: 16px;
-    --fs-header-medium: 20px;
     --fs-header-large: 24px;
     --fs-display: 32px;
 }
@@ -133,6 +124,7 @@ h1 {
     position: relative;
 }
 
+/* Navigation buttons - similar base to .btn but used for nav controls */
 .nav-btn {
     padding: 12px 24px;
     border: none;
@@ -157,15 +149,6 @@ h1 {
 
 .nav-menu-btn:hover {
     background-color: var(--gray-300);
-}
-
-.nav-btn-primary {
-    background-color: var(--blue);
-    color: white;
-}
-
-.nav-btn-primary:hover {
-    background-color: #2271a8;
 }
 
 .nav-menu-dropdown {
@@ -236,22 +219,15 @@ h1 {
     transition: all 0.3s ease;
 }
 
-.btn-primary {
+.btn-primary,
+.nav-btn-primary {
     background-color: var(--blue);
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.nav-btn-primary:hover {
     background-color: #2271a8;
-}
-
-.btn-success {
-    background-color: var(--green);
-    color: white;
-}
-
-.btn-success:hover {
-    background-color: #229954;
 }
 
 .btn-secondary {
@@ -261,15 +237,6 @@ h1 {
 
 .btn-secondary:hover {
     background-color: #7f8c8d;
-}
-
-.btn-warning {
-    background-color: var(--orange);
-    color: white;
-}
-
-.btn-warning:hover {
-    background-color: #e67e22;
 }
 
 .btn-danger {
@@ -297,13 +264,6 @@ h1 {
     right: -20px;
     z-index: 99;
 }
-
-.print-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    position: sticky;
-}
 /* #endregion */
 
 /* #region Forms & Inputs */
@@ -317,7 +277,7 @@ h1 {
     display: flex;
     gap: 8px;
     align-items: stretch;
-    background-color: var(--box-bg);
+    background-color: var(--bg-light);
     border-radius: var(--container-radius);
 }
 
@@ -326,7 +286,7 @@ h1 {
 }
 
 .kitten-form-content {
-    background-color: var(--box-bg-2);
+    background-color: var(--bg-medium);
     border-radius: var(--container-radius);
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
@@ -379,31 +339,10 @@ h1 {
     width: 128px;
 }
 
-.horizontal.label-control .checkbox-group {
-    margin-top: 0;
-}
-
-.horizontal.label-control .checkbox-group label {
-    width: auto;
-}
-
-.horizontal.label-control .checkbox-group input {
-    margin-left: 8px;
-    margin-right: 0;
-}
-
-.horizontal.label-control label:first-of-type {
-    flex-grow: 1;
-}
-
 .form-group label {
     font-weight: 600;
     color: var(--text-primary);
     -webkit-user-select: none;
-}
-
-.form-group label.regular {
-    font-weight: normal;
 }
 
 .form-group input,
@@ -529,20 +468,14 @@ input[type="radio"]:focus {
     color: white;
 }
 
-.checkbox-group,
-.radio-group-normal {
+.checkbox-group {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     margin-top: 8px;
 }
 
-.radio-group-normal {
-    margin-top: 12px;
-}
-
-.checkbox-group label,
-.radio-group-normal label {
+.checkbox-group label {
     display: flex;
     width: 33%;
     align-items: center;
@@ -560,39 +493,24 @@ input[type="radio"]:focus {
     margin-top: -3px;
 }
 
-/* Form checkbox/radio specific styles */
-.checkbox-group input,
-.radio-group-normal input {
+/* Form checkbox specific styles */
+.checkbox-group input {
     width: 30px;
     height: 30px;
     border: 2px solid var(--gray-500);
+    border-radius: 4px;
     margin-right: 12px;
     flex-shrink: 0;
     font-size: 20px;
 }
 
-.checkbox-group input:hover,
-.radio-group-normal input:hover {
+.checkbox-group input:hover {
     border-color: var(--blue);
 }
 
-.checkbox-group input[type="checkbox"]:disabled,
-.radio-group-normal input:disabled {
+.checkbox-group input[type="checkbox"]:disabled {
     background-color: transparent;
     border-color: rgba(0,0,0,0.05);
-}
-
-.checkbox-group input[type="checkbox"] {
-    border-radius: 4px;
-}
-
-.radio-group-normal input[type="radio"] {
-    border-radius: 34px;
-}
-
-.radio-group-normal input:checked::after {
-    content: '●';
-    font-size: 10px;
 }
 
 /* #endregion */
@@ -748,10 +666,6 @@ input[type="radio"]:focus {
     flex: 1;
 }
 
-.medication-choices .status-control.narrow {
-    flex: 0.8;
-}
-
 /* Single option display (like "Single Dose" for Capstar) */
 .single-option {
     flex: 1;
@@ -777,38 +691,11 @@ input[type="radio"]:focus {
     width: 100%;
 }
 
-/* Add meds link */
-.add-meds-link {
-    color: var(--blue);
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: var(--fs-body);
-}
-
-.add-meds-link:hover {
-    text-decoration: underline;
-}
-
 /* Medication section separator */
 .medication-separator {
     height: 1px;
     background-color: var(--border-color);
     margin: 0 0 20px 0;
-}
-
-/* Legacy support - hide old given-cell if still in DOM */
-.given-cell {
-    display: none;
-}
-
-.drontal-row {
-    /* No special styling needed now */
 }
 
 .ringworm-section {
@@ -870,7 +757,7 @@ input[type="radio"]:focus {
     border-radius: 0;
     background-color: transparent;
     font-size: var(--fs-body-medium);
-    border-bottom: 1px solid var(--box-bg-2);
+    border-bottom: 1px solid var(--bg-medium);
 }
 
 .result-display .result-item:last-child {
@@ -940,12 +827,6 @@ input[type="radio"]:focus {
 
 .result-item strong {
     color: var(--text-heading);
-}
-
-.dispense-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
 }
 
 .med-totals {
@@ -1021,7 +902,7 @@ input[type="radio"]:focus {
 /* Table borders for kitten columns and day rows */
 .checklist-table .kitten-header,
 .checklist-table .first-kitten-col {
-    border-left: 1px solid var(--dark-gray);
+    border-left: 1px solid var(--gray-700);
     padding-left: 8px;
 }
 
@@ -1037,14 +918,14 @@ input[type="radio"]:focus {
 .checklist-table input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    border: 2px solid var(--dark-gray);
+    border: 2px solid var(--gray-700);
     border-radius: 3px;
     font-size: var(--fs-body-small);
 }
 
 .checklist-table input[type="checkbox"]:hover {
     border-color: var(--blue);
-    background-color: var(--box-bg);
+    background-color: var(--bg-light);
 }
 /* #endregion */
 
@@ -1067,7 +948,6 @@ footer {
         --fs-body-large: 14px;
         --fs-body: var(--fs-body-medium);
         --fs-header-small: 14px;
-        --fs-header-medium: 16px;
         --fs-header-large: 20px;
     }
 
@@ -1169,11 +1049,6 @@ footer {
     .checklist-table th,
     .checklist-table td {
         padding: 4px;
-    }
-    
-    .intake-record {
-        break-inside: avoid;
-        page-break-inside: avoid;
     }
     
     .print-checklist-only nav,
@@ -1367,25 +1242,12 @@ footer {
         display: none;
     }
 
-    .btn-success {
-        margin: 0 auto;
-        display: block;
-    }
-
     .remove {
         right: -5px;
     }
 
     .form-grid.top {
         gap: 5px;
-    }
-
-    .dispense-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .print-buttons {
-        justify-content: center;
     }
 
     .checklist-table {
@@ -1429,4 +1291,3 @@ footer {
     }
 }
 /* #endregion */
-
