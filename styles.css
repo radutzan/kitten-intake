@@ -79,7 +79,6 @@ body {
 
 /* #region Header & Navigation */
 nav {
-    margin-bottom: 20px;
     padding: 10px 0;
     display: flex;
     justify-content: flex-end;
@@ -1167,6 +1166,7 @@ footer {
         /* Hide scrollbar for cleaner look */
         scrollbar-width: none;
         -ms-overflow-style: none;
+        padding-top: 20px;
     }
 
     #kittens-container::-webkit-scrollbar {
