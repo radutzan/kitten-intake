@@ -169,7 +169,7 @@ class FormManager {
         setTimeout(() => this.updateDotsOverflow(), 300);
     }
 
-    // Auto-save helper function
+    // Auto-save helper function (immediate save)
     autoSaveFormData() {
         if (window.localStorageManager) {
             localStorageManager.saveFormData();
@@ -178,6 +178,197 @@ class FormManager {
         if (window.KittenApp && window.KittenApp.urlStateManager) {
             window.KittenApp.urlStateManager.updateUrlRealtime();
         }
+    }
+
+    // Debounced auto-save for input events (500ms delay)
+    // Reduces localStorage writes during rapid typing
+    debouncedAutoSave() {
+        if (window.localStorageManager) {
+            localStorageManager.debouncedSave();
+        }
+        // URL update is also debounced via localStorage's save
+    }
+
+    /**
+     * Bind all event listeners for a kitten form
+     * This is the SINGLE SOURCE OF TRUTH for event binding
+     * Called by both addKitten() and localStorage restore
+     * @param {string} kittenId - The kitten form ID
+     */
+    bindKittenFormEvents(kittenId) {
+        this.bindWeightEvents(kittenId);
+        this.bindMedicationToggleEvents(kittenId);
+        this.bindMedicationStatusEvents(kittenId);
+        this.bindTopicalEvents(kittenId);
+        this.bindRegimenEvents(kittenId);
+        this.bindRingwormEvents(kittenId);
+        this.bindNameEvents(kittenId);
+    }
+
+    // Weight input events (filtering, display updates)
+    bindWeightEvents(kittenId) {
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
+        if (!weightInput) return;
+
+        // Filter input to allow only numbers and periods
+        weightInput.addEventListener('input', (e) => {
+            const filteredValue = e.target.value.replace(/[^0-9.]/g, '');
+            const parts = filteredValue.split('.');
+            if (parts.length > 2) {
+                e.target.value = parts[0] + '.' + parts.slice(1).join('');
+            } else {
+                e.target.value = filteredValue;
+            }
+
+            this.updateWeightDisplay(kittenId);
+            this.updateResultDisplay(kittenId);
+            this.updateAllStatusLights(kittenId);
+            if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                window.KittenApp.resultsDisplay.updateResultsAutomatically();
+            }
+            this.debouncedAutoSave(); // Use debounced save for rapid typing
+        });
+
+        // Prevent pasting invalid characters
+        weightInput.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            const filteredPaste = paste.replace(/[^0-9.]/g, '');
+            const parts = filteredPaste.split('.');
+            const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
+
+            e.target.value = validPaste;
+            this.updateWeightDisplay(kittenId);
+            this.updateResultDisplay(kittenId);
+            this.updateAllStatusLights(kittenId);
+            if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                window.KittenApp.resultsDisplay.updateResultsAutomatically();
+            }
+            this.autoSaveFormData(); // Immediate save after paste
+        });
+
+        // Validation on blur
+        weightInput.addEventListener('blur', () => {
+            this.validateField(kittenId, 'weight');
+            if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                window.KittenApp.resultsDisplay.updateResultsAutomatically();
+            }
+            this.autoSaveFormData(); // Immediate save on blur
+        });
+    }
+
+    // Medication toggle switch events (enable/disable)
+    bindMedicationToggleEvents(kittenId) {
+        Constants.MEDICATIONS.forEach(med => {
+            const toggleCheckbox = document.getElementById(Constants.ID.medEnabled(kittenId, med));
+            if (toggleCheckbox) {
+                toggleCheckbox.addEventListener('change', () => {
+                    this.updateMedicationRowState(kittenId, med);
+                    this.updateStatusLight(kittenId, med);
+                    this.updateResultDisplay(kittenId);
+                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                    }
+                    this.autoSaveFormData();
+                });
+            }
+        });
+    }
+
+    // Medication status radio events (To Do / Delay / Done)
+    bindMedicationStatusEvents(kittenId) {
+        Constants.MEDICATIONS.forEach(med => {
+            const statusRadios = document.querySelectorAll(`input[name="${Constants.ID.medStatusName(kittenId, med)}"]`);
+            statusRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    this.updateStatusLight(kittenId, med);
+                    this.updateResultDisplay(kittenId);
+                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                    }
+                    this.autoSaveFormData();
+                });
+            });
+        });
+    }
+
+    // Topical type events (Revolution / Advantage)
+    bindTopicalEvents(kittenId) {
+        const topicalRadios = document.querySelectorAll(`input[name="${Constants.ID.topicalName(kittenId)}"]`);
+        topicalRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateResultDisplay(kittenId);
+                this.updateStatusLight(kittenId, 'flea');
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+    }
+
+    // Regimen events (Panacur/Ponazuril days)
+    bindRegimenEvents(kittenId) {
+        // Panacur regimen
+        const panacurRadios = document.querySelectorAll(`input[name="${Constants.ID.panacurName(kittenId)}"]`);
+        panacurRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+
+        // Ponazuril regimen
+        const ponazurilRadios = document.querySelectorAll(`input[name="${Constants.ID.ponazurilName(kittenId)}"]`);
+        ponazurilRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+    }
+
+    // Ringworm status events
+    bindRingwormEvents(kittenId) {
+        const ringwormRadios = document.querySelectorAll(`input[name="${Constants.ID.ringwormName(kittenId)}"]`);
+        ringwormRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateRingwormStatusLight(kittenId);
+                this.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+    }
+
+    // Name input events
+    bindNameEvents(kittenId) {
+        const nameInput = document.getElementById(Constants.ID.name(kittenId));
+        if (!nameInput) return;
+
+        nameInput.addEventListener('input', () => {
+            this.updateResultDisplay(kittenId);
+            if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                window.KittenApp.resultsDisplay.updateResultsAutomatically();
+            }
+            this.debouncedAutoSave(); // Use debounced save for rapid typing
+        });
+
+        nameInput.addEventListener('blur', () => {
+            this.validateField(kittenId, 'name');
+            if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                window.KittenApp.resultsDisplay.updateResultsAutomatically();
+            }
+            this.autoSaveFormData(); // Immediate save on blur
+        });
     }
 
     // Generate HTML template for a kitten form (single source of truth)
@@ -440,62 +631,11 @@ class FormManager {
             }
         }
         
-        // Add weight conversion and dose calculation listeners
-        const weightInput = document.getElementById(`${kittenId}-weight`);
-        
-        // Filter input to allow only numbers and periods
-        weightInput.addEventListener('input', (e) => {
-            // Remove any characters that aren't digits or periods
-            const filteredValue = e.target.value.replace(/[^0-9.]/g, '');
-
-            // Ensure only one decimal point is allowed
-            const parts = filteredValue.split('.');
-            if (parts.length > 2) {
-                e.target.value = parts[0] + '.' + parts.slice(1).join('');
-            } else {
-                e.target.value = filteredValue;
-            }
-
-            this.updateWeightDisplay(kittenId);
-            this.updateResultDisplay(kittenId);
-            // Update all status lights when weight changes
-            this.updateAllStatusLights(kittenId);
-            if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                window.KittenApp.resultsDisplay.updateResultsAutomatically();
-            }
-            this.autoSaveFormData();
-        });
-        
-        // Prevent pasting invalid characters
-        weightInput.addEventListener('paste', (e) => {
-            e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text');
-            const filteredPaste = paste.replace(/[^0-9.]/g, '');
-
-            // Handle multiple decimal points in pasted content
-            const parts = filteredPaste.split('.');
-            const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
-
-            e.target.value = validPaste;
-            this.updateWeightDisplay(kittenId);
-            this.updateResultDisplay(kittenId);
-            // Update all status lights when weight changes
-            this.updateAllStatusLights(kittenId);
-            if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                window.KittenApp.resultsDisplay.updateResultsAutomatically();
-            }
-            this.autoSaveFormData();
-        });
-        
-        // Add real-time validation
-        this.addValidationListeners(kittenId);
-        
-        // Add listeners for medication changes
-        this.addMedicationListeners(kittenId);
+        // Bind all event listeners using unified method
+        this.bindKittenFormEvents(kittenId);
 
         // Initialize status lights
-        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
-        medications.forEach(med => {
+        Constants.MEDICATIONS.forEach(med => {
             this.updateStatusLight(kittenId, med);
         });
         this.updateRingwormStatusLight(kittenId);
@@ -511,10 +651,8 @@ class FormManager {
     }
 
     copySettingsFromKitten(sourceId, targetId) {
-        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
-
         // Copy medication toggle states (enabled/disabled)
-        medications.forEach(med => {
+        Constants.MEDICATIONS.forEach(med => {
             const sourceToggle = document.getElementById(`${sourceId}-${med}-enabled`);
             const targetToggle = document.getElementById(`${targetId}-${med}-enabled`);
             if (sourceToggle && targetToggle) {
@@ -524,7 +662,7 @@ class FormManager {
         });
 
         // Copy medication status (To Do / Delay / Done)
-        medications.forEach(med => {
+        Constants.MEDICATIONS.forEach(med => {
             const sourceStatus = document.querySelector(`input[name="${sourceId}-${med}-status"]:checked`);
             if (sourceStatus) {
                 const targetStatus = document.getElementById(`${targetId}-${med}-status-${sourceStatus.value}`);
@@ -583,7 +721,7 @@ class FormManager {
         element.remove();
 
         // Update pagination dots
-        const kittenForms = document.querySelectorAll('.kitten-form');
+        const kittenForms = document.querySelectorAll(`.${Constants.CSS.KITTEN_FORM}`);
         if (this.currentPageIndex >= kittenForms.length) {
             this.currentPageIndex = Math.max(0, kittenForms.length - 1);
         }
@@ -596,9 +734,9 @@ class FormManager {
     }
 
     updateWeightDisplay(kittenId) {
-        const weightInput = document.getElementById(`${kittenId}-weight`);
-        const display = document.getElementById(`${kittenId}-weight-display`);
-        
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
+        const display = document.getElementById(Constants.ID.weightDisplay(kittenId));
+
         const grams = parseFloat(weightInput.value);
         if (grams > 0) {
             const pounds = this.appState.constructor.convertToPounds(grams);
@@ -610,12 +748,12 @@ class FormManager {
     }
 
     updateResultDisplay(kittenId) {
-        const doseDisplay = document.getElementById(`${kittenId}-result-display`);
-        const doseContent = document.getElementById(`${kittenId}-result-content`);
-        const doseHeader = document.getElementById(`${kittenId}-result-header`);
+        const doseDisplay = document.getElementById(Constants.ID.resultDisplay(kittenId));
+        const doseContent = document.getElementById(Constants.ID.resultContent(kittenId));
+        const doseHeader = document.getElementById(Constants.ID.resultHeader(kittenId));
 
-        const nameInput = document.getElementById(`${kittenId}-name`);
-        const weightInput = document.getElementById(`${kittenId}-weight`);
+        const nameInput = document.getElementById(Constants.ID.name(kittenId));
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
         const grams = parseFloat(weightInput.value);
 
         // Update the print header with current name and weight
@@ -881,10 +1019,8 @@ class FormManager {
     }
 
     addMedicationListeners(kittenId) {
-        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
-
         // Listen for toggle switch changes (enable/disable medication)
-        medications.forEach(med => {
+        Constants.MEDICATIONS.forEach(med => {
             const toggleCheckbox = document.getElementById(`${kittenId}-${med}-enabled`);
             if (toggleCheckbox) {
                 toggleCheckbox.addEventListener('change', () => {
@@ -899,7 +1035,7 @@ class FormManager {
         });
 
         // Listen for status control changes (To Do / Delay / Done)
-        medications.forEach(med => {
+        Constants.MEDICATIONS.forEach(med => {
             const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${med}-status"]`);
             statusRadios.forEach(radio => {
                 radio.addEventListener('change', () => {
@@ -967,49 +1103,49 @@ class FormManager {
 
     // Update medication row visual state based on toggle
     updateMedicationRowState(kittenId, medType) {
-        const toggleCheckbox = document.getElementById(`${kittenId}-${medType}-enabled`);
-        const row = document.getElementById(`${kittenId}-${medType}-row`);
+        const toggleCheckbox = document.getElementById(Constants.ID.medEnabled(kittenId, medType));
+        const row = document.getElementById(Constants.ID.medRow(kittenId, medType));
 
         if (!toggleCheckbox || !row) return;
 
         if (toggleCheckbox.checked) {
-            row.classList.remove('disabled');
+            row.classList.remove(Constants.CSS.DISABLED);
         } else {
-            row.classList.add('disabled');
+            row.classList.add(Constants.CSS.DISABLED);
         }
     }
 
     // Update status light color based on status selection
     updateStatusLight(kittenId, medType) {
-        const statusLight = document.getElementById(`${kittenId}-${medType}-status-light`);
-        const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${medType}-status"]`);
-        const toggleCheckbox = document.getElementById(`${kittenId}-${medType}-enabled`);
+        const statusLight = document.getElementById(Constants.ID.medStatusLight(kittenId, medType));
+        const statusRadios = document.querySelectorAll(`input[name="${Constants.ID.medStatusName(kittenId, medType)}"]`);
+        const toggleCheckbox = document.getElementById(Constants.ID.medEnabled(kittenId, medType));
 
         if (!statusLight) return;
 
         // Check if there's a valid weight
-        const weightInput = document.getElementById(`${kittenId}-weight`);
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
         const grams = weightInput ? parseFloat(weightInput.value) : 0;
 
         // If no weight, hide the status light
         if (!grams || grams <= 0) {
-            statusLight.className = 'status-light hidden';
+            statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.CSS.HIDDEN}`;
             return;
         }
 
         // Check if this medication is out of range
         const weightLb = this.appState.constructor.convertToPounds(grams);
-        const outOfRangeString = this.appState.getOutOfRangeString();
+        const outOfRangeString = Constants.MESSAGES.OUT_OF_RANGE;
         let isOutOfRange = false;
 
         if (medType === 'flea') {
             // Check both Revolution and Advantage based on selection
-            const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-            let topical = 'revolution';
+            const topicalRadios = document.querySelectorAll(`input[name="${Constants.ID.topicalName(kittenId)}"]`);
+            let topical = Constants.TOPICAL.REVOLUTION;
             topicalRadios.forEach(radio => {
                 if (radio.checked) topical = radio.value;
             });
-            const dose = topical === 'revolution'
+            const dose = topical === Constants.TOPICAL.REVOLUTION
                 ? DoseCalculator.calculateRevolutionDose(weightLb)
                 : DoseCalculator.calculateAdvantageIIDose(weightLb);
             isOutOfRange = dose === outOfRangeString || dose === 0;
@@ -1023,50 +1159,50 @@ class FormManager {
 
         // If out of range, show gray
         if (isOutOfRange) {
-            statusLight.className = 'status-light out-of-range';
+            statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.CSS.OUT_OF_RANGE}`;
             return;
         }
 
         // If medication is disabled, show skip color
         if (toggleCheckbox && !toggleCheckbox.checked) {
-            statusLight.className = 'status-light skip';
+            statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.STATUS.SKIP}`;
             return;
         }
 
-        let status = 'todo';
+        let status = Constants.STATUS.TODO;
         statusRadios.forEach(radio => {
             if (radio.checked) status = radio.value;
         });
 
-        statusLight.className = `status-light ${status}`;
+        statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${status}`;
     }
 
     // Update ringworm status light
     updateRingwormStatusLight(kittenId) {
-        const statusLight = document.getElementById(`${kittenId}-ringworm-status-light`);
-        const statusRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
+        const statusLight = document.getElementById(Constants.ID.ringwormStatusLight(kittenId));
+        const statusRadios = document.querySelectorAll(`input[name="${Constants.ID.ringwormName(kittenId)}"]`);
 
         if (!statusLight) return;
 
         // Check if there's a valid weight
-        const weightInput = document.getElementById(`${kittenId}-weight`);
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
         const grams = weightInput ? parseFloat(weightInput.value) : 0;
 
         // If no weight, hide the status light
         if (!grams || grams <= 0) {
-            statusLight.className = 'status-light hidden';
+            statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.CSS.HIDDEN}`;
             return;
         }
 
-        let status = 'not-scanned';
+        let status = Constants.RINGWORM_STATUS.NOT_SCANNED;
         statusRadios.forEach(radio => {
             if (radio.checked) status = radio.value;
         });
 
         // Map ringworm status to light color
-        if (status === 'negative') {
-            statusLight.className = 'status-light done';
-        } else if (status === 'positive') {
+        if (status === Constants.RINGWORM_STATUS.NEGATIVE) {
+            statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.STATUS.DONE}`;
+        } else if (status === Constants.RINGWORM_STATUS.POSITIVE) {
             statusLight.className = 'status-light delay'; // amber/warning color
         } else {
             statusLight.className = 'status-light todo';

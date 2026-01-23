@@ -4,7 +4,18 @@
  */
 
 class DoseCalculator {
-    
+    // Memoization cache for calculateAllDoses
+    static doseCache = new Map();
+    static MAX_CACHE_SIZE = 50;
+
+    /**
+     * Clear the dose calculation cache
+     * Call this if you need to force recalculation
+     */
+    static clearCache() {
+        this.doseCache.clear();
+    }
+
     static calculatePanacurDose(weightLb) {
         return weightLb * 0.2;
     }
@@ -18,7 +29,7 @@ class DoseCalculator {
         if (weightLb >= 2.2 && weightLb < 4.4) return 0.1;
         if (weightLb >= 4.4 && weightLb < 9) return 0.2;
         if (weightLb >= 9 && weightLb <= 19.9) return 0.45;
-        return 'Out of range';
+        return Constants.MESSAGES.OUT_OF_RANGE;
     }
 
     static calculateAdvantageIIDose(weightLb) {
@@ -35,22 +46,32 @@ class DoseCalculator {
         if (weightLb >= 4 && weightLb < 9) return '1';
         if (weightLb >= 9 && weightLb < 13) return '1½';
         if (weightLb >= 13 && weightLb <= 16) return '2';
-        return 'Out of range';
+        return Constants.MESSAGES.OUT_OF_RANGE;
     }
 
     static calculateCapstarDose(weightLb) {
         // Capstar (nitenpyram) - 1 tablet for cats 2-25 lbs
         if (weightLb >= 2 && weightLb <= 25) return '1';
-        return 'Out of range';
+        return Constants.MESSAGES.OUT_OF_RANGE;
     }
 
     /**
      * Calculate all doses for a kitten based on weight
+     * Uses memoization to avoid redundant calculations
      * @param {number} weightLb - Weight in pounds
      * @returns {object} Object containing all calculated doses
      */
     static calculateAllDoses(weightLb) {
-        return {
+        // Round to 2 decimal places for cache key (avoids floating point issues)
+        const cacheKey = Math.round(weightLb * 100) / 100;
+
+        // Return cached result if available
+        if (this.doseCache.has(cacheKey)) {
+            return this.doseCache.get(cacheKey);
+        }
+
+        // Calculate fresh doses
+        const doses = {
             panacur: this.calculatePanacurDose(weightLb),
             ponazuril: this.calculatePonazurilDose(weightLb),
             revolution: this.calculateRevolutionDose(weightLb),
@@ -58,6 +79,16 @@ class DoseCalculator {
             drontal: this.calculateDrontalDose(weightLb),
             capstar: this.calculateCapstarDose(weightLb)
         };
+
+        // LRU-style eviction: remove oldest entry if cache is full
+        if (this.doseCache.size >= this.MAX_CACHE_SIZE) {
+            const oldestKey = this.doseCache.keys().next().value;
+            this.doseCache.delete(oldestKey);
+        }
+
+        // Cache and return
+        this.doseCache.set(cacheKey, doses);
+        return doses;
     }
 
     /**
@@ -94,7 +125,7 @@ class DoseCalculator {
      * @returns {boolean} True if dose is valid, false if out of range
      */
     static isDoseValid(dose) {
-        return dose !== 'Out of range' && dose !== null && dose !== undefined;
+        return dose !== Constants.MESSAGES.OUT_OF_RANGE && dose !== null && dose !== undefined;
     }
 }
 

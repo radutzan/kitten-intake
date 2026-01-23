@@ -9,9 +9,25 @@ class AppState {
             kittens: [],
             kittenCounter: 0
         };
-        
+
+        // Legacy support - use Constants.MESSAGES.OUT_OF_RANGE instead
         this.constants = {
-            outOfRangeString: 'Out of range'
+            outOfRangeString: Constants.MESSAGES.OUT_OF_RANGE
+        };
+    }
+
+    /**
+     * Debounce utility - delays function execution until after wait ms have elapsed
+     * since the last time the debounced function was invoked
+     * @param {Function} fn - Function to debounce
+     * @param {number} delay - Delay in milliseconds
+     * @returns {Function} Debounced function
+     */
+    static debounce(fn, delay) {
+        let timeoutId;
+        return function(...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => fn.apply(this, args), delay);
         };
     }
 
@@ -120,13 +136,13 @@ class AppState {
 
     // Helper to get medication status
     getMedicationStatus(kittenId, medType) {
-        const toggleCheckbox = document.getElementById(`${kittenId}-${medType}-enabled`);
+        const toggleCheckbox = document.getElementById(Constants.ID.medEnabled(kittenId, medType));
         if (toggleCheckbox && !toggleCheckbox.checked) {
-            return 'skip';
+            return Constants.STATUS.SKIP;
         }
 
-        const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${medType}-status"]`);
-        let status = 'todo';
+        const statusRadios = document.querySelectorAll(`input[name="${Constants.ID.medStatusName(kittenId, medType)}"]`);
+        let status = Constants.STATUS.TODO;
         statusRadios.forEach(radio => {
             if (radio.checked) status = radio.value;
         });
@@ -135,17 +151,17 @@ class AppState {
 
     // Data Collection
     collectKittenData() {
-        const kittenForms = document.querySelectorAll('.kitten-form');
+        const kittenForms = document.querySelectorAll(`.${Constants.CSS.KITTEN_FORM}`);
         const collectedKittens = [];
 
         kittenForms.forEach(form => {
             const kittenId = form.id;
-            const name = document.getElementById(`${kittenId}-name`).value.trim();
-            const weightGrams = parseFloat(document.getElementById(`${kittenId}-weight`).value);
+            const name = document.getElementById(Constants.ID.name(kittenId)).value.trim();
+            const weightGrams = parseFloat(document.getElementById(Constants.ID.weight(kittenId)).value);
             const weightLb = AppState.convertToPounds(weightGrams);
 
-            const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-            let topical = 'revolution'; // Default to revolution since we removed "none" option
+            const topicalRadios = document.querySelectorAll(`input[name="${Constants.ID.topicalName(kittenId)}"]`);
+            let topical = Constants.DEFAULTS.TOPICAL;
             topicalRadios.forEach(radio => {
                 if (radio.checked) topical = radio.value;
             });
@@ -158,29 +174,29 @@ class AppState {
             const drontalStatus = this.getMedicationStatus(kittenId, 'drontal');
 
             // Convert status to boolean for backward compatibility
-            const fleaGiven = fleaStatus === 'done';
+            const fleaGiven = fleaStatus === Constants.STATUS.DONE;
 
-            const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
-            let panacurDays = 3;
+            const panacurRadios = document.querySelectorAll(`input[name="${Constants.ID.panacurName(kittenId)}"]`);
+            let panacurDays = Constants.DEFAULTS.PANACUR_DAYS;
             panacurRadios.forEach(radio => {
                 if (radio.checked) panacurDays = parseInt(radio.value);
             });
 
-            const ponazurilRadios = document.querySelectorAll(`input[name="${kittenId}-ponazuril"]`);
-            let ponazurilDays = 3;
+            const ponazurilRadios = document.querySelectorAll(`input[name="${Constants.ID.ponazurilName(kittenId)}"]`);
+            let ponazurilDays = Constants.DEFAULTS.PONAZURIL_DAYS;
             ponazurilRadios.forEach(radio => {
                 if (radio.checked) ponazurilDays = parseInt(radio.value);
             });
 
             // Convert status to boolean for backward compatibility with schedule system
-            const panacurDay1Given = panacurStatus === 'done';
-            const ponazurilDay1Given = ponazurilStatus === 'done';
-            const drontalDay1Given = drontalStatus === 'done';
-            const capstarDay1Given = capstarStatus === 'done';
+            const panacurDay1Given = panacurStatus === Constants.STATUS.DONE;
+            const ponazurilDay1Given = ponazurilStatus === Constants.STATUS.DONE;
+            const drontalDay1Given = drontalStatus === Constants.STATUS.DONE;
+            const capstarDay1Given = capstarStatus === Constants.STATUS.DONE;
 
             // Get ringworm data
-            const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
-            let ringwormStatus = 'not-scanned';
+            const ringwormRadios = document.querySelectorAll(`input[name="${Constants.ID.ringwormName(kittenId)}"]`);
+            let ringwormStatus = Constants.RINGWORM_STATUS.NOT_SCANNED;
             ringwormRadios.forEach(radio => {
                 if (radio.checked) ringwormStatus = radio.value;
             });
@@ -190,10 +206,10 @@ class AppState {
                 name,
                 weightGrams,
                 weightLb,
-                topical: fleaStatus === 'skip' ? 'none' : topical, // Set to 'none' if flea med disabled
+                topical: fleaStatus === Constants.STATUS.SKIP ? Constants.TOPICAL.NONE : topical,
                 fleaGiven,
-                panacurDays: panacurStatus === 'skip' ? 0 : panacurDays,
-                ponazurilDays: ponazurilStatus === 'skip' ? 0 : ponazurilDays,
+                panacurDays: panacurStatus === Constants.STATUS.SKIP ? 0 : panacurDays,
+                ponazurilDays: ponazurilStatus === Constants.STATUS.SKIP ? 0 : ponazurilDays,
                 ringwormStatus,
                 day1Given: {
                     panacur: panacurDay1Given,

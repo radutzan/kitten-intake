@@ -5,9 +5,24 @@
 
 class LocalStorageManager {
     constructor() {
-        this.storageKey = 'cat-intake-form-data';
-        this.version = '2.0'; // Bumped for new medication status system
+        this.storageKey = Constants.STORAGE.FORM_DATA;
+        this.version = Constants.STORAGE.VERSION;
         this.isAvailable = this.checkStorageAvailability();
+
+        // Debounced save for input events (500ms delay)
+        // Initialized lazily after AppState is available
+        this._debouncedSave = null;
+    }
+
+    /**
+     * Get or create the debounced save function
+     * Lazy initialization to ensure AppState is available
+     */
+    get debouncedSave() {
+        if (!this._debouncedSave) {
+            this._debouncedSave = AppState.debounce(() => this.saveFormData(), 500);
+        }
+        return this._debouncedSave;
     }
 
     /**
@@ -111,7 +126,7 @@ class LocalStorageManager {
      * Collect current form data from the DOM
      */
     collectCurrentFormData() {
-        const kittenForms = document.querySelectorAll('.kitten-form');
+        const kittenForms = document.querySelectorAll(`.${Constants.CSS.KITTEN_FORM}`);
         const formData = {
             appState: {
                 kittenCounter: window.kittenCounter || 0,
@@ -126,36 +141,23 @@ class LocalStorageManager {
 
             // Collect all form data for this kitten (new v2.0 format)
             const kittenData = {
-                name: this.getInputValue(`${kittenId}-name`),
-                weight: this.getInputValue(`${kittenId}-weight`),
-                topical: this.getRadioValue(`${kittenId}-topical`),
-                panacurDays: this.getRadioValue(`${kittenId}-panacur`),
-                ponazurilDays: this.getRadioValue(`${kittenId}-ponazuril`),
-                ringwormStatus: this.getRadioValue(`${kittenId}-ringworm-status`),
-                // New medication enabled states
-                medications: {
-                    flea: {
-                        enabled: this.getCheckboxValue(`${kittenId}-flea-enabled`),
-                        status: this.getRadioValue(`${kittenId}-flea-status`)
-                    },
-                    capstar: {
-                        enabled: this.getCheckboxValue(`${kittenId}-capstar-enabled`),
-                        status: this.getRadioValue(`${kittenId}-capstar-status`)
-                    },
-                    panacur: {
-                        enabled: this.getCheckboxValue(`${kittenId}-panacur-enabled`),
-                        status: this.getRadioValue(`${kittenId}-panacur-status`)
-                    },
-                    ponazuril: {
-                        enabled: this.getCheckboxValue(`${kittenId}-ponazuril-enabled`),
-                        status: this.getRadioValue(`${kittenId}-ponazuril-status`)
-                    },
-                    drontal: {
-                        enabled: this.getCheckboxValue(`${kittenId}-drontal-enabled`),
-                        status: this.getRadioValue(`${kittenId}-drontal-status`)
-                    }
-                }
+                name: this.getInputValue(Constants.ID.name(kittenId)),
+                weight: this.getInputValue(Constants.ID.weight(kittenId)),
+                topical: this.getRadioValue(Constants.ID.topicalName(kittenId)),
+                panacurDays: this.getRadioValue(Constants.ID.panacurName(kittenId)),
+                ponazurilDays: this.getRadioValue(Constants.ID.ponazurilName(kittenId)),
+                ringwormStatus: this.getRadioValue(Constants.ID.ringwormName(kittenId)),
+                // Medication enabled states and statuses
+                medications: {}
             };
+
+            // Collect medication data using Constants.MEDICATIONS
+            Constants.MEDICATIONS.forEach(med => {
+                kittenData.medications[med] = {
+                    enabled: this.getCheckboxValue(Constants.ID.medEnabled(kittenId, med)),
+                    status: this.getRadioValue(Constants.ID.medStatusName(kittenId, med))
+                };
+            });
 
             formData.kittens[kittenId] = kittenData;
         });
@@ -171,7 +173,7 @@ class LocalStorageManager {
 
         try {
             // Clear existing forms first
-            const container = document.getElementById('kittens-container');
+            const container = document.getElementById(Constants.ELEMENTS.KITTENS_CONTAINER);
             if (container) {
                 container.innerHTML = '';
             }
@@ -221,9 +223,9 @@ class LocalStorageManager {
         }
 
         // Create form directly with correct ID - using FormManager's template method for consistency
-        const container = document.getElementById('kittens-container');
+        const container = document.getElementById(Constants.ELEMENTS.KITTENS_CONTAINER);
         const kittenForm = document.createElement('div');
-        kittenForm.className = 'kitten-form';
+        kittenForm.className = Constants.CSS.KITTEN_FORM;
         kittenForm.id = kittenId;
 
         // Use FormManager's HTML template generator (single source of truth)
@@ -236,25 +238,26 @@ class LocalStorageManager {
 
         container.appendChild(kittenForm);
 
-        // Add event listeners like the original addKitten function would
-        this.addFormEventListeners(kittenId);
+        // Use FormManager's unified event binding (single source of truth)
+        if (window.KittenApp && window.KittenApp.formManager) {
+            window.KittenApp.formManager.bindKittenFormEvents(kittenId);
+        }
 
         // Set the saved values immediately
-        this.setInputValue(`${kittenId}-name`, kittenData.name);
-        this.setInputValue(`${kittenId}-weight`, kittenData.weight);
-        this.setRadioValue(`${kittenId}-topical`, kittenData.topical);
-        this.setRadioValue(`${kittenId}-panacur`, kittenData.panacurDays || '3');
-        this.setRadioValue(`${kittenId}-ponazuril`, kittenData.ponazurilDays || '3');
-        this.setRadioValue(`${kittenId}-ringworm-status`, kittenData.ringwormStatus || 'not-scanned');
+        this.setInputValue(Constants.ID.name(kittenId), kittenData.name);
+        this.setInputValue(Constants.ID.weight(kittenId), kittenData.weight);
+        this.setRadioValue(Constants.ID.topicalName(kittenId), kittenData.topical);
+        this.setRadioValue(Constants.ID.panacurName(kittenId), kittenData.panacurDays || String(Constants.DEFAULTS.PANACUR_DAYS));
+        this.setRadioValue(Constants.ID.ponazurilName(kittenId), kittenData.ponazurilDays || String(Constants.DEFAULTS.PONAZURIL_DAYS));
+        this.setRadioValue(Constants.ID.ringwormName(kittenId), kittenData.ringwormStatus || Constants.RINGWORM_STATUS.NOT_SCANNED);
 
         // Restore medication enabled states and statuses (v2.0 format)
         if (kittenData.medications) {
-            const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
-            medications.forEach(med => {
+            Constants.MEDICATIONS.forEach(med => {
                 const medData = kittenData.medications[med];
                 if (medData) {
-                    this.setCheckboxValue(`${kittenId}-${med}-enabled`, medData.enabled !== false);
-                    this.setRadioValue(`${kittenId}-${med}-status`, medData.status || 'todo');
+                    this.setCheckboxValue(Constants.ID.medEnabled(kittenId, med), medData.enabled !== false);
+                    this.setRadioValue(Constants.ID.medStatusName(kittenId, med), medData.status || Constants.STATUS.TODO);
                 }
             });
         }
@@ -265,188 +268,11 @@ class LocalStorageManager {
             window.KittenApp.formManager.updateResultDisplay(kittenId);
 
             // Update medication row states and status lights
-            const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
-            medications.forEach(med => {
+            Constants.MEDICATIONS.forEach(med => {
                 window.KittenApp.formManager.updateMedicationRowState(kittenId, med);
                 window.KittenApp.formManager.updateStatusLight(kittenId, med);
             });
             window.KittenApp.formManager.updateRingwormStatusLight(kittenId);
-        }
-    }
-
-    /**
-     * Add event listeners to a restored form (replaces FormManager.addValidationListeners + addMedicationListeners)
-     */
-    addFormEventListeners(kittenId) {
-        const formManager = window.KittenApp && window.KittenApp.formManager;
-
-        // Add weight input filtering and validation
-        const weightInput = document.getElementById(`${kittenId}-weight`);
-        if (weightInput) {
-            // Filter input to allow only numbers and periods
-            weightInput.addEventListener('input', (e) => {
-                const filteredValue = e.target.value.replace(/[^0-9.]/g, '');
-                const parts = filteredValue.split('.');
-                if (parts.length > 2) {
-                    e.target.value = parts[0] + '.' + parts.slice(1).join('');
-                } else {
-                    e.target.value = filteredValue;
-                }
-
-                if (formManager) {
-                    formManager.updateWeightDisplay(kittenId);
-                    formManager.updateResultDisplay(kittenId);
-                    formManager.updateAllStatusLights(kittenId);
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
-
-            // Prevent pasting invalid characters
-            weightInput.addEventListener('paste', (e) => {
-                e.preventDefault();
-                const paste = (e.clipboardData || window.clipboardData).getData('text');
-                const filteredPaste = paste.replace(/[^0-9.]/g, '');
-                const parts = filteredPaste.split('.');
-                const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
-
-                e.target.value = validPaste;
-                if (formManager) {
-                    formManager.updateWeightDisplay(kittenId);
-                    formManager.updateResultDisplay(kittenId);
-                    formManager.updateAllStatusLights(kittenId);
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
-        }
-
-        // Add medication toggle switch listeners
-        const medications = ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'];
-        medications.forEach(med => {
-            const toggleCheckbox = document.getElementById(`${kittenId}-${med}-enabled`);
-            if (toggleCheckbox) {
-                toggleCheckbox.addEventListener('change', () => {
-                    if (formManager) {
-                        formManager.updateMedicationRowState(kittenId, med);
-                        formManager.updateStatusLight(kittenId, med);
-                        formManager.updateResultDisplay(kittenId);
-                    }
-                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                    }
-                    if (window.localStorageManager) {
-                        window.localStorageManager.saveFormData();
-                    }
-                });
-            }
-
-            // Add status control listeners
-            const statusRadios = document.querySelectorAll(`input[name="${kittenId}-${med}-status"]`);
-            statusRadios.forEach(radio => {
-                radio.addEventListener('change', () => {
-                    if (formManager) {
-                        formManager.updateStatusLight(kittenId, med);
-                        formManager.updateResultDisplay(kittenId);
-                    }
-                    if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                        window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                    }
-                    if (window.localStorageManager) {
-                        window.localStorageManager.saveFormData();
-                    }
-                });
-            });
-        });
-
-        // Add topical type change listeners (Revolution / Advantage)
-        const topicalRadios = document.querySelectorAll(`input[name="${kittenId}-topical"]`);
-        topicalRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (formManager) {
-                    formManager.updateResultDisplay(kittenId);
-                    formManager.updateStatusLight(kittenId, 'flea');
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
-        });
-
-        // Add panacur regimen listeners
-        const panacurRadios = document.querySelectorAll(`input[name="${kittenId}-panacur"]`);
-        panacurRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (formManager) {
-                    formManager.updateResultDisplay(kittenId);
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
-        });
-
-        // Add ponazuril regimen listeners
-        const ponazurilRadios = document.querySelectorAll(`input[name="${kittenId}-ponazuril"]`);
-        ponazurilRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (formManager) {
-                    formManager.updateResultDisplay(kittenId);
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
-        });
-
-        // Add ringworm listeners
-        const ringwormRadios = document.querySelectorAll(`input[name="${kittenId}-ringworm-status"]`);
-        ringwormRadios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (formManager) {
-                    formManager.updateRingwormStatusLight(kittenId);
-                    formManager.updateResultDisplay(kittenId);
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
-        });
-
-        // Add name validation listeners
-        const nameInput = document.getElementById(`${kittenId}-name`);
-        if (nameInput) {
-            nameInput.addEventListener('input', () => {
-                if (formManager) {
-                    formManager.updateResultDisplay(kittenId);
-                }
-                if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
-                }
-                if (window.localStorageManager) {
-                    window.localStorageManager.saveFormData();
-                }
-            });
         }
     }
 
