@@ -1064,7 +1064,7 @@ footer {
 /* #endregion */
 
 /* #region Mobile Responsive */
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     body {
         padding: 0;
     }
