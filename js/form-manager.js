@@ -124,10 +124,6 @@ class FormManager {
         this.renderer.updateResultDisplay(kittenId);
     }
 
-    toggleResultDisplay(kittenId) {
-        this.renderer.toggleResultDisplay(kittenId);
-    }
-
     // ==========================================
     // Validator Delegates
     // ==========================================

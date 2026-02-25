@@ -62,7 +62,6 @@ const Constants = {
         DISABLED: 'disabled',
         STATUS_LIGHT: 'status-light',
         OUT_OF_RANGE: 'out-of-range',
-        COLLAPSED: 'collapsed',
         EMPTY: 'empty'
     },
 

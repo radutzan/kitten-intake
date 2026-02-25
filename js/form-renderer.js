@@ -27,7 +27,7 @@ class FormRenderer {
         const grams = parseFloat(weightInput.value);
         if (grams > 0) {
             const pounds = AppState.convertToPounds(grams);
-            display.textContent = `${AppState.formatNumber(grams)}g = ${AppState.formatNumber(pounds, 2)} lb`;
+            display.textContent = `${AppState.formatNumber(grams)} g = ${AppState.formatNumber(pounds, 2)} lb`;
             display.style.display = 'block';
         } else {
             display.style.display = 'none';
@@ -202,7 +202,7 @@ class FormRenderer {
         const headerElement = doseHeader.querySelector('.kitten-info');
         if (grams > 0) {
             const weightLb = AppState.convertToPounds(grams);
-            headerElement.textContent = `${kittenName} - ${AppState.formatNumber(grams)}g (${AppState.formatNumber(weightLb, 2)} lb)`;
+            headerElement.textContent = `${kittenName} - ${AppState.formatNumber(grams)} g (${AppState.formatNumber(weightLb, 2)} lb)`;
         } else {
             headerElement.textContent = `${kittenName}`;
         }
@@ -248,21 +248,6 @@ class FormRenderer {
 
         doseDisplay.classList.remove(Constants.CSS.EMPTY);
         doseContent.innerHTML = content;
-    }
-
-    /**
-     * Toggle the result display expanded/collapsed state
-     * @param {string} kittenId - The kitten ID
-     */
-    toggleResultDisplay(kittenId) {
-        const resultDisplay = document.getElementById(`${kittenId}-result-display`);
-        if (!resultDisplay) return;
-
-        const isCollapsed = resultDisplay.classList.toggle(Constants.CSS.COLLAPSED);
-        const toggleText = resultDisplay.querySelector('.toggle-text');
-        if (toggleText) {
-            toggleText.textContent = isCollapsed ? 'Show All Doses' : 'Hide Doses';
-        }
     }
 
     // ==========================================

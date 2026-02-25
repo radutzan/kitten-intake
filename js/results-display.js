@@ -361,7 +361,7 @@ class ResultsDisplay {
             const kittenHeader = document.createElement('th');
             kittenHeader.colSpan = kitten.medications.length;
             kittenHeader.className = 'kitten-header';
-            kittenHeader.innerHTML = `<strong>${kitten.name}</strong> <span>${AppState.formatNumber(kitten.weightGrams)}g (${AppState.formatNumber(kitten.weightLb, 2)} lb)</span>`;
+            kittenHeader.innerHTML = `<strong>${kitten.name}</strong> <span>${AppState.formatNumber(kitten.weightGrams)} g (${AppState.formatNumber(kitten.weightLb, 2)} lb)</span>`;
             headerRow1.appendChild(kittenHeader);
 
             // Medication sub-headers

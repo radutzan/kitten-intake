@@ -122,8 +122,8 @@ class AppState {
             medicationStatus: kittenData.medicationStatus || {
                 flea: Constants.STATUS.TODO,
                 capstar: Constants.STATUS.TODO,
-                panacur: Constants.STATUS.DONE,
-                ponazuril: Constants.STATUS.DONE,
+                panacur: Constants.STATUS.TODO,
+                ponazuril: Constants.STATUS.TODO,
                 drontal: Constants.STATUS.TODO
             },
             medicationEnabled: kittenData.medicationEnabled || {

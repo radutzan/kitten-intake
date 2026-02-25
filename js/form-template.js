@@ -174,9 +174,9 @@ const FormTemplate = {
                         <label for="${kittenId}-panacur-5">5d</label>
                     </div>
                     <div class="radio-group status-control">
-                        <input type="radio" name="${kittenId}-panacur-status" value="todo" id="${kittenId}-panacur-status-todo">
+                        <input type="radio" name="${kittenId}-panacur-status" value="todo" id="${kittenId}-panacur-status-todo" checked>
                         <label for="${kittenId}-panacur-status-todo">To Do</label>
-                        <input type="radio" name="${kittenId}-panacur-status" value="done" id="${kittenId}-panacur-status-done" checked>
+                        <input type="radio" name="${kittenId}-panacur-status" value="done" id="${kittenId}-panacur-status-done">
                         <label for="${kittenId}-panacur-status-done">Done</label>
                     </div>
                 </div>
@@ -213,9 +213,9 @@ const FormTemplate = {
                         <label for="${kittenId}-ponazuril-3">3d</label>
                     </div>
                     <div class="radio-group status-control">
-                        <input type="radio" name="${kittenId}-ponazuril-status" value="todo" id="${kittenId}-ponazuril-status-todo">
+                        <input type="radio" name="${kittenId}-ponazuril-status" value="todo" id="${kittenId}-ponazuril-status-todo" checked>
                         <label for="${kittenId}-ponazuril-status-todo">To Do</label>
-                        <input type="radio" name="${kittenId}-ponazuril-status" value="done" id="${kittenId}-ponazuril-status-done" checked>
+                        <input type="radio" name="${kittenId}-ponazuril-status" value="done" id="${kittenId}-ponazuril-status-done">
                         <label for="${kittenId}-ponazuril-status-done">Done</label>
                     </div>
                 </div>
@@ -292,13 +292,10 @@ const FormTemplate = {
      */
     generateResultDisplay(kittenId) {
         return `
-            <div class="result-display empty collapsed" id="${kittenId}-result-display">
+            <div class="result-display empty" id="${kittenId}-result-display">
                 <div class="dose-print-header print-only" id="${kittenId}-result-header">
                     <h3 class="kitten-info"></h3>
                 </div>
-                <button type="button" class="result-toggle" onclick="window.KittenApp.formManager.toggleResultDisplay('${kittenId}')">
-                    <span class="toggle-text">Show All Doses</span>
-                </button>
                 <div id="${kittenId}-result-content">
                     <div class="collapsible-section">
                         <div class="result-display-content">

@@ -23,6 +23,7 @@
     --text-heading: var(--gray-900);
     --border-color: var(--gray-300);
     --border-light: var(--gray-200);
+    --divider: rgba(0,0,0,.06);
 
     /* Status colors */
     --status-done: var(--green);
@@ -713,10 +714,6 @@ input[type="radio"]:focus {
     margin-top: 0;
 }
 
-/* Result display toggle (mobile only) */
-.result-toggle {
-    display: none;
-}
 /* #endregion */
 
 /* #region Error States */
@@ -756,7 +753,7 @@ input[type="radio"]:focus {
     border-radius: 0;
     background-color: transparent;
     font-size: var(--fs-body-medium);
-    border-bottom: 1px solid var(--bg-medium);
+    border-bottom: 1px solid var(--divider);
 }
 
 .result-display .result-item:last-child {
@@ -954,12 +951,8 @@ footer {
         display: none !important;
     }
 
-    /* Always show result sections when printing (even if collapsed on mobile) */
-    .result-toggle {
-        display: none !important;
-    }
-
-    .result-display.collapsed .collapsible-section {
+    /* Always show dose sections when printing */
+    .result-display .collapsible-section {
         display: block !important;
     }
 
@@ -1210,35 +1203,16 @@ footer {
         padding-top: 0;
     }
 
-    /* Collapsible result display on mobile */
-    .result-toggle {
-        display: block;
-        width: 100%;
-        padding: 8px 12px;
-        margin-bottom: 8px;
-        background-color: var(--bg-light);
-        border: 1px solid var(--border-light);
-        border-radius: 8px;
-        font-size: var(--fs-body-medium);
-        font-weight: 500;
-        color: var(--blue);
-        cursor: pointer;
-        text-align: center;
+    .result-display-content {
+        border-radius: calc(var(--container-radius) + var(--input-radius) - 10px);
     }
 
-    .result-toggle:hover {
-        background-color: var(--border-light);
+    .result-display .result-item, .dose-section-header {
+        padding-left: 15px;
     }
 
-    .result-display.collapsed .collapsible-section {
-        display: none;
-    }
-
-    .result-display.collapsed .foster-section {
-        display: block;
-    }
-
-    .result-display.empty .result-toggle {
+    /* Always hide doses section on mobile */
+    .result-display .collapsible-section {
         display: none;
     }
 
