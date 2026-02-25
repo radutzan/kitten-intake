@@ -328,7 +328,7 @@ class FormRenderer {
         const fleaDoseEl = document.getElementById(`${kittenId}-flea-dose`);
         if (fleaDoseEl) {
             const dose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
-            fleaDoseEl.textContent = dose === outOfRange ? outOfRange : `${AppState.formatNumber(dose, 2)}ml`;
+            fleaDoseEl.textContent = dose === outOfRange ? outOfRange : `${AppState.formatNumber(dose, 2)} mL`;
         }
 
         // Capstar dose
@@ -340,13 +340,13 @@ class FormRenderer {
         // Panacur dose
         const panacurDoseEl = document.getElementById(`${kittenId}-panacur-dose`);
         if (panacurDoseEl) {
-            panacurDoseEl.textContent = `${AppState.formatNumber(doses.panacur, 2)}ml/day`;
+            panacurDoseEl.textContent = `${AppState.formatNumber(doses.panacur, 2)} mL/day`;
         }
 
         // Ponazuril dose
         const ponazurilDoseEl = document.getElementById(`${kittenId}-ponazuril-dose`);
         if (ponazurilDoseEl) {
-            ponazurilDoseEl.textContent = `${AppState.formatNumber(doses.ponazuril, 2)}ml/day`;
+            ponazurilDoseEl.textContent = `${AppState.formatNumber(doses.ponazuril, 2)} mL/day`;
         }
 
         // Drontal dose
