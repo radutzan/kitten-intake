@@ -521,11 +521,12 @@ class FormManager {
         this.pagination.updatePaginationDots();
 
         // Scroll to new kitten on mobile, or vertically on desktop
-        if (kittenCounter > 1) {
+        const formCount = container.querySelectorAll(`.${Constants.CSS.KITTEN_FORM}`).length;
+        if (formCount > 1) {
             const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
             if (isMobile) {
-                this.pagination.scrollToNewKitten(kittenCounter);
+                this.pagination.scrollToNewKitten(formCount);
             } else {
                 // On desktop, scroll vertically to the new form
                 const nav = document.querySelector('nav');
