@@ -395,50 +395,53 @@ class FormRenderer {
                 <div class="result-display-content">
         `;
 
-        if (panacurStatus !== Constants.STATUS.SKIP) {
-            content += `
-                <div class="result-item">
-                    <strong>Panacur</strong> ${AppState.formatNumber(doses.panacur, 2)} mL/day × ${panacurDays} days
-                </div>
-            `;
-        }
-        if (ponazurilStatus !== Constants.STATUS.SKIP) {
-            content += `
-                <div class="result-item">
-                    <strong>Ponazuril</strong> ${AppState.formatNumber(doses.ponazuril, 2)} mL/day × ${ponazurilDays} days
-                </div>
-            `;
-        }
-        if (drontalStatus !== Constants.STATUS.SKIP) {
-            content += `
-                <div class="result-item">
-                    <strong>Drontal</strong> ${doses.drontal === outOfRange ? outOfRange : doses.drontal + ' tablet(s)'}
-                </div>
-            `;
-        }
-        if (pyrantelStatus !== Constants.STATUS.SKIP) {
-            content += `
-                <div class="result-item">
-                    <strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL
-                </div>
-            `;
-        }
-        if (capstarStatus !== Constants.STATUS.SKIP) {
-            content += `
-                <div class="result-item">
-                    <strong>Capstar</strong> 1 tablet
-                </div>
-            `;
-        }
-        if (fleaStatus !== Constants.STATUS.SKIP) {
-            const topicalName = topical === Constants.TOPICAL.REVOLUTION ? 'Revolution' : 'Advantage II';
-            const topicalDose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
-            content += `
-                <div class="result-item">
-                    <strong>${topicalName}</strong> ${topicalDose === outOfRange ? outOfRange : AppState.formatNumber(topicalDose, 2) + ' mL'}
-                </div>
-            `;
-        }
+        // Render in Constants.MEDICATIONS order (matches form)
+        const statuses = { flea: fleaStatus, capstar: capstarStatus, panacur: panacurStatus,
+                           ponazuril: ponazurilStatus, drontal: drontalStatus, pyrantel: pyrantelStatus };
+
+        Constants.MEDICATIONS.forEach(med => {
+            if (statuses[med] === Constants.STATUS.SKIP) return;
+
+            if (med === 'flea') {
+                const topicalName = topical === Constants.TOPICAL.REVOLUTION ? 'Revolution' : 'Advantage II';
+                const topicalDose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
+                content += `
+                    <div class="result-item">
+                        <strong>${topicalName}</strong> ${topicalDose === outOfRange ? outOfRange : AppState.formatNumber(topicalDose, 2) + ' mL'}
+                    </div>
+                `;
+            } else if (med === 'capstar') {
+                content += `
+                    <div class="result-item">
+                        <strong>Capstar</strong> 1 tablet
+                    </div>
+                `;
+            } else if (med === 'panacur') {
+                content += `
+                    <div class="result-item">
+                        <strong>Panacur</strong> ${AppState.formatNumber(doses.panacur, 2)} mL/day × ${panacurDays} days
+                    </div>
+                `;
+            } else if (med === 'ponazuril') {
+                content += `
+                    <div class="result-item">
+                        <strong>Ponazuril</strong> ${AppState.formatNumber(doses.ponazuril, 2)} mL/day × ${ponazurilDays} days
+                    </div>
+                `;
+            } else if (med === 'drontal') {
+                content += `
+                    <div class="result-item">
+                        <strong>Drontal</strong> ${doses.drontal === outOfRange ? outOfRange : doses.drontal + ' tablet(s)'}
+                    </div>
+                `;
+            } else if (med === 'pyrantel') {
+                content += `
+                    <div class="result-item">
+                        <strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL
+                    </div>
+                `;
+            }
+        });
 
         content += `
                 </div>
@@ -471,34 +474,38 @@ class FormRenderer {
 
         const remainsForFoster = [];
 
-        if (drontalStatus !== Constants.STATUS.SKIP && !drontalDay1Given && doses.drontal !== outOfRange) {
-            remainsForFoster.push(`<strong>Drontal</strong> ${doses.drontal + ' tablet(s)'}`);
-        }
-
-        if (capstarStatus !== Constants.STATUS.SKIP && !capstarDay1Given) {
-            remainsForFoster.push(`<strong>Capstar</strong> 1 tablet`);
-        }
-
-        if (pyrantelStatus !== Constants.STATUS.SKIP && !pyrantelDay1Given) {
-            remainsForFoster.push(`<strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL`);
-        }
-
-        if (panacurRemaining > 0) {
-            remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${AppState.formatNumber(doses.panacur, 2)} mL = ${AppState.formatNumber(panacurTotal, 2)} mL`);
-        }
-
-        if (ponazurilRemaining > 0) {
-            remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${AppState.formatNumber(doses.ponazuril, 2)} mL = ${AppState.formatNumber(ponazurilTotal, 2)} mL`);
-        }
-
-        // Topical for foster
-        if (fleaStatus !== Constants.STATUS.SKIP) {
-            const topicalName = topical === Constants.TOPICAL.REVOLUTION ? 'Revolution' : 'Advantage II';
-            const topicalDose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
-            if (topicalDose !== outOfRange && !fleaGiven) {
-                remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose = ${AppState.formatNumber(topicalDose, 2)} mL`);
+        // Render in Constants.MEDICATIONS order (matches form)
+        Constants.MEDICATIONS.forEach(med => {
+            if (med === 'flea') {
+                if (fleaStatus !== Constants.STATUS.SKIP) {
+                    const topicalName = topical === Constants.TOPICAL.REVOLUTION ? 'Revolution' : 'Advantage II';
+                    const topicalDose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
+                    if (topicalDose !== outOfRange && !fleaGiven) {
+                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose = ${AppState.formatNumber(topicalDose, 2)} mL`);
+                    }
+                }
+            } else if (med === 'capstar') {
+                if (capstarStatus !== Constants.STATUS.SKIP && !capstarDay1Given) {
+                    remainsForFoster.push(`<strong>Capstar</strong> 1 tablet`);
+                }
+            } else if (med === 'panacur') {
+                if (panacurRemaining > 0) {
+                    remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${AppState.formatNumber(doses.panacur, 2)} mL = ${AppState.formatNumber(panacurTotal, 2)} mL`);
+                }
+            } else if (med === 'ponazuril') {
+                if (ponazurilRemaining > 0) {
+                    remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${AppState.formatNumber(doses.ponazuril, 2)} mL = ${AppState.formatNumber(ponazurilTotal, 2)} mL`);
+                }
+            } else if (med === 'drontal') {
+                if (drontalStatus !== Constants.STATUS.SKIP && !drontalDay1Given && doses.drontal !== outOfRange) {
+                    remainsForFoster.push(`<strong>Drontal</strong> ${doses.drontal + ' tablet(s)'}`);
+                }
+            } else if (med === 'pyrantel') {
+                if (pyrantelStatus !== Constants.STATUS.SKIP && !pyrantelDay1Given) {
+                    remainsForFoster.push(`<strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL`);
+                }
             }
-        }
+        });
 
         let content = `
             <div class="foster-section">

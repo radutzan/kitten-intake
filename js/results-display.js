@@ -137,68 +137,73 @@ class ResultsDisplay {
     renderDispenseSummaryHtml(totals) {
         const items = [];
 
-        if (totals.panacur > 0) {
-            items.push(`
-                <div class="total-item">
-                    <span>Panacur</span>
-                    <strong>${AppState.formatNumber(totals.panacur, 2)} mL</strong>
-                </div>
-            `);
-        }
-
-        if (totals.ponazuril > 0) {
-            items.push(`
-                <div class="total-item">
-                    <span>Ponazuril</span>
-                    <strong>${AppState.formatNumber(totals.ponazuril, 2)} mL</strong>
-                </div>
-            `);
-        }
-
-        if (totals.revolution > 0) {
-            items.push(`
-                <div class="total-item">
-                    <span>Revolution</span>
-                    <strong>${AppState.formatNumber(totals.revolution, 2)} mL</strong>
-                </div>
-            `);
-        }
-
-        if (totals.advantage > 0) {
-            items.push(`
-                <div class="total-item">
-                    <span>Advantage II</span>
-                    <strong>${AppState.formatNumber(totals.advantage, 2)} mL</strong>
-                </div>
-            `);
-        }
-
-        if (totals.drontal > 0) {
-            items.push(`
-                <div class="total-item">
-                    <span>Drontal</span>
-                    <strong>${totals.drontal} tablet(s)</strong>
-                </div>
-            `);
-        }
-
-        if (totals.capstar > 0) {
-            items.push(`
-                <div class="total-item">
-                    <span>Capstar</span>
-                    <strong>${totals.capstar} tablet(s)</strong>
-                </div>
-            `);
-        }
-
-        if (totals.pyrantel > 0) {
-            items.push(`
-                <div class="total-item">
-                    <span>Pyrantel</span>
-                    <strong>${AppState.formatNumber(totals.pyrantel, 2)} mL</strong>
-                </div>
-            `);
-        }
+        // Render in Constants.MEDICATIONS order (matches form)
+        Constants.MEDICATIONS.forEach(med => {
+            if (med === 'flea') {
+                // Flea has two sub-types: revolution and advantage
+                if (totals.revolution > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Revolution</span>
+                            <strong>${AppState.formatNumber(totals.revolution, 2)} mL</strong>
+                        </div>
+                    `);
+                }
+                if (totals.advantage > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Advantage II</span>
+                            <strong>${AppState.formatNumber(totals.advantage, 2)} mL</strong>
+                        </div>
+                    `);
+                }
+            } else if (med === 'capstar') {
+                if (totals.capstar > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Capstar</span>
+                            <strong>${totals.capstar} tablet(s)</strong>
+                        </div>
+                    `);
+                }
+            } else if (med === 'panacur') {
+                if (totals.panacur > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Panacur</span>
+                            <strong>${AppState.formatNumber(totals.panacur, 2)} mL</strong>
+                        </div>
+                    `);
+                }
+            } else if (med === 'ponazuril') {
+                if (totals.ponazuril > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Ponazuril</span>
+                            <strong>${AppState.formatNumber(totals.ponazuril, 2)} mL</strong>
+                        </div>
+                    `);
+                }
+            } else if (med === 'drontal') {
+                if (totals.drontal > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Drontal</span>
+                            <strong>${totals.drontal} tablet(s)</strong>
+                        </div>
+                    `);
+                }
+            } else if (med === 'pyrantel') {
+                if (totals.pyrantel > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Pyrantel</span>
+                            <strong>${AppState.formatNumber(totals.pyrantel, 2)} mL</strong>
+                        </div>
+                    `);
+                }
+            }
+        });
 
         return items.join('');
     }
