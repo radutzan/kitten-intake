@@ -5,7 +5,7 @@
 
 const Constants = {
     // Medication type keys (lowercase, used in form element IDs)
-    MEDICATIONS: ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal'],
+    MEDICATIONS: ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal', 'pyrantel'],
 
     // Display names for medications
     MEDICATION_DISPLAY_NAMES: {
@@ -13,7 +13,8 @@ const Constants = {
         capstar: 'Capstar',
         panacur: 'Panacur',
         ponazuril: 'Ponazuril',
-        drontal: 'Drontal'
+        drontal: 'Drontal',
+        pyrantel: 'Pyrantel'
     },
 
     // Topical medication brands
@@ -29,6 +30,13 @@ const Constants = {
         DONE: 'done',
         SKIP: 'skip',
         DELAY: 'delay'
+    },
+
+    // Sex values
+    SEX: {
+        UNKNOWN: 'unknown',
+        FEMALE: 'female',
+        MALE: 'male'
     },
 
     // Ringworm scan status values
@@ -75,7 +83,8 @@ const Constants = {
     DEFAULTS: {
         PANACUR_DAYS: 3,
         PONAZURIL_DAYS: 3,
-        TOPICAL: 'revolution'
+        TOPICAL: 'revolution',
+        SEX: 'unknown'
     },
 
     // ID generator functions - create consistent element IDs
@@ -99,6 +108,7 @@ const Constants = {
         topicalName: (kittenId) => `${kittenId}-topical`,
         panacurName: (kittenId) => `${kittenId}-panacur`,
         ponazurilName: (kittenId) => `${kittenId}-ponazuril`,
+        sexName: (kittenId) => `${kittenId}-sex`,
         ringwormName: (kittenId) => `${kittenId}-ringworm-status`,
         ringwormStatusLight: (kittenId) => `${kittenId}-ringworm-status-light`
     }
@@ -110,6 +120,7 @@ Object.freeze(Constants.MEDICATIONS);
 Object.freeze(Constants.MEDICATION_DISPLAY_NAMES);
 Object.freeze(Constants.TOPICAL);
 Object.freeze(Constants.STATUS);
+Object.freeze(Constants.SEX);
 Object.freeze(Constants.RINGWORM_STATUS);
 Object.freeze(Constants.MESSAGES);
 Object.freeze(Constants.ELEMENTS);

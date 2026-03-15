@@ -364,9 +364,34 @@ h1 {
     display: none;
 }
 
+.top .form-group .radio-group label {
+    display: flex;
+}
+
 .top .form-group input {
     font-size: var(--fs-header-large);
     width: 100%;
+}
+
+.weight-sex-row {
+    flex-direction: row !important;
+    align-items: stretch;
+    gap: 5px;
+}
+
+.weight-input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.sex-selector {
+    flex: 0 0 120px;
+    width: 120px;
+    margin-top: 0 !important;
+}
+
+.sex-selector label {
+    width: 33%;
 }
 
 .weight-display {

@@ -18,78 +18,118 @@ function testUrlState() {
         console.log(`   ${i} → "${encoded}" → ${decoded} ${i === decoded ? '✓' : '✗'}`);
     }
 
-    // Test flag encoding with sample data
-    console.log('\n2. Flag encoding test (v1 - 11 bits):');
-    const testCases = [
+    // Test base64 encoding with 4 chars (v2 uses 4)
+    console.log('\n   4-char base64 test (v2 range):');
+    for (let i = 0; i < 1048576; i += 200000) {
+        const encoded = manager.toBase64Url(i, 4);
+        const decoded = manager.fromBase64Url(encoded);
+        console.log(`   ${i} → "${encoded}" → ${decoded} ${i === decoded ? '✓' : '✗'}`);
+    }
+
+    // Test v2 flag encoding
+    console.log('\n2. Flag encoding test (v2 - 20 bits):');
+    const testCasesV2 = [
         {
-            name: 'All defaults (rev, flea given, not-scanned, 5d pan, 3d pon, all day1)',
+            name: 'All defaults (unknown sex, rev, not-scanned, 3d pan, 3d pon, all todo)',
             kitten: {
+                sex: 'unknown',
                 topical: 'revolution',
-                fleaGiven: true,
                 ringwormStatus: 'not-scanned',
-                panacur: '5',
-                ponazuril: '3',
-                day1Given: { panacur: true, ponazuril: true, drontal: true }
+                panacurDays: '3',
+                ponazurilDays: '3',
+                fleaStatus: 'todo',
+                capstarStatus: 'todo',
+                panacurStatus: 'todo',
+                ponazurilStatus: 'todo',
+                drontalStatus: 'todo',
+                pyrantelStatus: 'todo'
             }
         },
         {
-            name: 'All alternate values',
+            name: 'All done, female, advantage, positive ringworm',
             kitten: {
-                topical: 'none',
-                fleaGiven: false,
-                ringwormStatus: 'positive',
-                panacur: '1',
-                ponazuril: '1',
-                day1Given: { panacur: false, ponazuril: false, drontal: false }
-            }
-        },
-        {
-            name: 'Mixed: advantage, flea not given, negative, 3d pan, 1d pon',
-            kitten: {
+                sex: 'female',
                 topical: 'advantage',
-                fleaGiven: false,
-                ringwormStatus: 'negative',
-                panacur: '3',
-                ponazuril: '1',
-                day1Given: { panacur: true, ponazuril: false, drontal: true }
+                ringwormStatus: 'positive',
+                panacurDays: '5',
+                ponazurilDays: '1',
+                fleaStatus: 'done',
+                capstarStatus: 'done',
+                panacurStatus: 'done',
+                ponazurilStatus: 'done',
+                drontalStatus: 'done',
+                pyrantelStatus: 'done'
             }
         },
         {
-            name: 'Panacur 1 day only',
+            name: 'Mixed: male, some skipped, flea delayed',
             kitten: {
+                sex: 'male',
                 topical: 'revolution',
-                fleaGiven: true,
+                ringwormStatus: 'negative',
+                panacurDays: '1',
+                ponazurilDays: '1',
+                fleaStatus: 'delay',
+                capstarStatus: 'skip',
+                panacurStatus: 'done',
+                ponazurilStatus: 'todo',
+                drontalStatus: 'skip',
+                pyrantelStatus: 'done'
+            }
+        },
+        {
+            name: 'All skipped',
+            kitten: {
+                sex: 'unknown',
+                topical: 'revolution',
                 ringwormStatus: 'not-scanned',
-                panacur: '1',
-                ponazuril: '3',
-                day1Given: { panacur: true, ponazuril: true, drontal: true }
+                panacurDays: '3',
+                ponazurilDays: '3',
+                fleaStatus: 'skip',
+                capstarStatus: 'skip',
+                panacurStatus: 'skip',
+                ponazurilStatus: 'skip',
+                drontalStatus: 'skip',
+                pyrantelStatus: 'skip'
             }
         }
     ];
 
-    testCases.forEach(tc => {
-        const encoded = manager.encodeFlags(tc.kitten);
-        const decoded = manager.decodeFlags(encoded);
+    testCasesV2.forEach(tc => {
+        const encoded = manager.encodeFlagsV2(tc.kitten);
+        const decoded = manager.decodeFlagsV2(encoded);
+
+        // Check that round-trip preserves values
         const match =
+            decoded.sex === tc.kitten.sex &&
             decoded.topical === tc.kitten.topical &&
-            decoded.fleaGiven === tc.kitten.fleaGiven &&
             decoded.ringwormStatus === tc.kitten.ringwormStatus &&
-            decoded.panacur === tc.kitten.panacur &&
-            decoded.ponazuril === tc.kitten.ponazuril &&
-            decoded.day1Given.panacur === tc.kitten.day1Given.panacur &&
-            decoded.day1Given.ponazuril === tc.kitten.day1Given.ponazuril &&
-            decoded.day1Given.drontal === tc.kitten.day1Given.drontal;
+            decoded.panacurDays === tc.kitten.panacurDays &&
+            decoded.ponazurilDays === tc.kitten.ponazurilDays &&
+            checkMedStatus(decoded.medications.flea, tc.kitten.fleaStatus) &&
+            checkMedStatus(decoded.medications.capstar, tc.kitten.capstarStatus) &&
+            checkMedStatus(decoded.medications.panacur, tc.kitten.panacurStatus) &&
+            checkMedStatus(decoded.medications.ponazuril, tc.kitten.ponazurilStatus) &&
+            checkMedStatus(decoded.medications.drontal, tc.kitten.drontalStatus) &&
+            checkMedStatus(decoded.medications.pyrantel, tc.kitten.pyrantelStatus);
 
         console.log(`   ${tc.name}:`);
-        console.log(`     "${encoded}" ${match ? '✓' : '✗'}`);
+        console.log(`     "${encoded}" (${encoded.length} chars) ${match ? '✓' : '✗'}`);
         if (!match) {
             console.log('     Expected:', tc.kitten);
             console.log('     Got:', decoded);
         }
     });
 
+    // Test v1 backward compatibility
+    console.log('\n3. V1 backward compatibility test:');
+    const v1Decoded = manager.decodeFlagsV1('oG');
+    console.log('   Decode v1 "oG":', v1Decoded);
+    console.log('   Has medications object:', !!v1Decoded.medications, '✓');
+    console.log('   Has sex field:', !!v1Decoded.sex, '✓');
+
     // Test full URL encoding if forms exist
-    console.log('\n3. Current form encoding:');
+    console.log('\n4. Current form encoding:');
     const preview = manager.getUrlPreview();
     if (preview) {
         console.log(`   URL length: ${preview.length} chars`);
@@ -97,7 +137,7 @@ function testUrlState() {
         console.log(`   Full URL: ${preview.full}`);
 
         // Test round-trip
-        console.log('\n4. Round-trip test:');
+        console.log('\n5. Round-trip test:');
         const decoded = manager.decodeFromUrl(preview.full);
         console.log('   Decoded data:', decoded);
     } else {
@@ -105,7 +145,7 @@ function testUrlState() {
     }
 
     // Test temporary state functionality
-    console.log('\n5. Temporary state check:');
+    console.log('\n6. Temporary state check:');
     console.log(`   Is temporary state loaded: ${manager.isTemporaryStateLoaded()}`);
     console.log(`   Has backup: ${manager.hasBackup()}`);
     const backupInfo = manager.getBackupInfo();
@@ -126,41 +166,33 @@ function testUrlState() {
     return manager;
 }
 
+/**
+ * Helper: check if decoded medication state matches expected status
+ */
+function checkMedStatus(medObj, expectedStatus) {
+    if (expectedStatus === 'skip') {
+        return medObj.enabled === false;
+    }
+    return medObj.enabled === true && medObj.status === expectedStatus;
+}
+
 // Example URLs for reference
 function showExampleUrls() {
     const manager = new UrlStateManager();
 
-    console.log('=== Example Encoded URLs (v1) ===\n');
+    console.log('=== Example Encoded URLs ===\n');
 
-    // Simulate encoding for display purposes
-    const examples = [
-        {
-            desc: 'Single kitten: Mittens, 450g, all defaults',
-            url: '?k=1|Mittens|450|oG'
-        },
-        {
-            desc: 'Two kittens with mixed settings',
-            url: '?k=1|Mittens|450|oG|Whiskers|380|VB'
-        },
-        {
-            desc: 'Three kittens, various weights',
-            url: '?k=1|Luna|520|oG|Oliver|380|VB|Bella|290|oj'
-        },
-        {
-            desc: 'Name with spaces and special chars',
-            url: '?k=1|Mr%20Fluffy|400|oG|Princess%20%F0%9F%90%B1|350|oG'
-        }
-    ];
+    console.log('V2 format (4-char flags):');
+    console.log('  ?k=2|Mittens|450|ABCD');
+    console.log('  ?k=2|Mittens|450|ABCD|Whiskers|380|EFGH\n');
 
-    examples.forEach(ex => {
-        console.log(`${ex.desc}:`);
-        console.log(`  ${ex.url}`);
-        console.log(`  Length: ${ex.url.length} chars\n`);
-    });
+    console.log('V1 format (2-char flags, legacy):');
+    console.log('  ?k=1|Mittens|450|oG');
+    console.log('  ?k=1|Mittens|450|oG|Whiskers|380|VB\n');
 
-    // Decode an example
-    console.log('Decoding example (Two kittens):');
-    const decoded = manager.decodeFromUrl('http://example.com/?k=1|Mittens|450|oG|Whiskers|380|VB');
+    // Decode v1 example to show backward compatibility
+    console.log('V1 backward compatibility - decoding "?k=1|Mittens|450|oG":');
+    const decoded = manager.decodeFromUrl('http://example.com/?k=1|Mittens|450|oG');
     console.log(decoded);
 }
 

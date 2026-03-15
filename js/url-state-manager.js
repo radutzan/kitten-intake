@@ -4,7 +4,20 @@
  *
  * Format: ?k=VERSION|name|weight|flags|name|weight|flags|...
  *
- * Version 1 bitfield layout (11 bits, encoded as 2 base64url chars):
+ * Version 2 bitfield layout (20 bits, encoded as 4 base64url chars):
+ *   Bits 0-1:   sex (0=unknown, 1=female, 2=male)
+ *   Bit 2:      topical (0=revolution, 1=advantage)
+ *   Bits 3-4:   ringwormStatus (0=not-scanned, 1=negative, 2=positive)
+ *   Bits 5-6:   panacurDays (0=1, 1=3, 2=5)
+ *   Bit 7:      ponazurilDays (0=1, 1=3)
+ *   Bits 8-9:   flea status (0=skip, 1=todo, 2=delay, 3=done)
+ *   Bits 10-11: capstar status (0=skip, 1=todo, 2=done)
+ *   Bits 12-13: panacur status (0=skip, 1=todo, 2=done)
+ *   Bits 14-15: ponazuril status (0=skip, 1=todo, 2=done)
+ *   Bits 16-17: drontal status (0=skip, 1=todo, 2=done)
+ *   Bits 18-19: pyrantel status (0=skip, 1=todo, 2=done)
+ *
+ * Version 1 (legacy, decode-only) bitfield layout (11 bits, 2 base64url chars):
  *   Bits 0-1:  topical (0=revolution, 1=advantage, 2=none)
  *   Bit 2:     fleaGiven (0=given/checked, 1=not given/unchecked)
  *   Bits 3-4:  ringwormStatus (0=not-scanned, 1=negative, 2=positive)
@@ -17,7 +30,7 @@
 
 class UrlStateManager {
     constructor() {
-        this.version = 1;
+        this.version = 2;
         this.paramKey = 'k';
         this.backupStorageKey = 'cat-intake-form-backup';
         this.loadedStateKey = 'cat-intake-url-loaded';
@@ -26,10 +39,20 @@ class UrlStateManager {
         // Base64url alphabet (RFC 4648 - URL safe)
         this.b64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
-        // Enum mappings for version 1
+        // Enum mappings for version 2
+        this.v2 = {
+            sex: ['unknown', 'female', 'male'],
+            topical: ['revolution', 'advantage'],
+            ringwormStatus: ['not-scanned', 'negative', 'positive'],
+            panacurDays: ['1', '3', '5'],
+            ponazurilDays: ['1', '3'],
+            fleaStatus: ['skip', 'todo', 'delay', 'done'],
+            medStatus: ['skip', 'todo', 'done']
+        };
+
+        // Enum mappings for version 1 (legacy decode-only)
         this.v1 = {
             topical: ['revolution', 'advantage', 'none'],
-            fleaStatus: ['given', 'bathed'],
             ringwormStatus: ['not-scanned', 'negative', 'positive'],
             panacurDays: ['1', '3', '5'],
             ponazurilDays: ['1', '3']
@@ -78,6 +101,17 @@ class UrlStateManager {
         }
     }
 
+    /**
+     * Read a medication's combined enabled+status from the DOM
+     * Returns 'skip' if disabled, otherwise the status radio value
+     */
+    _getMedStatusFromDom(kittenId, med) {
+        const toggle = document.getElementById(`${kittenId}-${med}-enabled`);
+        if (toggle && !toggle.checked) return 'skip';
+        const radio = document.querySelector(`input[name="${kittenId}-${med}-status"]:checked`);
+        return radio ? radio.value : 'todo';
+    }
+
     _encodeCurrentState() {
         const kittenForms = document.querySelectorAll('.kitten-form');
         if (kittenForms.length === 0) return null;
@@ -93,21 +127,21 @@ class UrlStateManager {
 
             if (name || weight) hasAnyData = true;
 
-            const topical = document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution';
-            const fleaGiven = document.getElementById(`${kittenId}-flea-given`)?.checked ?? false;
-            const panacur = document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5';
-            const ponazuril = document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3';
-            const ringwormStatus = document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned';
-
-            const day1Given = {
-                panacur: document.getElementById(`${kittenId}-panacur-day1`)?.checked ?? true,
-                ponazuril: document.getElementById(`${kittenId}-ponazuril-day1`)?.checked ?? true,
-                drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true
+            const kitten = {
+                sex: document.querySelector(`input[name="${kittenId}-sex"]:checked`)?.value || 'unknown',
+                topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
+                ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
+                panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '3',
+                ponazurilDays: document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3',
+                fleaStatus: this._getMedStatusFromDom(kittenId, 'flea'),
+                capstarStatus: this._getMedStatusFromDom(kittenId, 'capstar'),
+                panacurStatus: this._getMedStatusFromDom(kittenId, 'panacur'),
+                ponazurilStatus: this._getMedStatusFromDom(kittenId, 'ponazuril'),
+                drontalStatus: this._getMedStatusFromDom(kittenId, 'drontal'),
+                pyrantelStatus: this._getMedStatusFromDom(kittenId, 'pyrantel')
             };
 
-            const kitten = { topical, fleaGiven, ringwormStatus, panacur, ponazuril, day1Given };
-            const flags = this.encodeFlags(kitten);
-
+            const flags = this.encodeFlagsV2(kitten);
             parts.push(encodeURIComponent(name), weight, flags);
         });
 
@@ -118,7 +152,7 @@ class UrlStateManager {
     }
 
     /**
-     * Encode a number to base64url (2 chars for up to 12 bits)
+     * Encode a number to base64url
      */
     toBase64Url(num, chars = 2) {
         let result = '';
@@ -141,54 +175,121 @@ class UrlStateManager {
     }
 
     /**
-     * Encode flags for a single kitten (version 1)
+     * Encode flags for a single kitten (version 2)
      */
-    encodeFlags(kitten) {
+    encodeFlagsV2(kitten) {
         let bits = 0;
 
-        // Bits 0-1: topical
-        const topicalIndex = this.v1.topical.indexOf(kitten.topical);
-        bits |= (topicalIndex >= 0 ? topicalIndex : 0);
+        // Bits 0-1: sex
+        const sexIndex = this.v2.sex.indexOf(kitten.sex);
+        bits |= (sexIndex >= 0 ? sexIndex : 0);
 
-        // Bit 2: fleaGiven (0=given/checked, 1=not given/unchecked)
-        bits |= (kitten.fleaGiven ? 0 : 1) << 2;
+        // Bit 2: topical type
+        const topicalIndex = this.v2.topical.indexOf(kitten.topical);
+        bits |= (topicalIndex >= 0 ? topicalIndex : 0) << 2;
 
         // Bits 3-4: ringwormStatus
-        const ringwormIndex = this.v1.ringwormStatus.indexOf(kitten.ringwormStatus);
+        const ringwormIndex = this.v2.ringwormStatus.indexOf(kitten.ringwormStatus);
         bits |= (ringwormIndex >= 0 ? ringwormIndex : 0) << 3;
 
         // Bits 5-6: panacurDays (1, 3, or 5)
-        const panacurIndex = this.v1.panacurDays.indexOf(kitten.panacur);
-        bits |= (panacurIndex >= 0 ? panacurIndex : 2) << 5; // default to 5 days
+        const panacurDaysIndex = this.v2.panacurDays.indexOf(kitten.panacurDays);
+        bits |= (panacurDaysIndex >= 0 ? panacurDaysIndex : 1) << 5; // default 3d
 
         // Bit 7: ponazurilDays (1 or 3)
-        const ponazurilIndex = this.v1.ponazurilDays.indexOf(kitten.ponazuril);
-        bits |= (ponazurilIndex >= 0 ? ponazurilIndex : 1) << 7; // default to 3 days
+        const ponazurilDaysIndex = this.v2.ponazurilDays.indexOf(kitten.ponazurilDays);
+        bits |= (ponazurilDaysIndex >= 0 ? ponazurilDaysIndex : 1) << 7; // default 3d
 
-        // Bits 8-10: day1Given
-        bits |= (kitten.day1Given?.panacur ? 1 : 0) << 8;
-        bits |= (kitten.day1Given?.ponazuril ? 1 : 0) << 9;
-        bits |= (kitten.day1Given?.drontal ? 1 : 0) << 10;
+        // Bits 8-9: flea status (4 values: skip/todo/delay/done)
+        const fleaIndex = this.v2.fleaStatus.indexOf(kitten.fleaStatus);
+        bits |= (fleaIndex >= 0 ? fleaIndex : 1) << 8;
 
-        return this.toBase64Url(bits, 2);
+        // Bits 10-11: capstar status
+        const capstarIndex = this.v2.medStatus.indexOf(kitten.capstarStatus);
+        bits |= (capstarIndex >= 0 ? capstarIndex : 1) << 10;
+
+        // Bits 12-13: panacur status
+        const panacurIndex = this.v2.medStatus.indexOf(kitten.panacurStatus);
+        bits |= (panacurIndex >= 0 ? panacurIndex : 1) << 12;
+
+        // Bits 14-15: ponazuril status
+        const ponazurilIndex = this.v2.medStatus.indexOf(kitten.ponazurilStatus);
+        bits |= (ponazurilIndex >= 0 ? ponazurilIndex : 1) << 14;
+
+        // Bits 16-17: drontal status
+        const drontalIndex = this.v2.medStatus.indexOf(kitten.drontalStatus);
+        bits |= (drontalIndex >= 0 ? drontalIndex : 1) << 16;
+
+        // Bits 18-19: pyrantel status
+        const pyrantelIndex = this.v2.medStatus.indexOf(kitten.pyrantelStatus);
+        bits |= (pyrantelIndex >= 0 ? pyrantelIndex : 1) << 18;
+
+        return this.toBase64Url(bits, 4);
     }
 
     /**
-     * Decode flags for a single kitten (version 1)
+     * Decode flags for a single kitten (version 2)
+     * Returns data in localStorage v2.0 format
      */
-    decodeFlags(flagStr) {
+    decodeFlagsV2(flagStr) {
         const bits = this.fromBase64Url(flagStr);
 
+        const fleaStatus = this.v2.fleaStatus[(bits >> 8) & 0x3] || 'todo';
+        const capstarStatus = this.v2.medStatus[(bits >> 10) & 0x3] || 'todo';
+        const panacurStatus = this.v2.medStatus[(bits >> 12) & 0x3] || 'todo';
+        const ponazurilStatus = this.v2.medStatus[(bits >> 14) & 0x3] || 'todo';
+        const drontalStatus = this.v2.medStatus[(bits >> 16) & 0x3] || 'todo';
+        const pyrantelStatus = this.v2.medStatus[(bits >> 18) & 0x3] || 'todo';
+
+        // Topical is 'none' equivalent when flea is skipped
+        const topicalValue = this.v2.topical[(bits >> 2) & 0x1] || 'revolution';
+
         return {
-            topical: this.v1.topical[bits & 0x3] || 'revolution',
-            fleaGiven: ((bits >> 2) & 0x1) === 0, // 0=given/true, 1=not given/false
+            sex: this.v2.sex[bits & 0x3] || 'unknown',
+            topical: topicalValue,
+            ringwormStatus: this.v2.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
+            panacurDays: this.v2.panacurDays[(bits >> 5) & 0x3] || '3',
+            ponazurilDays: this.v2.ponazurilDays[(bits >> 7) & 0x1] || '3',
+            medications: {
+                flea: { enabled: fleaStatus !== 'skip', status: fleaStatus === 'skip' ? 'todo' : fleaStatus },
+                capstar: { enabled: capstarStatus !== 'skip', status: capstarStatus === 'skip' ? 'todo' : capstarStatus },
+                panacur: { enabled: panacurStatus !== 'skip', status: panacurStatus === 'skip' ? 'todo' : panacurStatus },
+                ponazuril: { enabled: ponazurilStatus !== 'skip', status: ponazurilStatus === 'skip' ? 'todo' : ponazurilStatus },
+                drontal: { enabled: drontalStatus !== 'skip', status: drontalStatus === 'skip' ? 'todo' : drontalStatus },
+                pyrantel: { enabled: pyrantelStatus !== 'skip', status: pyrantelStatus === 'skip' ? 'todo' : pyrantelStatus }
+            }
+        };
+    }
+
+    /**
+     * Decode flags for a single kitten (version 1 - legacy)
+     * Converts old format to localStorage v2.0 format
+     */
+    decodeFlagsV1(flagStr) {
+        const bits = this.fromBase64Url(flagStr);
+
+        const topicalRaw = this.v1.topical[bits & 0x3] || 'revolution';
+        const fleaGiven = ((bits >> 2) & 0x1) === 0;
+        const panacurDay1Given = !!((bits >> 8) & 0x1);
+        const ponazurilDay1Given = !!((bits >> 9) & 0x1);
+        const drontalDay1Given = !!((bits >> 10) & 0x1);
+
+        // Convert v1 concepts to v2 medication status format
+        const fleaSkipped = topicalRaw === 'none';
+
+        return {
+            sex: 'unknown',
+            topical: fleaSkipped ? 'revolution' : topicalRaw,
             ringwormStatus: this.v1.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
-            panacur: this.v1.panacurDays[(bits >> 5) & 0x3] || '5',
-            ponazuril: this.v1.ponazurilDays[(bits >> 7) & 0x1] || '3',
-            day1Given: {
-                panacur: !!((bits >> 8) & 0x1),
-                ponazuril: !!((bits >> 9) & 0x1),
-                drontal: !!((bits >> 10) & 0x1)
+            panacurDays: this.v1.panacurDays[(bits >> 5) & 0x3] || '3',
+            ponazurilDays: this.v1.ponazurilDays[(bits >> 7) & 0x1] || '3',
+            medications: {
+                flea: { enabled: !fleaSkipped, status: fleaSkipped ? 'todo' : (fleaGiven ? 'done' : 'todo') },
+                capstar: { enabled: true, status: 'todo' },
+                panacur: { enabled: true, status: panacurDay1Given ? 'done' : 'todo' },
+                ponazuril: { enabled: true, status: ponazurilDay1Given ? 'done' : 'todo' },
+                drontal: { enabled: true, status: drontalDay1Given ? 'done' : 'todo' },
+                pyrantel: { enabled: true, status: 'todo' }
             }
         };
     }
@@ -206,26 +307,24 @@ class UrlStateManager {
         kittenForms.forEach(form => {
             const kittenId = form.id;
 
-            // Collect kitten data
             const name = document.getElementById(`${kittenId}-name`)?.value.trim() || '';
             const weight = document.getElementById(`${kittenId}-weight`)?.value || '';
 
-            const topical = document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution';
-            const fleaGiven = document.getElementById(`${kittenId}-flea-given`)?.checked ?? false;
-            const panacur = document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5';
-            const ponazuril = document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3';
-            const ringwormStatus = document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned';
-
-            const day1Given = {
-                panacur: document.getElementById(`${kittenId}-panacur-day1`)?.checked ?? true,
-                ponazuril: document.getElementById(`${kittenId}-ponazuril-day1`)?.checked ?? true,
-                drontal: document.getElementById(`${kittenId}-drontal-day1`)?.checked ?? true
+            const kitten = {
+                sex: document.querySelector(`input[name="${kittenId}-sex"]:checked`)?.value || 'unknown',
+                topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
+                ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
+                panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '3',
+                ponazurilDays: document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3',
+                fleaStatus: this._getMedStatusFromDom(kittenId, 'flea'),
+                capstarStatus: this._getMedStatusFromDom(kittenId, 'capstar'),
+                panacurStatus: this._getMedStatusFromDom(kittenId, 'panacur'),
+                ponazurilStatus: this._getMedStatusFromDom(kittenId, 'ponazuril'),
+                drontalStatus: this._getMedStatusFromDom(kittenId, 'drontal'),
+                pyrantelStatus: this._getMedStatusFromDom(kittenId, 'pyrantel')
             };
 
-            const kitten = { topical, fleaGiven, ringwormStatus, panacur, ponazuril, day1Given };
-            const flags = this.encodeFlags(kitten);
-
-            // URL-encode the name to handle special characters
+            const flags = this.encodeFlagsV2(kitten);
             parts.push(encodeURIComponent(name), weight, flags);
         });
 
@@ -239,6 +338,7 @@ class UrlStateManager {
     /**
      * Decode URL parameter to form data structure
      * Returns data compatible with LocalStorageManager.restoreFormData()
+     * Supports both v1 (legacy) and v2 URLs
      */
     decodeFromUrl(urlString = window.location.href) {
         const url = new URL(urlString);
@@ -250,7 +350,7 @@ class UrlStateManager {
         if (parts.length < 4) return null; // At least version + 1 kitten (name, weight, flags)
 
         const version = parseInt(parts[0]);
-        if (version !== 1) {
+        if (version !== 1 && version !== 2) {
             console.warn(`Unknown URL state version: ${version}`);
             return null;
         }
@@ -265,7 +365,9 @@ class UrlStateManager {
 
             const name = decodeURIComponent(parts[i]);
             const weight = parts[i + 1];
-            const flags = this.decodeFlags(parts[i + 2]);
+            const flags = version === 2
+                ? this.decodeFlagsV2(parts[i + 2])
+                : this.decodeFlagsV1(parts[i + 2]);
 
             const kittenId = `kitten-${kittenIndex}`;
             activeKittens.push(kittenId);
@@ -499,16 +601,22 @@ class UrlStateManager {
                 // Compare key fields
                 if (urlKitten.name !== localKitten.name) return false;
                 if (urlKitten.weight !== localKitten.weight) return false;
+                if (urlKitten.sex !== (localKitten.sex || 'unknown')) return false;
                 if (urlKitten.topical !== localKitten.topical) return false;
-                if (urlKitten.fleaGiven !== localKitten.fleaGiven) return false;
-                if (urlKitten.panacur !== localKitten.panacur) return false;
-                if (urlKitten.ponazuril !== localKitten.ponazuril) return false;
+                if (urlKitten.panacurDays !== localKitten.panacurDays) return false;
+                if (urlKitten.ponazurilDays !== localKitten.ponazurilDays) return false;
                 if (urlKitten.ringwormStatus !== localKitten.ringwormStatus) return false;
 
-                // Compare day1Given
-                if (urlKitten.day1Given.panacur !== localKitten.day1Given.panacur) return false;
-                if (urlKitten.day1Given.ponazuril !== localKitten.day1Given.ponazuril) return false;
-                if (urlKitten.day1Given.drontal !== localKitten.day1Given.drontal) return false;
+                // Compare medication states
+                if (urlKitten.medications && localKitten.medications) {
+                    for (const med of Constants.MEDICATIONS) {
+                        const urlMed = urlKitten.medications[med];
+                        const localMed = localKitten.medications[med];
+                        if (!urlMed || !localMed) continue;
+                        if (urlMed.enabled !== localMed.enabled) return false;
+                        if (urlMed.status !== localMed.status) return false;
+                    }
+                }
             }
 
             return true;

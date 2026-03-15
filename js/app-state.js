@@ -124,14 +124,16 @@ class AppState {
                 capstar: Constants.STATUS.TODO,
                 panacur: Constants.STATUS.TODO,
                 ponazuril: Constants.STATUS.TODO,
-                drontal: Constants.STATUS.TODO
+                drontal: Constants.STATUS.TODO,
+                pyrantel: Constants.STATUS.TODO
             },
             medicationEnabled: kittenData.medicationEnabled || {
                 flea: true,
                 capstar: true,
                 panacur: true,
                 ponazuril: true,
-                drontal: true
+                drontal: true,
+                pyrantel: true
             },
             ...kittenData
         };
@@ -358,6 +360,7 @@ class AppState {
             const panacurStatus = this.getMedicationStatus(kittenId, 'panacur');
             const ponazurilStatus = this.getMedicationStatus(kittenId, 'ponazuril');
             const drontalStatus = this.getMedicationStatus(kittenId, 'drontal');
+            const pyrantelStatus = this.getMedicationStatus(kittenId, 'pyrantel');
 
             // Convert status to boolean for backward compatibility
             const fleaGiven = fleaStatus === Constants.STATUS.DONE;
@@ -379,6 +382,14 @@ class AppState {
             const ponazurilDay1Given = ponazurilStatus === Constants.STATUS.DONE;
             const drontalDay1Given = drontalStatus === Constants.STATUS.DONE;
             const capstarDay1Given = capstarStatus === Constants.STATUS.DONE;
+            const pyrantelDay1Given = pyrantelStatus === Constants.STATUS.DONE;
+
+            // Get sex
+            const sexRadios = document.querySelectorAll(`input[name="${Constants.ID.sexName(kittenId)}"]`);
+            let sex = Constants.DEFAULTS.SEX;
+            sexRadios.forEach(radio => {
+                if (radio.checked) sex = radio.value;
+            });
 
             // Get ringworm data
             const ringwormRadios = document.querySelectorAll(`input[name="${Constants.ID.ringwormName(kittenId)}"]`);
@@ -390,6 +401,7 @@ class AppState {
             const kitten = {
                 id: kittenId,
                 name,
+                sex,
                 weightGrams,
                 weightLb,
                 topical: fleaStatus === Constants.STATUS.SKIP ? Constants.TOPICAL.NONE : topical,
@@ -401,7 +413,8 @@ class AppState {
                     panacur: panacurDay1Given,
                     ponazuril: ponazurilDay1Given,
                     drontal: drontalDay1Given,
-                    capstar: capstarDay1Given
+                    capstar: capstarDay1Given,
+                    pyrantel: pyrantelDay1Given
                 },
                 // New medication status fields
                 medicationStatus: {
@@ -409,7 +422,8 @@ class AppState {
                     capstar: capstarStatus,
                     panacur: panacurStatus,
                     ponazuril: ponazurilStatus,
-                    drontal: drontalStatus
+                    drontal: drontalStatus,
+                    pyrantel: pyrantelStatus
                 }
             };
 

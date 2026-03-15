@@ -91,7 +91,8 @@ class ResultsDisplay {
             revolution: 0,
             advantage: 0,
             drontal: 0,
-            capstar: 0
+            capstar: 0,
+            pyrantel: 0
         };
 
         const outOfRangeString = Constants.MESSAGES.OUT_OF_RANGE;
@@ -114,6 +115,9 @@ class ResultsDisplay {
             }
             if (remaining.capstar) {
                 totals.capstar += remaining.capstar.amount;
+            }
+            if (remaining.pyrantel) {
+                totals.pyrantel += remaining.pyrantel.amount;
             }
         });
 
@@ -187,6 +191,15 @@ class ResultsDisplay {
             `);
         }
 
+        if (totals.pyrantel > 0) {
+            items.push(`
+                <div class="total-item">
+                    <span>Pyrantel</span>
+                    <strong>${AppState.formatNumber(totals.pyrantel, 2)} mL</strong>
+                </div>
+            `);
+        }
+
         return items.join('');
     }
 
@@ -246,9 +259,13 @@ class ResultsDisplay {
                     dose: this._getMedicationDoseDisplay(medType, medData)
                 }));
 
+                const sexDisplay = kitten.sex === 'female' ? 'F' : kitten.sex === 'male' ? 'M' : '';
+                const displayName = kitten.name || 'Unnamed Kitten';
+                const nameWithSex = sexDisplay ? `${displayName} (${sexDisplay})` : displayName;
+
                 return {
                     id: kitten.id,
-                    name: kitten.name || 'Unnamed Kitten',
+                    name: nameWithSex,
                     weightGrams: kitten.weightGrams,
                     weightLb: kitten.weightLb,
                     medications,
@@ -289,6 +306,7 @@ class ResultsDisplay {
             ponazuril: 'Ponazuril',
             drontal: 'Drontal',
             capstar: 'Capstar',
+            pyrantel: 'Pyrantel',
             topical: medData.type === 'revolution' ? 'Revolution' : 'Advantage II'
         };
         return names[medType] || medType;
@@ -298,6 +316,9 @@ class ResultsDisplay {
      * Get dose display string for medication
      */
     _getMedicationDoseDisplay(medType, medData) {
+        if (medType === 'pyrantel') {
+            return `${AppState.formatNumber(medData.dose, 2)} mL`;
+        }
         if (medType === 'panacur' || medType === 'ponazuril') {
             return `${AppState.formatNumber(medData.dose, 2)} mL`;
         }

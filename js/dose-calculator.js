@@ -49,6 +49,10 @@ class DoseCalculator {
         return Constants.MESSAGES.OUT_OF_RANGE;
     }
 
+    static calculatePyrantelDose(weightLb) {
+        return weightLb * 0.1;
+    }
+
     static calculateCapstarDose(weightLb) {
         // Capstar (nitenpyram) - 1 tablet for cats 2-25 lbs
         if (weightLb >= 2 && weightLb <= 25) return '1';
@@ -77,7 +81,8 @@ class DoseCalculator {
             revolution: this.calculateRevolutionDose(weightLb),
             advantage: this.calculateAdvantageIIDose(weightLb),
             drontal: this.calculateDrontalDose(weightLb),
-            capstar: this.calculateCapstarDose(weightLb)
+            capstar: this.calculateCapstarDose(weightLb),
+            pyrantel: this.calculatePyrantelDose(weightLb)
         };
 
         // LRU-style eviction: remove oldest entry if cache is full
@@ -114,7 +119,8 @@ class DoseCalculator {
                 ponazuril: doses.ponazuril,
                 topical: topicalDose,
                 drontal: doses.drontal,
-                capstar: doses.capstar
+                capstar: doses.capstar,
+                pyrantel: doses.pyrantel
             }
         };
     }

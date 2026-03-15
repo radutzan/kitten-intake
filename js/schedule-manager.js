@@ -63,6 +63,14 @@ class ScheduleManager {
                 };
             }
 
+            // Pyrantel schedule (only if not skipped and not given at center)
+            if (!isSkipped('pyrantel') && !kitten.day1Given.pyrantel) {
+                schedule.medications.pyrantel = {
+                    dose: kitten.doses.pyrantel,
+                    days: this.generateDaysFromToday(1, notGivenStartOffset)
+                };
+            }
+
             // Capstar schedule (only if not skipped and not given at center)
             if (!isSkipped('capstar') && kitten.day1Given && kitten.day1Given.capstar === false) {
                 schedule.medications.capstar = {
@@ -161,6 +169,10 @@ class ScheduleManager {
         const drontalAmount = isSkipped('drontal') ? 0 :
             (kitten.day1Given.drontal ? 0 : 1);
 
+        // Pyrantel: 0 if skipped, otherwise 1 dose if not given at center
+        const pyrantelAmount = isSkipped('pyrantel') ? 0 :
+            (kitten.day1Given.pyrantel ? 0 : kitten.doses.pyrantel);
+
         // Capstar: 0 if skipped, otherwise 1 tablet if not given at center
         const capstarAmount = isSkipped('capstar') ? 0 :
             ((kitten.day1Given && kitten.day1Given.capstar === false) ? 1 : 0);
@@ -183,6 +195,9 @@ class ScheduleManager {
             },
             capstar: {
                 amount: capstarAmount
+            },
+            pyrantel: {
+                amount: pyrantelAmount
             }
         };
     }
@@ -230,6 +245,15 @@ class ScheduleManager {
                 dose: '1 tablet',
                 days: 1,
                 total: '1 tablet'
+            });
+        }
+
+        if (remaining.pyrantel && remaining.pyrantel.amount > 0) {
+            summary.push({
+                medication: 'Pyrantel',
+                dose: AppState.formatNumber(kitten.doses.pyrantel, 2) + ' mL',
+                days: 1,
+                total: AppState.formatNumber(remaining.pyrantel.amount, 2) + ' mL'
             });
         }
 

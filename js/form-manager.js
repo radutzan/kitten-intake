@@ -198,6 +198,12 @@ class FormManager {
             if (radio.checked) updates.ponazurilDays = parseInt(radio.value);
         });
 
+        // Get sex
+        const sexRadios = document.querySelectorAll(`input[name="${Constants.ID.sexName(kittenId)}"]`);
+        sexRadios.forEach(radio => {
+            if (radio.checked) updates.sex = radio.value;
+        });
+
         // Get ringworm status
         const ringwormRadios = document.querySelectorAll(`input[name="${Constants.ID.ringwormName(kittenId)}"]`);
         ringwormRadios.forEach(radio => {
@@ -246,6 +252,7 @@ class FormManager {
         this.bindMedicationStatusEvents(kittenId);
         this.bindTopicalEvents(kittenId);
         this.bindRegimenEvents(kittenId);
+        this.bindSexEvents(kittenId);
         this.bindRingwormEvents(kittenId);
         this.bindNameEvents(kittenId);
 
@@ -459,6 +466,24 @@ class FormManager {
 
                 // Then render
                 this.renderer.updateRingwormStatusLight(kittenId);
+                this.renderer.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+    }
+
+    /**
+     * Sex selector events
+     * Data flow: Radio → State → Render
+     */
+    bindSexEvents(kittenId) {
+        const sexRadios = document.querySelectorAll(`input[name="${Constants.ID.sexName(kittenId)}"]`);
+        sexRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateKittenState(kittenId, { sex: radio.value });
                 this.renderer.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();

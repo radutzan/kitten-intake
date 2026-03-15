@@ -197,14 +197,21 @@ class FormRenderer {
         const weightInput = document.getElementById(Constants.ID.weight(kittenId));
         const grams = parseFloat(weightInput.value);
 
-        // Update the print header with current name and weight
+        // Update the print header with current name, sex, and weight
         const kittenName = nameInput.value.trim() || 'Unnamed Cat';
+        const sexRadios = document.querySelectorAll(`input[name="${Constants.ID.sexName(kittenId)}"]`);
+        let sex = Constants.DEFAULTS.SEX;
+        sexRadios.forEach(radio => {
+            if (radio.checked) sex = radio.value;
+        });
+        const sexDisplay = sex === 'female' ? 'F' : sex === 'male' ? 'M' : '';
+        const nameWithSex = sexDisplay ? `${kittenName} (${sexDisplay})` : kittenName;
         const headerElement = doseHeader.querySelector('.kitten-info');
         if (grams > 0) {
             const weightLb = AppState.convertToPounds(grams);
-            headerElement.textContent = `${kittenName} - ${AppState.formatNumber(grams)} g (${AppState.formatNumber(weightLb, 2)} lb)`;
+            headerElement.textContent = `${nameWithSex} - ${AppState.formatNumber(grams)} g (${AppState.formatNumber(weightLb, 2)} lb)`;
         } else {
-            headerElement.textContent = `${kittenName}`;
+            headerElement.textContent = `${nameWithSex}`;
         }
 
         if (!grams || grams <= 0) {
@@ -229,6 +236,7 @@ class FormRenderer {
         const panacurStatus = this.getMedicationStatus(kittenId, 'panacur');
         const ponazurilStatus = this.getMedicationStatus(kittenId, 'ponazuril');
         const drontalStatus = this.getMedicationStatus(kittenId, 'drontal');
+        const pyrantelStatus = this.getMedicationStatus(kittenId, 'pyrantel');
 
         // Get regimen days
         const panacurDays = this._getRegimenDays(kittenId, 'panacur', Constants.DEFAULTS.PANACUR_DAYS);
@@ -243,7 +251,7 @@ class FormRenderer {
         // Build the result display content
         const content = this._buildResultDisplayContent(
             doses, topical, fleaStatus, capstarStatus, panacurStatus,
-            ponazurilStatus, drontalStatus, panacurDays, ponazurilDays, kittenId
+            ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays, kittenId
         );
 
         doseDisplay.classList.remove(Constants.CSS.EMPTY);
@@ -296,6 +304,7 @@ class FormRenderer {
             advantage: this.doseCalculator.calculateAdvantageIIDose(weightLb),
             capstar: this.doseCalculator.calculateCapstarDose ?
                 this.doseCalculator.calculateCapstarDose(weightLb) : '1 tablet',
+            pyrantel: this.doseCalculator.calculatePyrantelDose(weightLb),
             outOfRange: Constants.MESSAGES.OUT_OF_RANGE
         };
     }
@@ -339,6 +348,12 @@ class FormRenderer {
         if (drontalDoseEl) {
             drontalDoseEl.textContent = doses.drontal === outOfRange ? outOfRange : `${doses.drontal} tablet(s)`;
         }
+
+        // Pyrantel dose
+        const pyrantelDoseEl = document.getElementById(`${kittenId}-pyrantel-dose`);
+        if (pyrantelDoseEl) {
+            pyrantelDoseEl.textContent = `${AppState.formatNumber(doses.pyrantel, 2)} mL`;
+        }
     }
 
     /**
@@ -346,19 +361,19 @@ class FormRenderer {
      * @returns {string} HTML content
      */
     _buildResultDisplayContent(doses, topical, fleaStatus, capstarStatus, panacurStatus,
-                               ponazurilStatus, drontalStatus, panacurDays, ponazurilDays, kittenId) {
+                               ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays, kittenId) {
         const outOfRange = doses.outOfRange;
         let content = '';
 
         // Doses section
         content += this._buildDosesSection(doses, topical, fleaStatus, capstarStatus,
                                            panacurStatus, ponazurilStatus, drontalStatus,
-                                           panacurDays, ponazurilDays);
+                                           pyrantelStatus, panacurDays, ponazurilDays);
 
         // For Foster section
         content += this._buildFosterSection(doses, topical, fleaStatus, capstarStatus,
                                             panacurStatus, ponazurilStatus, drontalStatus,
-                                            panacurDays, ponazurilDays);
+                                            pyrantelStatus, panacurDays, ponazurilDays);
 
         // Other section (ringworm)
         content += this._buildOtherSection(kittenId);
@@ -370,7 +385,7 @@ class FormRenderer {
      * Build the Doses section HTML
      */
     _buildDosesSection(doses, topical, fleaStatus, capstarStatus, panacurStatus,
-                       ponazurilStatus, drontalStatus, panacurDays, ponazurilDays) {
+                       ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays) {
         const outOfRange = doses.outOfRange;
         let content = `
             <div class="collapsible-section">
@@ -398,6 +413,13 @@ class FormRenderer {
             content += `
                 <div class="result-item">
                     <strong>Drontal</strong> ${doses.drontal === outOfRange ? outOfRange : doses.drontal + ' tablet(s)'}
+                </div>
+            `;
+        }
+        if (pyrantelStatus !== Constants.STATUS.SKIP) {
+            content += `
+                <div class="result-item">
+                    <strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL
                 </div>
             `;
         }
@@ -430,7 +452,7 @@ class FormRenderer {
      * Build the For Foster section HTML
      */
     _buildFosterSection(doses, topical, fleaStatus, capstarStatus, panacurStatus,
-                        ponazurilStatus, drontalStatus, panacurDays, ponazurilDays) {
+                        ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays) {
         const outOfRange = doses.outOfRange;
 
         // Determine what was given at intake
@@ -438,6 +460,7 @@ class FormRenderer {
         const ponazurilDay1Given = ponazurilStatus === Constants.STATUS.DONE;
         const drontalDay1Given = drontalStatus === Constants.STATUS.DONE;
         const capstarDay1Given = capstarStatus === Constants.STATUS.DONE;
+        const pyrantelDay1Given = pyrantelStatus === Constants.STATUS.DONE;
         const fleaGiven = fleaStatus === Constants.STATUS.DONE;
 
         // Calculate remaining
@@ -454,6 +477,10 @@ class FormRenderer {
 
         if (capstarStatus !== Constants.STATUS.SKIP && !capstarDay1Given) {
             remainsForFoster.push(`<strong>Capstar</strong> 1 tablet`);
+        }
+
+        if (pyrantelStatus !== Constants.STATUS.SKIP && !pyrantelDay1Given) {
+            remainsForFoster.push(`<strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL`);
         }
 
         if (panacurRemaining > 0) {

@@ -143,6 +143,7 @@ class LocalStorageManager {
             const kittenData = {
                 name: this.getInputValue(Constants.ID.name(kittenId)),
                 weight: this.getInputValue(Constants.ID.weight(kittenId)),
+                sex: this.getRadioValue(Constants.ID.sexName(kittenId)),
                 topical: this.getRadioValue(Constants.ID.topicalName(kittenId)),
                 panacurDays: this.getRadioValue(Constants.ID.panacurName(kittenId)),
                 ponazurilDays: this.getRadioValue(Constants.ID.ponazurilName(kittenId)),
@@ -246,6 +247,7 @@ class LocalStorageManager {
         // Set the saved values immediately
         this.setInputValue(Constants.ID.name(kittenId), kittenData.name);
         this.setInputValue(Constants.ID.weight(kittenId), kittenData.weight);
+        this.setRadioValue(Constants.ID.sexName(kittenId), kittenData.sex || Constants.DEFAULTS.SEX);
         this.setRadioValue(Constants.ID.topicalName(kittenId), kittenData.topical);
         this.setRadioValue(Constants.ID.panacurName(kittenId), kittenData.panacurDays || String(Constants.DEFAULTS.PANACUR_DAYS));
         this.setRadioValue(Constants.ID.ponazurilName(kittenId), kittenData.ponazurilDays || String(Constants.DEFAULTS.PONAZURIL_DAYS));

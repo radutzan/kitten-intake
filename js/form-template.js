@@ -39,11 +39,21 @@ const FormTemplate = {
                     <div class="error" id="${kittenId}-name-error"></div>
                 </div>
 
-                <div class="form-group">
-                    <label for="${kittenId}-weight">Weight (grams)</label>
-                    <input type="text" inputmode="decimal" pattern="[0-9.]*" id="${kittenId}-weight" placeholder="Weight (grams)" name="weight" min="1" step="0.1" required>
-                    <div class="error" id="${kittenId}-weight-error"></div>
-                    <div class="weight-display" id="${kittenId}-weight-display" style="display: none;"></div>
+                <div class="form-group weight-sex-row">
+                    <div class="weight-input-wrapper">
+                        <label for="${kittenId}-weight">Weight (grams)</label>
+                        <input type="text" inputmode="decimal" pattern="[0-9.]*" id="${kittenId}-weight" placeholder="Weight (grams)" name="weight" min="1" step="0.1" required>
+                        <div class="error" id="${kittenId}-weight-error"></div>
+                        <div class="weight-display" id="${kittenId}-weight-display" style="display: none;"></div>
+                    </div>
+                    <div class="radio-group sex-selector">
+                        <input type="radio" name="${kittenId}-sex" value="unknown" id="${kittenId}-sex-unknown" checked>
+                        <label for="${kittenId}-sex-unknown">–</label>
+                        <input type="radio" name="${kittenId}-sex" value="female" id="${kittenId}-sex-female">
+                        <label for="${kittenId}-sex-female">F</label>
+                        <input type="radio" name="${kittenId}-sex" value="male" id="${kittenId}-sex-male">
+                        <label for="${kittenId}-sex-male">M</label>
+                    </div>
                 </div>
             </div>
         `;
@@ -62,6 +72,7 @@ const FormTemplate = {
                 ${this.generatePanacurRow(kittenId)}
                 ${this.generatePonazurilRow(kittenId)}
                 ${this.generateDrontalRow(kittenId)}
+                ${this.generatePyrantelRow(kittenId)}
             </div>
         `;
     },
@@ -253,6 +264,42 @@ const FormTemplate = {
                         <label for="${kittenId}-drontal-status-todo">To Do</label>
                         <input type="radio" name="${kittenId}-drontal-status" value="done" id="${kittenId}-drontal-status-done">
                         <label for="${kittenId}-drontal-status-done">Done</label>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Generate the Pyrantel row (single dose, liquid)
+     * @param {string} kittenId - The kitten ID
+     * @returns {string} HTML string
+     */
+    generatePyrantelRow(kittenId) {
+        return `
+            <div class="medication-row" id="${kittenId}-pyrantel-row">
+                <div class="medication-labels">
+                    <div class="left">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="${kittenId}-pyrantel-enabled" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="med-name">Pyrantel</span>
+                    </div>
+                    <div class="right">
+                        <span class="status-light hidden" id="${kittenId}-pyrantel-status-light"></span>
+                        <span class="dose-display" id="${kittenId}-pyrantel-dose"></span>
+                    </div>
+                </div>
+                <div class="medication-choices">
+                    <div class="single-option">
+                        <span class="option-label">Single Dose</span>
+                    </div>
+                    <div class="radio-group status-control">
+                        <input type="radio" name="${kittenId}-pyrantel-status" value="todo" id="${kittenId}-pyrantel-status-todo" checked>
+                        <label for="${kittenId}-pyrantel-status-todo">To Do</label>
+                        <input type="radio" name="${kittenId}-pyrantel-status" value="done" id="${kittenId}-pyrantel-status-done">
+                        <label for="${kittenId}-pyrantel-status-done">Done</label>
                     </div>
                 </div>
             </div>
