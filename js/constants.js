@@ -5,7 +5,7 @@
 
 const Constants = {
     // Medication type keys (lowercase, used in form element IDs)
-    MEDICATIONS: ['flea', 'capstar', 'panacur', 'ponazuril', 'drontal', 'pyrantel'],
+    MEDICATIONS: ['flea', 'capstar', 'ponazuril', 'drontal', 'pyrantel', 'panacur'],
 
     // Display names for medications
     MEDICATION_DISPLAY_NAMES: {
@@ -82,7 +82,7 @@ const Constants = {
     // Default values
     DEFAULTS: {
         PANACUR_DAYS: 3,
-        PONAZURIL_DAYS: 3,
+        PONAZURIL_DAYS: 1,
         TOPICAL: 'revolution',
         SEX: 'unknown'
     },

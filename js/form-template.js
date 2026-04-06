@@ -69,10 +69,10 @@ const FormTemplate = {
             <div class="medication-grid">
                 ${this.generateFleaMedRow(kittenId)}
                 ${this.generateCapstarRow(kittenId)}
-                ${this.generatePanacurRow(kittenId)}
                 ${this.generatePonazurilRow(kittenId)}
                 ${this.generateDrontalRow(kittenId)}
                 ${this.generatePyrantelRow(kittenId)}
+                ${this.generatePanacurRow(kittenId)}
             </div>
         `;
     },
@@ -165,7 +165,7 @@ const FormTemplate = {
                 <div class="medication-labels">
                     <div class="left">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="${kittenId}-panacur-enabled" checked>
+                            <input type="checkbox" id="${kittenId}-panacur-enabled">
                             <span class="slider"></span>
                         </label>
                         <span class="med-name">Panacur</span>
@@ -177,8 +177,6 @@ const FormTemplate = {
                 </div>
                 <div class="medication-choices">
                     <div class="radio-group">
-                        <input type="radio" name="${kittenId}-panacur" value="1" id="${kittenId}-panacur-1">
-                        <label for="${kittenId}-panacur-1">1d</label>
                         <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3" checked>
                         <label for="${kittenId}-panacur-3">3d</label>
                         <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5">
@@ -218,9 +216,9 @@ const FormTemplate = {
                 </div>
                 <div class="medication-choices">
                     <div class="radio-group">
-                        <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
+                        <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1" checked>
                         <label for="${kittenId}-ponazuril-1">1d</label>
-                        <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
+                        <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3">
                         <label for="${kittenId}-ponazuril-3">3d</label>
                     </div>
                     <div class="radio-group status-control">
