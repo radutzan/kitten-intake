@@ -176,8 +176,11 @@ class FormManager {
         const nameInput = document.getElementById(Constants.ID.name(kittenId));
         const weightInput = document.getElementById(Constants.ID.weight(kittenId));
 
+        const microchipInput = document.getElementById(Constants.ID.microchip(kittenId));
+
         const updates = {
             name: nameInput ? nameInput.value.trim() : '',
+            microchip: microchipInput ? microchipInput.value.trim() : '',
             weightGrams: weightInput ? parseFloat(weightInput.value) || 0 : 0
         };
 
@@ -255,6 +258,7 @@ class FormManager {
         this.bindSexEvents(kittenId);
         this.bindRingwormEvents(kittenId);
         this.bindNameEvents(kittenId);
+        this.bindMicrochipEvents(kittenId);
 
         // Initialize state from current form values
         this.syncFormToState(kittenId);
@@ -522,6 +526,135 @@ class FormManager {
         });
     }
 
+    /**
+     * Microchip input + barcode scan events
+     * Data flow: Input/Scan → State → Render → AutoSave
+     */
+    bindMicrochipEvents(kittenId) {
+        const microchipInput = document.getElementById(Constants.ID.microchip(kittenId));
+        const scanBtn = document.getElementById(Constants.ID.microchipScanBtn(kittenId));
+        const fileInput = document.getElementById(Constants.ID.microchipFile(kittenId));
+        const feedback = document.getElementById(`${kittenId}-microchip-feedback`);
+
+        if (!microchipInput) return;
+
+        // Feature detection: hide scan button if BarcodeDetector not available
+        if (!('BarcodeDetector' in window) && scanBtn) {
+            scanBtn.hidden = true;
+        }
+
+        // Manual text input — filter to digits only
+        microchipInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            this.updateKittenState(kittenId, { microchip: e.target.value });
+            this.renderer.updateResultDisplay(kittenId);
+            if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                window.KittenApp.resultsDisplay.updateResultsAutomatically();
+            }
+            this.debouncedAutoSave();
+        });
+
+        microchipInput.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            const digits = paste.replace(/[^0-9]/g, '').slice(0, 15);
+            e.target.value = digits;
+            this.updateKittenState(kittenId, { microchip: digits });
+            this.renderer.updateResultDisplay(kittenId);
+            if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                window.KittenApp.resultsDisplay.updateResultsAutomatically();
+            }
+            this.autoSaveFormData();
+        });
+
+        microchipInput.addEventListener('blur', () => {
+            this.autoSaveFormData();
+        });
+
+        // Scan button triggers hidden file input
+        if (scanBtn && fileInput) {
+            scanBtn.addEventListener('click', () => {
+                if (feedback) {
+                    feedback.textContent = '';
+                    feedback.className = 'microchip-feedback';
+                }
+                fileInput.click();
+            });
+
+            // Process captured image
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                scanBtn.classList.add('scanning');
+                if (feedback) {
+                    feedback.textContent = 'Reading\u2026';
+                    feedback.className = 'microchip-feedback';
+                }
+
+                try {
+                    const result = await this._detectBarcode(file);
+                    if (result) {
+                        const digits = result.replace(/[^0-9]/g, '').slice(0, 15);
+                        microchipInput.value = digits;
+                        this.updateKittenState(kittenId, { microchip: digits });
+                        this.renderer.updateResultDisplay(kittenId);
+                        if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                            window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                        }
+                        this.autoSaveFormData();
+
+                        if (feedback) {
+                            feedback.textContent = 'Scanned!';
+                            feedback.className = 'microchip-feedback success';
+                            setTimeout(() => {
+                                feedback.textContent = '';
+                                feedback.className = 'microchip-feedback';
+                            }, 3000);
+                        }
+                    } else {
+                        if (feedback) {
+                            feedback.textContent = 'No barcode found. Try again or type manually.';
+                            feedback.className = 'microchip-feedback error';
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Barcode detection failed:', err);
+                    if (feedback) {
+                        feedback.textContent = 'Scan failed. Please type the number.';
+                        feedback.className = 'microchip-feedback error';
+                    }
+                } finally {
+                    scanBtn.classList.remove('scanning');
+                    fileInput.value = '';
+                }
+            });
+        }
+    }
+
+    /**
+     * Detect barcode from an image file using BarcodeDetector API
+     * @param {File} imageFile - The captured image
+     * @returns {Promise<string|null>} The raw barcode value, or null
+     */
+    async _detectBarcode(imageFile) {
+        if (!('BarcodeDetector' in window)) return null;
+
+        const bitmap = await createImageBitmap(imageFile);
+        const detector = new BarcodeDetector({
+            formats: ['code_128', 'code_39', 'itf', 'ean_13', 'ean_8', 'codabar']
+        });
+
+        const barcodes = await detector.detect(bitmap);
+        bitmap.close();
+
+        if (barcodes.length === 0) return null;
+
+        // Prefer a 15-digit numeric result if multiple barcodes found
+        const numeric15 = barcodes.find(b => /^\d{15}$/.test(b.rawValue));
+        return numeric15 ? numeric15.rawValue : barcodes[0].rawValue;
+    }
+
     // ==========================================
     // Kitten Management
     // ==========================================
@@ -572,8 +705,9 @@ class FormManager {
         // Bind all event listeners using unified method
         this.bindKittenFormEvents(kittenId);
 
-        // Initialize status lights
+        // Initialize medication row states and status lights
         Constants.MEDICATIONS.forEach(med => {
+            this.renderer.updateMedicationRowState(kittenId, med);
             this.renderer.updateStatusLight(kittenId, med);
         });
         this.renderer.updateRingwormStatusLight(kittenId);
