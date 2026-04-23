@@ -2,9 +2,12 @@
  * URL State Manager - Encodes/decodes form state to/from URL parameters
  * Supports temporary loading of shared URLs with eject-to-restore functionality
  *
- * Format: ?k=VERSION|name|weight|microchip|flags|name|weight|microchip|flags|...
- *   (Version 2 legacy: ?k=2|name|weight|flags|... — 3 segments per kitten)
- *   (Version 3: ?k=3|name|weight|microchip|flags|... — 4 segments per kitten)
+ * Format: ?k=VERSION<sep>name<sep>weight<sep>microchip<sep>flags<sep>...
+ *   (Version 4 [current]: separator is '~' — RFC 3986 unreserved, never percent-encoded
+ *    by clients like Slack/iMessage. 4 segments per kitten.)
+ *   (Version 3 legacy: separator is '|', 4 segments per kitten)
+ *   (Version 2 legacy: separator is '|', 3 segments per kitten — no microchip)
+ *   (Version 1 legacy: separator is '|', 3 segments per kitten, 2-char flags)
  *
  * Version 2/3 bitfield layout (20 bits, encoded as 4 base64url chars):
  *   Bits 0-1:   sex (0=unknown, 1=female, 2=male)
@@ -32,11 +35,16 @@
 
 class UrlStateManager {
     constructor() {
-        this.version = 3;
+        this.version = 4;
         this.paramKey = 'k';
         this.backupStorageKey = 'cat-intake-form-backup';
         this.loadedStateKey = 'cat-intake-url-loaded';
         this.ownUrlKey = 'cat-intake-own-url';
+
+        // Separator selection per version. v4+ uses '~' (safe across
+        // messengers that percent-encode '|'). v1-v3 kept '|' for decode.
+        this.sepForVersion = { 1: '|', 2: '|', 3: '|', 4: '~' };
+        this.currentSep = this.sepForVersion[this.version];
 
         // Base64url alphabet (RFC 4648 - URL safe)
         this.b64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -107,6 +115,15 @@ class UrlStateManager {
      * Read a medication's combined enabled+status from the DOM
      * Returns 'skip' if disabled, otherwise the status radio value
      */
+    /**
+     * Encode a name segment. encodeURIComponent leaves '~' alone, so
+     * explicitly escape it to guarantee it can't collide with the v4
+     * separator even if someone puts a tilde in a kitten's name.
+     */
+    _encodeNameSegment(name) {
+        return encodeURIComponent(name).replace(/~/g, '%7E');
+    }
+
     _getMedStatusFromDom(kittenId, med) {
         const toggle = document.getElementById(`${kittenId}-${med}-enabled`);
         if (toggle && !toggle.checked) return 'skip';
@@ -145,13 +162,13 @@ class UrlStateManager {
             };
 
             const flags = this.encodeFlagsV2(kitten);
-            parts.push(encodeURIComponent(name), weight, microchip, flags);
+            parts.push(this._encodeNameSegment(name), weight, microchip, flags);
         });
 
         // Don't encode URL state if no kitten has a name or weight entered
         if (!hasAnyData) return null;
 
-        return parts.join('|');
+        return parts.join(this.currentSep);
     }
 
     /**
@@ -329,10 +346,10 @@ class UrlStateManager {
             };
 
             const flags = this.encodeFlagsV2(kitten);
-            parts.push(encodeURIComponent(name), weight, microchip, flags);
+            parts.push(this._encodeNameSegment(name), weight, microchip, flags);
         });
 
-        const encoded = parts.join('|');
+        const encoded = parts.join(this.currentSep);
         const url = new URL(window.location.href);
         url.search = `?${this.paramKey}=${encoded}`;
 
@@ -350,18 +367,21 @@ class UrlStateManager {
 
         if (!encoded) return null;
 
-        const parts = encoded.split('|');
+        // Detect separator from the character right after the version digit.
+        // Version is always a single ASCII digit, so encoded[1] is the separator.
+        const sep = this.sepForVersion[encoded[0]] || encoded[1];
+        const parts = encoded.split(sep);
         if (parts.length < 4) return null; // At least version + 1 kitten (name, weight, flags)
 
         const version = parseInt(parts[0]);
-        if (version !== 1 && version !== 2 && version !== 3) {
+        if (version < 1 || version > 4) {
             console.warn(`Unknown URL state version: ${version}`);
             return null;
         }
 
-        // v3: 4 parts per kitten (name, weight, microchip, flags)
+        // v3+: 4 parts per kitten (name, weight, microchip, flags)
         // v1/v2: 3 parts per kitten (name, weight, flags)
-        const partsPerKitten = version === 3 ? 4 : 3;
+        const partsPerKitten = version >= 3 ? 4 : 3;
         const kittens = {};
         const activeKittens = [];
         let kittenIndex = 1;
@@ -374,7 +394,7 @@ class UrlStateManager {
             let microchip = '';
             let flagStr;
 
-            if (version === 3) {
+            if (version >= 3) {
                 microchip = parts[i + 2];
                 flagStr = parts[i + 3];
             } else {

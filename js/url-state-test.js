@@ -182,18 +182,28 @@ function showExampleUrls() {
 
     console.log('=== Example Encoded URLs ===\n');
 
-    console.log('V2 format (4-char flags):');
+    console.log('V4 format (current, ~ separator, 4-char flags, microchip):');
+    console.log('  ?k=4~Mittens~450~~ABCD');
+    console.log('  ?k=4~Mittens~450~985112345678901~ABCD~Whiskers~380~~EFGH\n');
+
+    console.log('V3 format (legacy, | separator, 4-char flags, microchip):');
+    console.log('  ?k=3|Mittens|450||ABCD');
+    console.log('  ?k=3|Mittens|450|985112345678901|ABCD|Whiskers|380||EFGH\n');
+
+    console.log('V2 format (legacy, | separator, 4-char flags, no microchip):');
     console.log('  ?k=2|Mittens|450|ABCD');
     console.log('  ?k=2|Mittens|450|ABCD|Whiskers|380|EFGH\n');
 
-    console.log('V1 format (2-char flags, legacy):');
+    console.log('V1 format (legacy, | separator, 2-char flags):');
     console.log('  ?k=1|Mittens|450|oG');
     console.log('  ?k=1|Mittens|450|oG|Whiskers|380|VB\n');
 
-    // Decode v1 example to show backward compatibility
+    // Decode legacy examples to show backward compatibility
     console.log('V1 backward compatibility - decoding "?k=1|Mittens|450|oG":');
-    const decoded = manager.decodeFromUrl('http://example.com/?k=1|Mittens|450|oG');
-    console.log(decoded);
+    console.log(manager.decodeFromUrl('http://example.com/?k=1|Mittens|450|oG'));
+
+    console.log('\nV3 backward compatibility - decoding "?k=3|Mittens|450||ABCD":');
+    console.log(manager.decodeFromUrl('http://example.com/?k=3|Mittens|450||ABCD'));
 }
 
 // Test the temporary load flow
