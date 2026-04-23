@@ -39,16 +39,6 @@ const FormTemplate = {
                     <div class="error" id="${kittenId}-name-error"></div>
                 </div>
 
-                <div class="form-group microchip-row">
-                    <label for="${kittenId}-microchip">Microchip</label>
-                    <div class="microchip-input-wrapper">
-                        <input type="text" id="${kittenId}-microchip" name="microchip" placeholder="Microchip #" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="off">
-                        <button type="button" class="microchip-scan-btn" id="${kittenId}-microchip-scan" aria-label="Scan microchip barcode">Scan</button>
-                        <input type="file" id="${kittenId}-microchip-file" accept="image/*" capture="environment" class="microchip-file-input">
-                    </div>
-                    <div class="microchip-feedback" id="${kittenId}-microchip-feedback"></div>
-                </div>
-
                 <div class="form-group weight-sex-row">
                     <div class="weight-input-wrapper">
                         <label for="${kittenId}-weight">Weight (grams)</label>
@@ -64,6 +54,16 @@ const FormTemplate = {
                         <input type="radio" name="${kittenId}-sex" value="male" id="${kittenId}-sex-male">
                         <label for="${kittenId}-sex-male">M</label>
                     </div>
+                </div>
+
+                <div class="form-group microchip-row">
+                    <label for="${kittenId}-microchip">Microchip</label>
+                    <div class="microchip-input-wrapper">
+                        <input type="text" id="${kittenId}-microchip" name="microchip" placeholder="Microchip" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="off">
+                        <button type="button" class="microchip-scan-btn" id="${kittenId}-microchip-scan" aria-label="Scan microchip barcode">Scan</button>
+                        <input type="file" id="${kittenId}-microchip-file" accept="image/*" capture="environment" class="microchip-file-input">
+                    </div>
+                    <div class="microchip-feedback" id="${kittenId}-microchip-feedback"></div>
                 </div>
             </div>
         `;
