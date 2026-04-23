@@ -384,6 +384,75 @@ h1 {
     position: relative;
 }
 
+/* Microchip input row */
+.microchip-row {
+    margin-bottom: 0 !important;
+}
+
+.microchip-input-wrapper {
+    display: flex;
+    align-items: stretch;
+    gap: 5px;
+}
+
+.top .microchip-row input[type="text"] {
+    font-size: var(--fs-body-medium);
+    flex: 1;
+    letter-spacing: 0.5px;
+}
+
+.microchip-scan-btn {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--input-radius);
+    background-color: var(--bg-light);
+    color: var(--blue);
+    font-size: var(--fs-body-medium);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.microchip-scan-btn:active {
+    background-color: var(--blue);
+    color: white;
+    border-color: var(--blue);
+}
+
+.microchip-scan-btn.scanning {
+    background-color: var(--blue);
+    color: white;
+    border-color: var(--blue);
+    opacity: 0.7;
+}
+
+.microchip-file-input {
+    display: none !important;
+}
+
+.microchip-feedback {
+    font-size: var(--fs-body-small);
+    padding: 2px 4px;
+    min-height: 0;
+    transition: all 0.3s ease;
+}
+
+.microchip-feedback.success {
+    color: var(--green);
+}
+
+.microchip-feedback.error {
+    color: var(--red);
+}
+
+.microchip-display {
+    font-weight: normal;
+    color: var(--text-secondary);
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
 .sex-selector {
     flex: 0 0 120px;
     width: 120px;

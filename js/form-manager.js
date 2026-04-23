@@ -538,11 +538,6 @@ class FormManager {
 
         if (!microchipInput) return;
 
-        // Feature detection: hide scan button if BarcodeDetector not available
-        if (!('BarcodeDetector' in window) && scanBtn) {
-            scanBtn.hidden = true;
-        }
-
         // Manual text input — filter to digits only
         microchipInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^0-9]/g, '');
@@ -638,8 +633,6 @@ class FormManager {
      * @returns {Promise<string|null>} The raw barcode value, or null
      */
     async _detectBarcode(imageFile) {
-        if (!('BarcodeDetector' in window)) return null;
-
         const bitmap = await createImageBitmap(imageFile);
         const detector = new BarcodeDetector({
             formats: ['code_128', 'code_39', 'itf', 'ean_13', 'ean_8', 'codabar']

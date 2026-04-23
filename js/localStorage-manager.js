@@ -142,6 +142,7 @@ class LocalStorageManager {
             // Collect all form data for this kitten (new v2.0 format)
             const kittenData = {
                 name: this.getInputValue(Constants.ID.name(kittenId)),
+                microchip: this.getInputValue(Constants.ID.microchip(kittenId)),
                 weight: this.getInputValue(Constants.ID.weight(kittenId)),
                 sex: this.getRadioValue(Constants.ID.sexName(kittenId)),
                 topical: this.getRadioValue(Constants.ID.topicalName(kittenId)),
@@ -246,6 +247,7 @@ class LocalStorageManager {
 
         // Set the saved values immediately
         this.setInputValue(Constants.ID.name(kittenId), kittenData.name);
+        this.setInputValue(Constants.ID.microchip(kittenId), kittenData.microchip || '');
         this.setInputValue(Constants.ID.weight(kittenId), kittenData.weight);
         this.setRadioValue(Constants.ID.sexName(kittenId), kittenData.sex || Constants.DEFAULTS.SEX);
         this.setRadioValue(Constants.ID.topicalName(kittenId), kittenData.topical);

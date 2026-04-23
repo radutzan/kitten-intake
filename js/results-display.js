@@ -271,6 +271,7 @@ class ResultsDisplay {
                 return {
                     id: kitten.id,
                     name: nameWithSex,
+                    microchip: kitten.microchip || '',
                     weightGrams: kitten.weightGrams,
                     weightLb: kitten.weightLb,
                     medications,
@@ -387,7 +388,8 @@ class ResultsDisplay {
             const kittenHeader = document.createElement('th');
             kittenHeader.colSpan = kitten.medications.length;
             kittenHeader.className = 'kitten-header';
-            kittenHeader.innerHTML = `<strong>${kitten.name}</strong> <span>${AppState.formatNumber(kitten.weightGrams)} g (${AppState.formatNumber(kitten.weightLb, 2)} lb)</span>`;
+            const mcHtml = kitten.microchip ? `<br><small class="microchip-display">MC ${kitten.microchip}</small>` : '';
+            kittenHeader.innerHTML = `<strong>${kitten.name}</strong> <span>${AppState.formatNumber(kitten.weightGrams)} g (${AppState.formatNumber(kitten.weightLb, 2)} lb)</span>${mcHtml}`;
             headerRow1.appendChild(kittenHeader);
 
             // Medication sub-headers

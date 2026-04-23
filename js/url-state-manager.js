@@ -2,9 +2,11 @@
  * URL State Manager - Encodes/decodes form state to/from URL parameters
  * Supports temporary loading of shared URLs with eject-to-restore functionality
  *
- * Format: ?k=VERSION|name|weight|flags|name|weight|flags|...
+ * Format: ?k=VERSION|name|weight|microchip|flags|name|weight|microchip|flags|...
+ *   (Version 2 legacy: ?k=2|name|weight|flags|... — 3 segments per kitten)
+ *   (Version 3: ?k=3|name|weight|microchip|flags|... — 4 segments per kitten)
  *
- * Version 2 bitfield layout (20 bits, encoded as 4 base64url chars):
+ * Version 2/3 bitfield layout (20 bits, encoded as 4 base64url chars):
  *   Bits 0-1:   sex (0=unknown, 1=female, 2=male)
  *   Bit 2:      topical (0=revolution, 1=advantage)
  *   Bits 3-4:   ringwormStatus (0=not-scanned, 1=negative, 2=positive)
@@ -30,7 +32,7 @@
 
 class UrlStateManager {
     constructor() {
-        this.version = 2;
+        this.version = 3;
         this.paramKey = 'k';
         this.backupStorageKey = 'cat-intake-form-backup';
         this.loadedStateKey = 'cat-intake-url-loaded';
@@ -124,6 +126,7 @@ class UrlStateManager {
 
             const name = document.getElementById(`${kittenId}-name`)?.value.trim() || '';
             const weight = document.getElementById(`${kittenId}-weight`)?.value || '';
+            const microchip = document.getElementById(Constants.ID.microchip(kittenId))?.value.trim() || '';
 
             if (name || weight) hasAnyData = true;
 
@@ -142,7 +145,7 @@ class UrlStateManager {
             };
 
             const flags = this.encodeFlagsV2(kitten);
-            parts.push(encodeURIComponent(name), weight, flags);
+            parts.push(encodeURIComponent(name), weight, microchip, flags);
         });
 
         // Don't encode URL state if no kitten has a name or weight entered
@@ -309,6 +312,7 @@ class UrlStateManager {
 
             const name = document.getElementById(`${kittenId}-name`)?.value.trim() || '';
             const weight = document.getElementById(`${kittenId}-weight`)?.value || '';
+            const microchip = document.getElementById(Constants.ID.microchip(kittenId))?.value.trim() || '';
 
             const kitten = {
                 sex: document.querySelector(`input[name="${kittenId}-sex"]:checked`)?.value || 'unknown',
@@ -325,7 +329,7 @@ class UrlStateManager {
             };
 
             const flags = this.encodeFlagsV2(kitten);
-            parts.push(encodeURIComponent(name), weight, flags);
+            parts.push(encodeURIComponent(name), weight, microchip, flags);
         });
 
         const encoded = parts.join('|');
@@ -350,24 +354,36 @@ class UrlStateManager {
         if (parts.length < 4) return null; // At least version + 1 kitten (name, weight, flags)
 
         const version = parseInt(parts[0]);
-        if (version !== 1 && version !== 2) {
+        if (version !== 1 && version !== 2 && version !== 3) {
             console.warn(`Unknown URL state version: ${version}`);
             return null;
         }
 
-        // Parse kittens (3 parts each: name, weight, flags)
+        // v3: 4 parts per kitten (name, weight, microchip, flags)
+        // v1/v2: 3 parts per kitten (name, weight, flags)
+        const partsPerKitten = version === 3 ? 4 : 3;
         const kittens = {};
         const activeKittens = [];
         let kittenIndex = 1;
 
-        for (let i = 1; i < parts.length; i += 3) {
-            if (i + 2 >= parts.length) break; // Incomplete kitten data
+        for (let i = 1; i < parts.length; i += partsPerKitten) {
+            if (i + partsPerKitten - 1 >= parts.length) break;
 
             const name = decodeURIComponent(parts[i]);
             const weight = parts[i + 1];
-            const flags = version === 2
-                ? this.decodeFlagsV2(parts[i + 2])
-                : this.decodeFlagsV1(parts[i + 2]);
+            let microchip = '';
+            let flagStr;
+
+            if (version === 3) {
+                microchip = parts[i + 2];
+                flagStr = parts[i + 3];
+            } else {
+                flagStr = parts[i + 2];
+            }
+
+            const flags = version >= 2
+                ? this.decodeFlagsV2(flagStr)
+                : this.decodeFlagsV1(flagStr);
 
             const kittenId = `kitten-${kittenIndex}`;
             activeKittens.push(kittenId);
@@ -375,6 +391,7 @@ class UrlStateManager {
             kittens[kittenId] = {
                 name,
                 weight,
+                microchip,
                 ...flags
             };
 
@@ -600,6 +617,7 @@ class UrlStateManager {
 
                 // Compare key fields
                 if (urlKitten.name !== localKitten.name) return false;
+                if ((urlKitten.microchip || '') !== (localKitten.microchip || '')) return false;
                 if (urlKitten.weight !== localKitten.weight) return false;
                 if (urlKitten.sex !== (localKitten.sex || 'unknown')) return false;
                 if (urlKitten.topical !== localKitten.topical) return false;

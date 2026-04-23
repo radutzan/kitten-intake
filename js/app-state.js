@@ -113,6 +113,7 @@ class AppState {
         const kitten = {
             id: kittenData.id || `kitten-${this.incrementKittenCounter()}`,
             name: kittenData.name || '',
+            microchip: kittenData.microchip || '',
             weightGrams: kittenData.weightGrams || 0,
             weightLb: kittenData.weightLb || 0,
             topical: kittenData.topical || Constants.DEFAULTS.TOPICAL,
@@ -345,6 +346,8 @@ class AppState {
         kittenForms.forEach(form => {
             const kittenId = form.id;
             const name = document.getElementById(Constants.ID.name(kittenId)).value.trim();
+            const microchipInput = document.getElementById(Constants.ID.microchip(kittenId));
+            const microchip = microchipInput ? microchipInput.value.trim() : '';
             const weightGrams = parseFloat(document.getElementById(Constants.ID.weight(kittenId)).value);
             const weightLb = AppState.convertToPounds(weightGrams);
 
@@ -401,6 +404,7 @@ class AppState {
             const kitten = {
                 id: kittenId,
                 name,
+                microchip,
                 sex,
                 weightGrams,
                 weightLb,

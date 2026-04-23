@@ -110,7 +110,12 @@ const Constants = {
         ponazurilName: (kittenId) => `${kittenId}-ponazuril`,
         sexName: (kittenId) => `${kittenId}-sex`,
         ringwormName: (kittenId) => `${kittenId}-ringworm-status`,
-        ringwormStatusLight: (kittenId) => `${kittenId}-ringworm-status-light`
+        ringwormStatusLight: (kittenId) => `${kittenId}-ringworm-status-light`,
+
+        // Microchip elements
+        microchip: (kittenId) => `${kittenId}-microchip`,
+        microchipFile: (kittenId) => `${kittenId}-microchip-file`,
+        microchipScanBtn: (kittenId) => `${kittenId}-microchip-scan`
     }
 };
 

@@ -206,12 +206,15 @@ class FormRenderer {
         });
         const sexDisplay = sex === 'female' ? 'F' : sex === 'male' ? 'M' : '';
         const nameWithSex = sexDisplay ? `${kittenName} (${sexDisplay})` : kittenName;
+        const microchipInput = document.getElementById(Constants.ID.microchip(kittenId));
+        const microchip = microchipInput ? microchipInput.value.trim() : '';
+        const mcSuffix = microchip ? ` \u00B7 MC ${microchip}` : '';
         const headerElement = doseHeader.querySelector('.kitten-info');
         if (grams > 0) {
             const weightLb = AppState.convertToPounds(grams);
-            headerElement.textContent = `${nameWithSex} - ${AppState.formatNumber(grams)} g (${AppState.formatNumber(weightLb, 2)} lb)`;
+            headerElement.textContent = `${nameWithSex} - ${AppState.formatNumber(grams)} g (${AppState.formatNumber(weightLb, 2)} lb)${mcSuffix}`;
         } else {
-            headerElement.textContent = `${nameWithSex}`;
+            headerElement.textContent = `${nameWithSex}${mcSuffix}`;
         }
 
         if (!grams || grams <= 0) {
