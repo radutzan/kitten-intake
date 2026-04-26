@@ -169,7 +169,8 @@ h1 {
     display: block;
 }
 
-.nav-menu-dropdown button {
+.nav-menu-dropdown button,
+.nav-menu-dropdown a {
     display: block;
     width: 100%;
     padding: 12px 16px;
@@ -180,13 +181,17 @@ h1 {
     font-weight: 500;
     color: var(--text-primary);
     cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
 }
 
-.nav-menu-dropdown button:hover {
+.nav-menu-dropdown button:hover,
+.nav-menu-dropdown a:hover {
     background-color: var(--gray-100);
 }
 
-.nav-menu-dropdown button:active {
+.nav-menu-dropdown button:active,
+.nav-menu-dropdown a:active {
     background-color: var(--gray-200);
 }
 

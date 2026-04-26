@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dose Calculator</title><!-- by Anti & Radu (& AI) -->
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        /* /calc/-specific styles. Spartan: a weight input and a table. */
+
+        .calc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .calc-header h1 {
+            font-size: var(--fs-header-large);
+            color: var(--text-heading);
+        }
+        .calc-header a {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .calc-weight-row {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            margin-bottom: 24px;
+            background-color: var(--bg-medium);
+            border-radius: var(--container-radius);
+            padding: var(--container-radius);
+        }
+        .calc-weight-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        .calc-weight-wrapper input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--input-radius);
+            font-size: var(--fs-header-large);
+            background: white;
+        }
+        .calc-weight-wrapper input:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(40, 90, 168, 0.2);
+        }
+        .calc-weight-display {
+            background-color: var(--bg-light);
+            padding: 6px 10px;
+            border-radius: calc(var(--input-radius) - var(--control-padding));
+            font-weight: 600;
+            color: var(--text-secondary);
+            position: absolute;
+            right: var(--control-padding);
+            top: var(--control-padding);
+            bottom: var(--control-padding);
+            display: flex;
+            align-items: center;
+            font-size: var(--fs-body-medium);
+        }
+
+        .meds-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--fs-body-medium);
+        }
+        .meds-table th,
+        .meds-table td {
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid var(--divider);
+        }
+        .meds-table th {
+            font-weight: 600;
+            color: var(--text-heading);
+            background-color: var(--bg-light);
+            position: sticky;
+            top: 60px;  /* below the sticky nav */
+            z-index: 10;
+        }
+        .meds-table tbody tr:hover {
+            background-color: var(--bg-light);
+        }
+        .meds-table .calc-text {
+            white-space: pre-line;
+            color: var(--text-secondary);
+        }
+        .meds-table .dose-cell {
+            font-weight: 600;
+            color: var(--text-heading);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .meds-table .dose-cell.out-of-range {
+            color: var(--text-secondary);
+            font-weight: normal;
+            font-style: italic;
+        }
+        .meds-table .notes-cell {
+            color: var(--text-secondary);
+            font-size: var(--fs-body-small);
+        }
+        .meds-table .warning {
+            color: var(--orange);
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Stack content on narrow viewports — keep Dose prominent on the right. */
+        @media (max-width: 600px) {
+            .meds-table thead th.col-conc,
+            .meds-table thead th.col-calc,
+            .meds-table thead th.col-notes {
+                display: none;
+            }
+            .meds-table tbody td.col-conc,
+            .meds-table tbody td.col-calc,
+            .meds-table tbody td.col-notes {
+                display: block;
+                border-bottom: none;
+                padding: 0 12px 4px 12px;
+                color: var(--text-secondary);
+                font-size: var(--fs-body-small);
+            }
+            .meds-table tbody td.col-conc {
+                padding-top: 0;
+            }
+            .meds-table tbody td.col-name {
+                font-weight: 600;
+                color: var(--text-heading);
+                padding-bottom: 2px;
+                border-bottom: none;
+            }
+            .meds-table tbody td.col-notes:empty {
+                display: none;
+            }
+            .meds-table tbody tr {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas:
+                    "name dose"
+                    "conc dose"
+                    "calc dose"
+                    "notes notes";
+                border-bottom: 1px solid var(--divider);
+                padding: 8px 0;
+            }
+            .meds-table tbody td.col-name { grid-area: name; }
+            .meds-table tbody td.col-conc { grid-area: conc; }
+            .meds-table tbody td.col-calc { grid-area: calc; }
+            .meds-table tbody td.col-dose { grid-area: dose; align-self: center; padding-right: 12px; }
+            .meds-table tbody td.col-notes { grid-area: notes; }
+        }
+    </style>
+</head>
+<body>
+    <header class="calc-header">
+        <h1>Dose Calculator</h1>
+        <a href="../">← Back</a>
+    </header>
+
+    <div class="calc-weight-row">
+        <div class="calc-weight-wrapper">
+            <input type="number" id="calc-weight" placeholder="Weight (g)" inputmode="numeric" min="0" step="any" autofocus>
+            <div class="calc-weight-display" id="calc-weight-display"></div>
+        </div>
+    </div>
+
+    <table class="meds-table">
+        <thead>
+            <tr>
+                <th class="col-name">Medication</th>
+                <th class="col-conc">Concentration</th>
+                <th class="col-calc">Calculation</th>
+                <th class="col-dose">Dose</th>
+                <th class="col-notes">Notes</th>
+            </tr>
+        </thead>
+        <tbody id="meds-tbody"></tbody>
+    </table>
+
+    <script src="../js/constants.js"></script>
+    <script src="../js/meds-data.js"></script>
+    <script src="../js/med-calculator.js"></script>
+    <script src="calc-app.js"></script>
+</body>
+</html>
