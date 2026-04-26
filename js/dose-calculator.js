@@ -1,62 +1,39 @@
 /**
- * Dose Calculator Module - All medication dose calculations
- * Handles dose calculations for all medications based on weight
+ * Dose Calculator Module - Per-medication dose calculations.
+ *
+ * Public API is unchanged. Each per-med method now delegates to
+ * MedCalculator against the MedsData catalog (the single source of truth).
+ * Caching behavior is preserved.
+ *
+ * Quirk preserved for backwards compatibility: calculateAdvantageIIDose
+ * returns 0 (not OUT_OF_RANGE) when the engine reports out-of-range —
+ * the previous implementation returned 0 for negative weights. In
+ * practice weight is always positive so this never triggers, but
+ * Stage 1b is meant to be behaviour-preserving.
  */
 
 class DoseCalculator {
-    // Memoization cache for calculateAllDoses
     static doseCache = new Map();
     static MAX_CACHE_SIZE = 50;
 
-    /**
-     * Clear the dose calculation cache
-     * Call this if you need to force recalculation
-     */
     static clearCache() {
         this.doseCache.clear();
     }
 
-    static calculatePanacurDose(weightLb) {
-        return weightLb * 0.2;
+    static _value(medId, weightLb) {
+        return MedCalculator.compute(MedsData.byId(medId), weightLb).value;
     }
 
-    static calculatePonazurilDose(weightLb) {
-        return weightLb * 0.23;
-    }
-
-    static calculateRevolutionDose(weightLb) {
-        if (weightLb >= 1.1 && weightLb < 2.2) return 0.05;
-        if (weightLb >= 2.2 && weightLb < 4.4) return 0.1;
-        if (weightLb >= 4.4 && weightLb < 9) return 0.2;
-        if (weightLb >= 9 && weightLb <= 19.9) return 0.45;
-        return Constants.MESSAGES.OUT_OF_RANGE;
-    }
+    static calculatePanacurDose(weightLb)    { return this._value('panacur',    weightLb); }
+    static calculatePonazurilDose(weightLb)  { return this._value('ponazuril',  weightLb); }
+    static calculatePyrantelDose(weightLb)   { return this._value('pyrantel',   weightLb); }
+    static calculateRevolutionDose(weightLb) { return this._value('revolution', weightLb); }
+    static calculateDrontalDose(weightLb)    { return this._value('drontal',    weightLb); }
+    static calculateCapstarDose(weightLb)    { return this._value('capstar',    weightLb); }
 
     static calculateAdvantageIIDose(weightLb) {
-        if (weightLb >= 0 && weightLb < 1) return 0.05;
-        if (weightLb >= 1 && weightLb < 5) return 0.1;
-        if (weightLb >= 5 && weightLb < 9) return 0.2;
-        if (weightLb >= 9) return 0.45;
-        return 0;
-    }
-
-    static calculateDrontalDose(weightLb) {
-        if (weightLb >= 1.5 && weightLb < 2) return '¼';
-        if (weightLb >= 2 && weightLb < 4) return '½';
-        if (weightLb >= 4 && weightLb < 9) return '1';
-        if (weightLb >= 9 && weightLb < 13) return '1½';
-        if (weightLb >= 13 && weightLb <= 16) return '2';
-        return Constants.MESSAGES.OUT_OF_RANGE;
-    }
-
-    static calculatePyrantelDose(weightLb) {
-        return weightLb * 0.1;
-    }
-
-    static calculateCapstarDose(weightLb) {
-        // Capstar (nitenpyram) - 1 tablet for cats 2-25 lbs
-        if (weightLb >= 2 && weightLb <= 25) return '1';
-        return Constants.MESSAGES.OUT_OF_RANGE;
+        const result = MedCalculator.compute(MedsData.byId('advantage-ii'), weightLb);
+        return result.isOutOfRange ? 0 : result.value;
     }
 
     /**
@@ -66,32 +43,27 @@ class DoseCalculator {
      * @returns {object} Object containing all calculated doses
      */
     static calculateAllDoses(weightLb) {
-        // Round to 2 decimal places for cache key (avoids floating point issues)
         const cacheKey = Math.round(weightLb * 100) / 100;
 
-        // Return cached result if available
         if (this.doseCache.has(cacheKey)) {
             return this.doseCache.get(cacheKey);
         }
 
-        // Calculate fresh doses
         const doses = {
-            panacur: this.calculatePanacurDose(weightLb),
-            ponazuril: this.calculatePonazurilDose(weightLb),
+            panacur:    this.calculatePanacurDose(weightLb),
+            ponazuril:  this.calculatePonazurilDose(weightLb),
             revolution: this.calculateRevolutionDose(weightLb),
-            advantage: this.calculateAdvantageIIDose(weightLb),
-            drontal: this.calculateDrontalDose(weightLb),
-            capstar: this.calculateCapstarDose(weightLb),
-            pyrantel: this.calculatePyrantelDose(weightLb)
+            advantage:  this.calculateAdvantageIIDose(weightLb),
+            drontal:    this.calculateDrontalDose(weightLb),
+            capstar:    this.calculateCapstarDose(weightLb),
+            pyrantel:   this.calculatePyrantelDose(weightLb)
         };
 
-        // LRU-style eviction: remove oldest entry if cache is full
         if (this.doseCache.size >= this.MAX_CACHE_SIZE) {
             const oldestKey = this.doseCache.keys().next().value;
             this.doseCache.delete(oldestKey);
         }
 
-        // Cache and return
         this.doseCache.set(cacheKey, doses);
         return doses;
     }
@@ -104,7 +76,6 @@ class DoseCalculator {
     static addDosesToKitten(kitten) {
         const doses = this.calculateAllDoses(kitten.weightLb);
 
-        // Determine topical dose based on selected medication
         let topicalDose = 0;
         if (kitten.topical === 'revolution') {
             topicalDose = doses.revolution;
