@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MedCalculator vs DoseCalculator parity</title>
+    <style>
+        body { font-family: ui-monospace, monospace; padding: 1em; max-width: 900px; }
+        h1 { font-size: 1.1em; }
+        table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+        th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+        .pass { color: #0a0; }
+        .fail { color: #c00; font-weight: bold; }
+        tfoot td { font-weight: bold; padding-top: 1em; }
+    </style>
+</head>
+<body>
+    <h1>MedCalculator vs DoseCalculator parity</h1>
+    <p>Asserts MedCalculator produces the same raw value as the existing
+       DoseCalculator for every built-in med at sample weights. This is the
+       safety net for Stage 1b (delegating DoseCalculator to MedCalculator).</p>
+    <table id="results">
+        <thead>
+            <tr><th>Med</th><th>Weight (lb)</th><th>DoseCalculator</th><th>MedCalculator</th><th>Result</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+            <tr><td colspan="5" id="summary"></td></tr>
+        </tfoot>
+    </table>
+
+    <script src="../js/constants.js"></script>
+    <script src="../js/dose-calculator.js"></script>
+    <script src="../js/meds-data.js"></script>
+    <script src="../js/med-calculator.js"></script>
+    <script>
+        // Test cases: [medId, doseCalculatorMethod, weights[]]
+        // For Advantage II the existing code returns 0 for negative weights
+        // (a quirk preserved by the Stage 1b delegate, not by the engine).
+        // We exclude negative weights here.
+        const cases = [
+            { medId: 'panacur',      method: 'calculatePanacurDose',     weights: [0.5, 1, 2, 4.4, 9, 16, 25] },
+            { medId: 'ponazuril',    method: 'calculatePonazurilDose',   weights: [0.5, 1, 2, 4.4, 9, 16, 25] },
+            { medId: 'pyrantel',     method: 'calculatePyrantelDose',    weights: [0.5, 1, 2, 4.4, 9, 16, 25] },
+            { medId: 'revolution',   method: 'calculateRevolutionDose',  weights: [0.5, 1.0, 1.1, 1.5, 2.1, 2.2, 4.3, 4.4, 8.9, 9, 19.9, 20, 25] },
+            { medId: 'advantage-ii', method: 'calculateAdvantageIIDose', weights: [0, 0.5, 0.99, 1, 4.99, 5, 8.99, 9, 100] },
+            { medId: 'drontal',      method: 'calculateDrontalDose',     weights: [1, 1.49, 1.5, 1.99, 2, 3.99, 4, 8.99, 9, 12.99, 13, 16, 16.01, 17] },
+            { medId: 'capstar',      method: 'calculateCapstarDose',     weights: [1, 1.99, 2, 10, 25, 25.01, 30] },
+        ];
+
+        // Stage 1b delegate quirks the test must mirror to be honest.
+        // - Advantage II: engine reports OUT_OF_RANGE below 0; delegate will
+        //   convert that to 0. For weights ≥ 0 (everything we test), no change.
+        // - Drontal/Revolution/Capstar: engine and current both produce OUT_OF_RANGE
+        //   for the same weights, so equality works directly.
+        function normalise(v) {
+            if (v === Constants.MESSAGES.OUT_OF_RANGE) return 'OOR';
+            if (typeof v === 'number') {
+                // Accept tiny float drift between two equivalent computations.
+                return Math.round(v * 1e9) / 1e9;
+            }
+            return v;
+        }
+
+        const tbody = document.querySelector('#results tbody');
+        let pass = 0, fail = 0;
+
+        for (const { medId, method, weights } of cases) {
+            const med = MedsData.byId(medId);
+            for (const w of weights) {
+                const expected = DoseCalculator[method](w);
+                const actualResult = MedCalculator.compute(med, w);
+                const actual = actualResult.value;
+
+                const ok = normalise(expected) === normalise(actual);
+                ok ? pass++ : fail++;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${medId}</td>
+                    <td>${w}</td>
+                    <td>${String(expected)}</td>
+                    <td>${String(actual)}</td>
+                    <td class="${ok ? 'pass' : 'fail'}">${ok ? 'PASS' : 'FAIL'}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        const summary = document.getElementById('summary');
+        summary.textContent = `${pass} passing, ${fail} failing`;
+        summary.className = fail === 0 ? 'pass' : 'fail';
+    </script>
+</body>
+</html>
