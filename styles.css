@@ -1055,7 +1055,7 @@ footer {
 }
 
 .footer-disclaimer {
-    margin: 12px auto 0;
+    margin: 12px auto;
     max-width: 640px;
     color: var(--text-secondary);
     font-size: var(--fs-body-small);
