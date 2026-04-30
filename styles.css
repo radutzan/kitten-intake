@@ -802,14 +802,11 @@ input[type="radio"]:focus {
 }
 
 /* Result display sections */
-.collapsible-section + .collapsible-section,
-.collapsible-section + .foster-section,
-.foster-section + .collapsible-section {
+.collapsible-section + .collapsible-section {
     margin-top: 12px;
 }
 
-.collapsible-section .dose-section-header,
-.foster-section .dose-section-header {
+.collapsible-section .dose-section-header {
     margin-top: 0;
 }
 
@@ -842,10 +839,6 @@ input[type="radio"]:focus {
     background-color: white;
 }
 
-.result-display-content.foster {
-    background-color: var(--bg-yellow);
-}
-
 .result-display .result-item {
     margin-bottom: 0;
     padding: 5px 8px;
@@ -853,6 +846,9 @@ input[type="radio"]:focus {
     background-color: transparent;
     font-size: var(--fs-body-medium);
     border-bottom: 1px solid var(--divider);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .result-display .result-item:last-child {
@@ -863,6 +859,35 @@ input[type="radio"]:focus {
     display: inline-block;
     width: 100px;
     height: 100%;
+    flex-shrink: 0;
+}
+
+.result-display .result-item-dose {
+    flex: 1;
+}
+
+.med-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: var(--fs-body-small);
+    font-weight: 600;
+    line-height: 1.4;
+    color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.med-status-todo {
+    background-color: var(--status-todo);
+}
+
+.med-status-done {
+    background-color: var(--status-done);
+}
+
+.med-status-delay {
+    background-color: var(--status-delay);
 }
 
 .result-display > .dose-section-header {
@@ -1097,6 +1122,15 @@ footer {
         margin: 0;
         padding: 0;
         border-radius: 0;
+    }
+
+    .med-status {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid black;
+        padding: 0 6px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .horizontal-label {

@@ -409,11 +409,6 @@ class FormRenderer {
                                            panacurStatus, ponazurilStatus, drontalStatus,
                                            pyrantelStatus, panacurDays, ponazurilDays);
 
-        // For Foster section
-        content += this._buildFosterSection(doses, topical, fleaStatus, capstarStatus,
-                                            panacurStatus, ponazurilStatus, drontalStatus,
-                                            pyrantelStatus, panacurDays, ponazurilDays);
-
         // Other section (ringworm)
         content += this._buildOtherSection(kittenId);
 
@@ -439,44 +434,47 @@ class FormRenderer {
                            ponazuril: ponazurilStatus, drontal: drontalStatus, pyrantel: pyrantelStatus };
 
         Constants.MEDICATIONS.forEach(med => {
-            if (statuses[med] === Constants.STATUS.SKIP) return;
+            const status = statuses[med];
+            if (status === Constants.STATUS.SKIP) return;
+
+            const statusBadge = this._renderStatusBadge(status);
 
             if (med === 'flea') {
                 const topicalName = topical === Constants.TOPICAL.REVOLUTION ? 'Revolution' : 'Advantage II';
                 const topicalDose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
                 content += `
                     <div class="result-item">
-                        <strong>${topicalName}</strong> ${topicalDose === outOfRange ? outOfRange : AppState.formatNumber(topicalDose, 2) + ' mL'}
+                        <strong>${topicalName}</strong> <span class="result-item-dose">${topicalDose === outOfRange ? outOfRange : AppState.formatNumber(topicalDose, 2) + ' mL'}</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'capstar') {
                 content += `
                     <div class="result-item">
-                        <strong>Capstar</strong> 1 tablet
+                        <strong>Capstar</strong> <span class="result-item-dose">1 tablet</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'panacur') {
                 content += `
                     <div class="result-item">
-                        <strong>Panacur</strong> ${AppState.formatNumber(doses.panacur, 2)} mL/day × ${panacurDays} days
+                        <strong>Panacur</strong> <span class="result-item-dose">${AppState.formatNumber(doses.panacur, 2)} mL/day × ${panacurDays} days</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'ponazuril') {
                 content += `
                     <div class="result-item">
-                        <strong>Ponazuril</strong> ${AppState.formatNumber(doses.ponazuril, 2)} mL/day × ${ponazurilDays} days
+                        <strong>Ponazuril</strong> <span class="result-item-dose">${AppState.formatNumber(doses.ponazuril, 2)} mL/day × ${ponazurilDays} days</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'drontal') {
                 content += `
                     <div class="result-item">
-                        <strong>Drontal</strong> ${doses.drontal === outOfRange ? outOfRange : doses.drontal + ' tablet(s)'}
+                        <strong>Drontal</strong> <span class="result-item-dose">${doses.drontal === outOfRange ? outOfRange : doses.drontal + ' tablet(s)'}</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'pyrantel') {
                 content += `
                     <div class="result-item">
-                        <strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL
+                        <strong>Pyrantel</strong> <span class="result-item-dose">${AppState.formatNumber(doses.pyrantel, 2)} mL</span>${statusBadge}
                     </div>
                 `;
             }
@@ -491,83 +489,19 @@ class FormRenderer {
     }
 
     /**
-     * Build the For Foster section HTML
+     * Render a status badge for a medication row
+     * @param {string} status - One of Constants.STATUS values
+     * @returns {string} HTML for the badge (empty string if no badge)
      */
-    _buildFosterSection(doses, topical, fleaStatus, capstarStatus, panacurStatus,
-                        ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays) {
-        const outOfRange = doses.outOfRange;
-
-        // Determine what was given at intake
-        const panacurDay1Given = panacurStatus === Constants.STATUS.DONE;
-        const ponazurilDay1Given = ponazurilStatus === Constants.STATUS.DONE;
-        const drontalDay1Given = drontalStatus === Constants.STATUS.DONE;
-        const capstarDay1Given = capstarStatus === Constants.STATUS.DONE;
-        const pyrantelDay1Given = pyrantelStatus === Constants.STATUS.DONE;
-        const fleaGiven = fleaStatus === Constants.STATUS.DONE;
-
-        // Calculate remaining
-        const panacurRemaining = panacurStatus === Constants.STATUS.SKIP ? 0 : (panacurDay1Given ? (panacurDays - 1) : panacurDays);
-        const ponazurilRemaining = ponazurilStatus === Constants.STATUS.SKIP ? 0 : (ponazurilDay1Given ? (ponazurilDays - 1) : ponazurilDays);
-        const panacurTotal = doses.panacur * panacurRemaining;
-        const ponazurilTotal = doses.ponazuril * ponazurilRemaining;
-
-        const remainsForFoster = [];
-
-        // Render in Constants.MEDICATIONS order (matches form)
-        Constants.MEDICATIONS.forEach(med => {
-            if (med === 'flea') {
-                if (fleaStatus !== Constants.STATUS.SKIP) {
-                    const topicalName = topical === Constants.TOPICAL.REVOLUTION ? 'Revolution' : 'Advantage II';
-                    const topicalDose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
-                    if (topicalDose !== outOfRange && !fleaGiven) {
-                        remainsForFoster.push(`<strong>${topicalName}</strong> 1 dose = ${AppState.formatNumber(topicalDose, 2)} mL`);
-                    }
-                }
-            } else if (med === 'capstar') {
-                if (capstarStatus !== Constants.STATUS.SKIP && !capstarDay1Given) {
-                    remainsForFoster.push(`<strong>Capstar</strong> 1 tablet`);
-                }
-            } else if (med === 'panacur') {
-                if (panacurRemaining > 0) {
-                    remainsForFoster.push(`<strong>Panacur</strong> ${panacurRemaining} days × ${AppState.formatNumber(doses.panacur, 2)} mL = ${AppState.formatNumber(panacurTotal, 2)} mL`);
-                }
-            } else if (med === 'ponazuril') {
-                if (ponazurilRemaining > 0) {
-                    remainsForFoster.push(`<strong>Ponazuril</strong> ${ponazurilRemaining} days × ${AppState.formatNumber(doses.ponazuril, 2)} mL = ${AppState.formatNumber(ponazurilTotal, 2)} mL`);
-                }
-            } else if (med === 'drontal') {
-                if (drontalStatus !== Constants.STATUS.SKIP && !drontalDay1Given && doses.drontal !== outOfRange) {
-                    remainsForFoster.push(`<strong>Drontal</strong> ${doses.drontal + ' tablet(s)'}`);
-                }
-            } else if (med === 'pyrantel') {
-                if (pyrantelStatus !== Constants.STATUS.SKIP && !pyrantelDay1Given) {
-                    remainsForFoster.push(`<strong>Pyrantel</strong> ${AppState.formatNumber(doses.pyrantel, 2)} mL`);
-                }
-            }
-        });
-
-        let content = `
-            <div class="foster-section">
-                <div class="dose-section-header">
-                    <strong>For Foster</strong>
-                </div>
-                <div class="result-display-content${remainsForFoster.length > 0 ? ' foster' : ''}">
-        `;
-
-        if (remainsForFoster.length > 0) {
-            remainsForFoster.forEach(item => {
-                content += `<div class="result-item">${item}</div>`;
-            });
-        } else {
-            content += `<div class="result-item">None</div>`;
-        }
-
-        content += `
-                </div>
-            </div>
-        `;
-
-        return content;
+    _renderStatusBadge(status) {
+        const labels = {
+            [Constants.STATUS.TODO]: 'To Do',
+            [Constants.STATUS.DONE]: 'Done',
+            [Constants.STATUS.DELAY]: 'Delay'
+        };
+        const label = labels[status];
+        if (!label) return '';
+        return `<span class="med-status med-status-${status}">${label}</span>`;
     }
 
     /**

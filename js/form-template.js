@@ -227,9 +227,9 @@ const FormTemplate = {
                 </div>
                 <div class="medication-choices">
                     <div class="radio-group">
-                        <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1" checked>
+                        <input type="radio" name="${kittenId}-ponazuril" value="1" id="${kittenId}-ponazuril-1">
                         <label for="${kittenId}-ponazuril-1">1d</label>
-                        <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3">
+                        <input type="radio" name="${kittenId}-ponazuril" value="3" id="${kittenId}-ponazuril-3" checked>
                         <label for="${kittenId}-ponazuril-3">3d</label>
                     </div>
                     <div class="radio-group status-control">

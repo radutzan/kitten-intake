@@ -89,7 +89,7 @@ const Constants = {
     // Default values
     DEFAULTS: {
         PANACUR_DAYS: 3,
-        PONAZURIL_DAYS: 1,
+        PONAZURIL_DAYS: 3,
         TOPICAL: 'revolution',
         SEX: 'unknown'
     },
