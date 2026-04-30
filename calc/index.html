@@ -120,6 +120,20 @@
 
         /* Stack content on narrow viewports — keep Dose prominent on the right. */
         @media (max-width: 600px) {
+            /* Drop table layout entirely in mobile so grid rows can fill the
+               viewport width. With the default `display: table` chain
+               (table → table-row-group → table-row), the row's width is
+               sized by the column algorithm, not the grid we declared on it. */
+            .meds-table,
+            .meds-table thead,
+            .meds-table tbody {
+                display: block;
+                width: 100%;
+            }
+            .meds-table thead tr {
+                display: grid;
+                grid-template-columns: 1fr auto;
+            }
             .meds-table thead th.col-conc,
             .meds-table thead th.col-calc,
             .meds-table thead th.col-notes {
