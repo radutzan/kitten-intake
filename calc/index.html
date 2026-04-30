@@ -15,13 +15,18 @@
             margin-bottom: 16px;
         }
         .calc-header h1 {
+            /* Override global h1 (absolutely centered for the main app's logo). */
             font-size: var(--fs-header-large);
             color: var(--text-heading);
+            position: static;
+            transform: none;
+            margin: 0;
         }
         .calc-header a {
             color: var(--blue);
             text-decoration: none;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .calc-weight-row {
@@ -155,15 +160,21 @@
             .meds-table tbody td.col-name { grid-area: name; }
             .meds-table tbody td.col-conc { grid-area: conc; }
             .meds-table tbody td.col-calc { grid-area: calc; }
-            .meds-table tbody td.col-dose { grid-area: dose; align-self: center; padding-right: 12px; }
+            .meds-table tbody td.col-dose {
+                grid-area: dose;
+                align-self: center;
+                padding-right: 12px;
+                border-bottom: none;
+                text-align: right;
+            }
             .meds-table tbody td.col-notes { grid-area: notes; }
         }
     </style>
 </head>
 <body>
     <header class="calc-header">
-        <h1>Dose Calculator</h1>
         <a href="../">← Back</a>
+        <h1>Dose Calculator</h1>
     </header>
 
     <div class="calc-weight-row">
