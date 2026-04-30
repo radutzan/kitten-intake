@@ -1053,6 +1053,14 @@ input[type="radio"]:focus {
 footer {
     text-align: center;
 }
+
+.footer-disclaimer {
+    margin: 12px auto 0;
+    max-width: 640px;
+    color: var(--text-secondary);
+    font-size: var(--fs-body-small);
+    line-height: 1.5;
+}
 /* #endregion */
 
 /* #region Print Styles */
