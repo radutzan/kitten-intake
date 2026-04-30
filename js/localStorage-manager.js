@@ -149,6 +149,7 @@ class LocalStorageManager {
                 panacurDays: this.getRadioValue(Constants.ID.panacurName(kittenId)),
                 ponazurilDays: this.getRadioValue(Constants.ID.ponazurilName(kittenId)),
                 ringwormStatus: this.getRadioValue(Constants.ID.ringwormName(kittenId)),
+                fvrcpStatus: this.getRadioValue(Constants.ID.fvrcpName(kittenId)),
                 // Medication enabled states and statuses
                 medications: {}
             };
@@ -254,6 +255,7 @@ class LocalStorageManager {
         this.setRadioValue(Constants.ID.panacurName(kittenId), kittenData.panacurDays || String(Constants.DEFAULTS.PANACUR_DAYS));
         this.setRadioValue(Constants.ID.ponazurilName(kittenId), kittenData.ponazurilDays || String(Constants.DEFAULTS.PONAZURIL_DAYS));
         this.setRadioValue(Constants.ID.ringwormName(kittenId), kittenData.ringwormStatus || Constants.RINGWORM_STATUS.NOT_SCANNED);
+        this.setRadioValue(Constants.ID.fvrcpName(kittenId), kittenData.fvrcpStatus || Constants.FVRCP_STATUS.UNKNOWN);
 
         // Restore medication enabled states and statuses (v2.0 format)
         if (kittenData.medications) {
@@ -277,6 +279,7 @@ class LocalStorageManager {
                 window.KittenApp.formManager.updateStatusLight(kittenId, med);
             });
             window.KittenApp.formManager.updateRingwormStatusLight(kittenId);
+            window.KittenApp.formManager.updateFvrcpStatusLight(kittenId);
         }
     }
 

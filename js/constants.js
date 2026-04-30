@@ -46,6 +46,13 @@ const Constants = {
         NEGATIVE: 'negative'
     },
 
+    // FVRCP vaccination status values
+    FVRCP_STATUS: {
+        UNKNOWN: 'unknown',
+        VACCINATED: 'vaccinated',
+        NOT_VACCINATED: 'not-vaccinated'
+    },
+
     // Validation messages
     MESSAGES: {
         OUT_OF_RANGE: 'Out of range'
@@ -111,6 +118,8 @@ const Constants = {
         sexName: (kittenId) => `${kittenId}-sex`,
         ringwormName: (kittenId) => `${kittenId}-ringworm-status`,
         ringwormStatusLight: (kittenId) => `${kittenId}-ringworm-status-light`,
+        fvrcpName: (kittenId) => `${kittenId}-fvrcp-status`,
+        fvrcpStatusLight: (kittenId) => `${kittenId}-fvrcp-status-light`,
 
         // Microchip elements
         microchip: (kittenId) => `${kittenId}-microchip`,
@@ -127,6 +136,7 @@ Object.freeze(Constants.TOPICAL);
 Object.freeze(Constants.STATUS);
 Object.freeze(Constants.SEX);
 Object.freeze(Constants.RINGWORM_STATUS);
+Object.freeze(Constants.FVRCP_STATUS);
 Object.freeze(Constants.MESSAGES);
 Object.freeze(Constants.ELEMENTS);
 Object.freeze(Constants.CSS);

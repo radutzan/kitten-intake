@@ -20,6 +20,7 @@ const FormTemplate = {
                 ${this.generateMedicationGrid(kittenId)}
                 <div class="medication-separator"></div>
                 ${this.generateRingwormSection(kittenId)}
+                ${this.generateFvrcpSection(kittenId)}
             </div>
             ${this.generateResultDisplay(kittenId)}
         `;
@@ -335,6 +336,32 @@ const FormTemplate = {
                     <label for="${kittenId}-ringworm-positive">Positive</label>
                     <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
                     <label for="${kittenId}-ringworm-negative">Negative</label>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Generate the FVRCP vaccine section
+     * @param {string} kittenId - The kitten ID
+     * @returns {string} HTML string
+     */
+    generateFvrcpSection(kittenId) {
+        return `
+            <div class="form-group ringworm-section">
+                <div class="medication-labels">
+                    <div class="left">
+                        <span class="status-light hidden" id="${kittenId}-fvrcp-status-light"></span>
+                        <span class="med-name">FVRCP Vaccine</span>
+                    </div>
+                </div>
+                <div class="radio-group">
+                    <input type="radio" name="${kittenId}-fvrcp-status" value="unknown" id="${kittenId}-fvrcp-unknown" checked>
+                    <label for="${kittenId}-fvrcp-unknown">Unknown</label>
+                    <input type="radio" name="${kittenId}-fvrcp-status" value="not-vaccinated" id="${kittenId}-fvrcp-not-vaccinated">
+                    <label for="${kittenId}-fvrcp-not-vaccinated">Not Vaccinated</label>
+                    <input type="radio" name="${kittenId}-fvrcp-status" value="vaccinated" id="${kittenId}-fvrcp-vaccinated">
+                    <label for="${kittenId}-fvrcp-vaccinated">Vaccinated</label>
                 </div>
             </div>
         `;

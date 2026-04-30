@@ -120,6 +120,7 @@ class AppState {
             panacurDays: kittenData.panacurDays ?? Constants.DEFAULTS.PANACUR_DAYS,
             ponazurilDays: kittenData.ponazurilDays ?? Constants.DEFAULTS.PONAZURIL_DAYS,
             ringwormStatus: kittenData.ringwormStatus || Constants.RINGWORM_STATUS.NOT_SCANNED,
+            fvrcpStatus: kittenData.fvrcpStatus || Constants.FVRCP_STATUS.UNKNOWN,
             medicationStatus: kittenData.medicationStatus || {
                 flea: Constants.STATUS.TODO,
                 capstar: Constants.STATUS.TODO,
@@ -401,6 +402,13 @@ class AppState {
                 if (radio.checked) ringwormStatus = radio.value;
             });
 
+            // Get FVRCP data
+            const fvrcpRadios = document.querySelectorAll(`input[name="${Constants.ID.fvrcpName(kittenId)}"]`);
+            let fvrcpStatus = Constants.FVRCP_STATUS.UNKNOWN;
+            fvrcpRadios.forEach(radio => {
+                if (radio.checked) fvrcpStatus = radio.value;
+            });
+
             const kitten = {
                 id: kittenId,
                 name,
@@ -413,6 +421,7 @@ class AppState {
                 panacurDays: panacurStatus === Constants.STATUS.SKIP ? 0 : panacurDays,
                 ponazurilDays: ponazurilStatus === Constants.STATUS.SKIP ? 0 : ponazurilDays,
                 ringwormStatus,
+                fvrcpStatus,
                 day1Given: {
                     panacur: panacurDay1Given,
                     ponazuril: ponazurilDay1Given,

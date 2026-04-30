@@ -154,6 +154,41 @@ class FormRenderer {
     }
 
     /**
+     * Update FVRCP status light
+     * @param {string} kittenId - The kitten ID
+     */
+    updateFvrcpStatusLight(kittenId) {
+        const statusLight = document.getElementById(Constants.ID.fvrcpStatusLight(kittenId));
+        const statusRadios = document.querySelectorAll(`input[name="${Constants.ID.fvrcpName(kittenId)}"]`);
+
+        if (!statusLight) return;
+
+        // Check if there's a valid weight
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
+        const grams = weightInput ? parseFloat(weightInput.value) : 0;
+
+        // If no weight, hide the status light
+        if (!grams || grams <= 0) {
+            statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.CSS.HIDDEN}`;
+            return;
+        }
+
+        let status = Constants.FVRCP_STATUS.UNKNOWN;
+        statusRadios.forEach(radio => {
+            if (radio.checked) status = radio.value;
+        });
+
+        // Map FVRCP status to light color
+        if (status === Constants.FVRCP_STATUS.VACCINATED) {
+            statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.STATUS.DONE}`;
+        } else if (status === Constants.FVRCP_STATUS.NOT_VACCINATED) {
+            statusLight.className = 'status-light delay'; // amber/warning color
+        } else {
+            statusLight.className = 'status-light todo';
+        }
+    }
+
+    /**
      * Update all status lights for a kitten (called when weight changes)
      * @param {string} kittenId - The kitten ID
      */
@@ -162,6 +197,7 @@ class FormRenderer {
             this.updateStatusLight(kittenId, med);
         });
         this.updateRingwormStatusLight(kittenId);
+        this.updateFvrcpStatusLight(kittenId);
     }
 
     /**
@@ -535,7 +571,7 @@ class FormRenderer {
     }
 
     /**
-     * Build the Other section HTML (ringworm status)
+     * Build the Other section HTML (ringworm + FVRCP status)
      */
     _buildOtherSection(kittenId) {
         // Get ringworm status
@@ -551,6 +587,19 @@ class FormRenderer {
             'positive': 'Positive'
         };
 
+        // Get FVRCP status
+        const fvrcpRadios = document.querySelectorAll(`input[name="${kittenId}-fvrcp-status"]`);
+        let fvrcpStatus = Constants.FVRCP_STATUS.UNKNOWN;
+        fvrcpRadios.forEach(radio => {
+            if (radio.checked) fvrcpStatus = radio.value;
+        });
+
+        const fvrcpStatusText = {
+            'unknown': 'Unknown',
+            'vaccinated': 'Vaccinated',
+            'not-vaccinated': 'Not vaccinated'
+        };
+
         return `
             <div class="collapsible-section">
                 <div class="dose-section-header">
@@ -559,6 +608,9 @@ class FormRenderer {
                 <div class="result-display-content">
                     <div class="result-item">
                         <strong>Ringworm</strong> ${ringwormStatusText[ringwormStatus] || ringwormStatus}
+                    </div>
+                    <div class="result-item">
+                        <strong>FVRCP Vaccine</strong> ${fvrcpStatusText[fvrcpStatus] || fvrcpStatus}
                     </div>
                 </div>
             </div>

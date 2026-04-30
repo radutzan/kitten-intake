@@ -112,6 +112,10 @@ class FormManager {
         this.renderer.updateRingwormStatusLight(kittenId);
     }
 
+    updateFvrcpStatusLight(kittenId) {
+        this.renderer.updateFvrcpStatusLight(kittenId);
+    }
+
     updateAllStatusLights(kittenId) {
         this.renderer.updateAllStatusLights(kittenId);
     }
@@ -213,6 +217,12 @@ class FormManager {
             if (radio.checked) updates.ringwormStatus = radio.value;
         });
 
+        // Get FVRCP status
+        const fvrcpRadios = document.querySelectorAll(`input[name="${Constants.ID.fvrcpName(kittenId)}"]`);
+        fvrcpRadios.forEach(radio => {
+            if (radio.checked) updates.fvrcpStatus = radio.value;
+        });
+
         // Get medication enabled states
         const medicationEnabled = {};
         Constants.MEDICATIONS.forEach(med => {
@@ -257,6 +267,7 @@ class FormManager {
         this.bindRegimenEvents(kittenId);
         this.bindSexEvents(kittenId);
         this.bindRingwormEvents(kittenId);
+        this.bindFvrcpEvents(kittenId);
         this.bindNameEvents(kittenId);
         this.bindMicrochipEvents(kittenId);
 
@@ -470,6 +481,26 @@ class FormManager {
 
                 // Then render
                 this.renderer.updateRingwormStatusLight(kittenId);
+                this.renderer.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+    }
+
+    /**
+     * FVRCP vaccine status events
+     * Data flow: Radio → State → Render
+     */
+    bindFvrcpEvents(kittenId) {
+        const fvrcpRadios = document.querySelectorAll(`input[name="${Constants.ID.fvrcpName(kittenId)}"]`);
+        fvrcpRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.updateKittenState(kittenId, { fvrcpStatus: radio.value });
+
+                this.renderer.updateFvrcpStatusLight(kittenId);
                 this.renderer.updateResultDisplay(kittenId);
                 if (window.KittenApp && window.KittenApp.resultsDisplay) {
                     window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -704,6 +735,7 @@ class FormManager {
             this.renderer.updateStatusLight(kittenId, med);
         });
         this.renderer.updateRingwormStatusLight(kittenId);
+        this.renderer.updateFvrcpStatusLight(kittenId);
 
         // Copy settings from the first kitten if available
         const allKittens = document.querySelectorAll(`.${Constants.CSS.KITTEN_FORM}`);
@@ -774,6 +806,16 @@ class FormManager {
             }
         }
 
+        // Copy FVRCP Settings
+        const sourceFvrcp = document.querySelector(`input[name="${sourceId}-fvrcp-status"]:checked`);
+        if (sourceFvrcp) {
+            const targetFvrcp = document.getElementById(`${targetId}-fvrcp-${sourceFvrcp.value}`);
+            if (targetFvrcp) {
+                targetFvrcp.checked = true;
+                this.renderer.updateFvrcpStatusLight(targetId);
+            }
+        }
+
         // Sync state from copied DOM values (State as source of truth)
         this.syncFormToState(targetId);
 
@@ -825,6 +867,7 @@ class FormManager {
         this.bindTopicalEvents(kittenId);
         this.bindRegimenEvents(kittenId);
         this.bindRingwormEvents(kittenId);
+        this.bindFvrcpEvents(kittenId);
     }
 
     /**

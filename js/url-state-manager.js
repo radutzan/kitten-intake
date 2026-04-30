@@ -9,7 +9,7 @@
  *   (Version 2 legacy: separator is '|', 3 segments per kitten — no microchip)
  *   (Version 1 legacy: separator is '|', 3 segments per kitten, 2-char flags)
  *
- * Version 2/3 bitfield layout (20 bits, encoded as 4 base64url chars):
+ * Version 2/3/4 bitfield layout (22 bits, encoded as 4 base64url chars / 24 bits):
  *   Bits 0-1:   sex (0=unknown, 1=female, 2=male)
  *   Bit 2:      topical (0=revolution, 1=advantage)
  *   Bits 3-4:   ringwormStatus (0=not-scanned, 1=negative, 2=positive)
@@ -21,6 +21,7 @@
  *   Bits 14-15: ponazuril status (0=skip, 1=todo, 2=done)
  *   Bits 16-17: drontal status (0=skip, 1=todo, 2=done)
  *   Bits 18-19: pyrantel status (0=skip, 1=todo, 2=done)
+ *   Bits 20-21: fvrcpStatus (0=unknown, 1=vaccinated, 2=not-vaccinated)
  *
  * Version 1 (legacy, decode-only) bitfield layout (11 bits, 2 base64url chars):
  *   Bits 0-1:  topical (0=revolution, 1=advantage, 2=none)
@@ -57,7 +58,8 @@ class UrlStateManager {
             panacurDays: ['1', '3', '5'],
             ponazurilDays: ['1', '3'],
             fleaStatus: ['skip', 'todo', 'delay', 'done'],
-            medStatus: ['skip', 'todo', 'done']
+            medStatus: ['skip', 'todo', 'done'],
+            fvrcpStatus: ['unknown', 'vaccinated', 'not-vaccinated']
         };
 
         // Enum mappings for version 1 (legacy decode-only)
@@ -151,6 +153,7 @@ class UrlStateManager {
                 sex: document.querySelector(`input[name="${kittenId}-sex"]:checked`)?.value || 'unknown',
                 topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
                 ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
+                fvrcpStatus: document.querySelector(`input[name="${kittenId}-fvrcp-status"]:checked`)?.value || 'unknown',
                 panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '3',
                 ponazurilDays: document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3',
                 fleaStatus: this._getMedStatusFromDom(kittenId, 'flea'),
@@ -244,6 +247,10 @@ class UrlStateManager {
         const pyrantelIndex = this.v2.medStatus.indexOf(kitten.pyrantelStatus);
         bits |= (pyrantelIndex >= 0 ? pyrantelIndex : 1) << 18;
 
+        // Bits 20-21: fvrcpStatus
+        const fvrcpIndex = this.v2.fvrcpStatus.indexOf(kitten.fvrcpStatus);
+        bits |= (fvrcpIndex >= 0 ? fvrcpIndex : 0) << 20;
+
         return this.toBase64Url(bits, 4);
     }
 
@@ -268,6 +275,7 @@ class UrlStateManager {
             sex: this.v2.sex[bits & 0x3] || 'unknown',
             topical: topicalValue,
             ringwormStatus: this.v2.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
+            fvrcpStatus: this.v2.fvrcpStatus[(bits >> 20) & 0x3] || 'unknown',
             panacurDays: this.v2.panacurDays[(bits >> 5) & 0x3] || '3',
             ponazurilDays: this.v2.ponazurilDays[(bits >> 7) & 0x1] || '3',
             medications: {
@@ -301,6 +309,7 @@ class UrlStateManager {
             sex: 'unknown',
             topical: fleaSkipped ? 'revolution' : topicalRaw,
             ringwormStatus: this.v1.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
+            fvrcpStatus: 'unknown',
             panacurDays: this.v1.panacurDays[(bits >> 5) & 0x3] || '3',
             ponazurilDays: this.v1.ponazurilDays[(bits >> 7) & 0x1] || '3',
             medications: {
@@ -335,6 +344,7 @@ class UrlStateManager {
                 sex: document.querySelector(`input[name="${kittenId}-sex"]:checked`)?.value || 'unknown',
                 topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
                 ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
+                fvrcpStatus: document.querySelector(`input[name="${kittenId}-fvrcp-status"]:checked`)?.value || 'unknown',
                 panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '3',
                 ponazurilDays: document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3',
                 fleaStatus: this._getMedStatusFromDom(kittenId, 'flea'),
@@ -644,6 +654,7 @@ class UrlStateManager {
                 if (urlKitten.panacurDays !== localKitten.panacurDays) return false;
                 if (urlKitten.ponazurilDays !== localKitten.ponazurilDays) return false;
                 if (urlKitten.ringwormStatus !== localKitten.ringwormStatus) return false;
+                if ((urlKitten.fvrcpStatus || 'unknown') !== (localKitten.fvrcpStatus || 'unknown')) return false;
 
                 // Compare medication states
                 if (urlKitten.medications && localKitten.medications) {

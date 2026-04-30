@@ -30,11 +30,12 @@ function testUrlState() {
     console.log('\n2. Flag encoding test (v2 - 20 bits):');
     const testCasesV2 = [
         {
-            name: 'All defaults (unknown sex, rev, not-scanned, 3d pan, 3d pon, all todo)',
+            name: 'All defaults (unknown sex, rev, not-scanned, fvrcp unknown, 3d pan, 3d pon, all todo)',
             kitten: {
                 sex: 'unknown',
                 topical: 'revolution',
                 ringwormStatus: 'not-scanned',
+                fvrcpStatus: 'unknown',
                 panacurDays: '3',
                 ponazurilDays: '3',
                 fleaStatus: 'todo',
@@ -46,11 +47,12 @@ function testUrlState() {
             }
         },
         {
-            name: 'All done, female, advantage, positive ringworm',
+            name: 'All done, female, advantage, positive ringworm, vaccinated',
             kitten: {
                 sex: 'female',
                 topical: 'advantage',
                 ringwormStatus: 'positive',
+                fvrcpStatus: 'vaccinated',
                 panacurDays: '5',
                 ponazurilDays: '1',
                 fleaStatus: 'done',
@@ -62,11 +64,12 @@ function testUrlState() {
             }
         },
         {
-            name: 'Mixed: male, some skipped, flea delayed',
+            name: 'Mixed: male, some skipped, flea delayed, not vaccinated',
             kitten: {
                 sex: 'male',
                 topical: 'revolution',
                 ringwormStatus: 'negative',
+                fvrcpStatus: 'not-vaccinated',
                 panacurDays: '1',
                 ponazurilDays: '1',
                 fleaStatus: 'delay',
@@ -83,6 +86,7 @@ function testUrlState() {
                 sex: 'unknown',
                 topical: 'revolution',
                 ringwormStatus: 'not-scanned',
+                fvrcpStatus: 'unknown',
                 panacurDays: '3',
                 ponazurilDays: '3',
                 fleaStatus: 'skip',
@@ -104,6 +108,7 @@ function testUrlState() {
             decoded.sex === tc.kitten.sex &&
             decoded.topical === tc.kitten.topical &&
             decoded.ringwormStatus === tc.kitten.ringwormStatus &&
+            decoded.fvrcpStatus === tc.kitten.fvrcpStatus &&
             decoded.panacurDays === tc.kitten.panacurDays &&
             decoded.ponazurilDays === tc.kitten.ponazurilDays &&
             checkMedStatus(decoded.medications.flea, tc.kitten.fleaStatus) &&
