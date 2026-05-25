@@ -169,15 +169,15 @@ const MedsData = (() => {
             id: 'advantage-ii',
             name: 'Advantage II',
             concentration: '',
-            calculationText: '0–1.9 lbs: 0.05 mL\n2–4.9 lbs: 0.1 mL\n5–9 lbs: 0.2 mL\n>9 lbs: 0.45 mL',
+            calculationText: '0–1.9 lbs: 0.05 mL\n2–4.9 lbs: 0.23 mL\n5–9 lbs: 0.4 mL\n>9 lbs: 0.8 mL',
             unit: 'mL',
             calc: {
                 type: 'weightTable',
                 rows: [
-                    { minLb: 0, maxLb: 1,        value: 0.05 },
-                    { minLb: 1, maxLb: 5,        value: 0.1 },
-                    { minLb: 5, maxLb: 9,        value: 0.2 },
-                    { minLb: 9, maxLb: Infinity, value: 0.45, maxInclusive: true }
+                    { minLb: 0, maxLb: 2,        value: 0.05 },
+                    { minLb: 2, maxLb: 5,        value: 0.23 },
+                    { minLb: 5, maxLb: 9,        value: 0.4 },
+                    { minLb: 9, maxLb: Infinity, value: 0.8, maxInclusive: true }
                 ]
             }
         },

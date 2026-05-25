@@ -52,10 +52,11 @@ const baseline = [
     ['calculateRevolutionDose',  20,   OOR],
 
     ['calculateAdvantageIIDose', 0.5,  0.05],
-    ['calculateAdvantageIIDose', 1,    0.1],
-    ['calculateAdvantageIIDose', 5,    0.2],
-    ['calculateAdvantageIIDose', 9,    0.45],
-    ['calculateAdvantageIIDose', 100,  0.45],
+    ['calculateAdvantageIIDose', 1,    0.05],
+    ['calculateAdvantageIIDose', 2,    0.23],
+    ['calculateAdvantageIIDose', 5,    0.4],
+    ['calculateAdvantageIIDose', 9,    0.8],
+    ['calculateAdvantageIIDose', 100,  0.8],
 
     ['calculateDrontalDose',     1.5,  '¼'],
     ['calculateDrontalDose',     2,    '½'],
