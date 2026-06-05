@@ -135,7 +135,7 @@ class AppState {
                 panacur: true,
                 ponazuril: true,
                 drontal: true,
-                pyrantel: true
+                pyrantel: false
             },
             ...kittenData
         };
