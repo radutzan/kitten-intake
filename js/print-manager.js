@@ -13,8 +13,8 @@ class PrintManager {
         // items). Done only around printing so the live editing DOM stays flat.
         // PER_ROW must match the grid-template-columns count in styles.css.
         this.PER_ROW = 3;
-        window.addEventListener('beforeprint', () => this.groupRecordRows());
-        window.addEventListener('afterprint', () => this.ungroupRecordRows());
+        window.addEventListener('beforeprint', () => { this.groupRecordRows(); this.applyPrintTitle(); });
+        window.addEventListener('afterprint', () => { this.ungroupRecordRows(); this.restoreTitle(); });
 
         // Also group when the print media query flips. DevTools "emulate print
         // media" toggles this (Chrome fires it; Safari may not) without firing
@@ -35,6 +35,24 @@ class PrintManager {
             row.className = 'print-row';
             container.insertBefore(row, forms[i]);
             forms.slice(i, i + this.PER_ROW).forEach(f => row.appendChild(f));
+        }
+    }
+
+    /** Mirror the print-only heading (date/time and all) into document.title so the
+     *  browser's PDF header and default filename carry it. Restored on afterprint so
+     *  the live tab title stays clean. */
+    applyPrintTitle() {
+        const heading = document.querySelector('h2.print-only');
+        if (!heading) return;
+        this._savedTitle = document.title;
+        document.title = heading.textContent;
+    }
+
+    /** Restore the tab title saved before printing. */
+    restoreTitle() {
+        if (this._savedTitle != null) {
+            document.title = this._savedTitle;
+            this._savedTitle = null;
         }
     }
 
