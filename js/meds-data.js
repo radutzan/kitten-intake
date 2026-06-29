@@ -104,7 +104,7 @@ const MedsData = (() => {
             concentration: '16 mg tablets',
             calculationText: '1 mg/kg every 24h',
             unit: 'mg',
-            notes: 'Can create suspension with water for small doses. Very bitter.',
+            notes: 'Can dissolve one 16mg tablet in 8mL water to create 1mg/0.5mL suspension.',
             warning: 'Use with caution in kittens under 11 weeks. Can cause bone marrow hypoplasia.',
             calc: { type: 'linear', mgPerKg: 1 }
         },
@@ -136,7 +136,7 @@ const MedsData = (() => {
             id: 'drontal',
             name: 'Drontal',
             concentration: 'Praziquantel 18.2 mg + Pyrantel Pamoate 72.6 mg per tablet',
-            calculationText: '1.5–1.9 lb: ¼ tab\n2–3 lb: ½ tab\n4–8 lb: 1 tab\n9–12 lb: 1½ tabs\n13–16 lb: 2 tabs',
+            calculationText: '1.5–1.9 lb: ¼ tab\n2–3.9 lb: ½ tab\n4–8.9 lb: 1 tab\n9–12.9 lb: 1½ tabs\n13–16 lb: 2 tabs',
             unit: 'tablet',
             calc: {
                 type: 'weightTable',
@@ -146,6 +146,21 @@ const MedsData = (() => {
                     { minLb: 4,   maxLb: 9,    value: '1' },
                     { minLb: 9,   maxLb: 13,   value: '1½' },
                     { minLb: 13,  maxLb: 16,   value: '2', maxInclusive: true }
+                ]
+            }
+        },
+        {
+            id: 'droncit',
+            name: 'Injectable Droncit',
+            concentration: '56.8 mg/mL',
+            calculationText: '<5 lb: 0.2 mL\n5–11 lb: 0.4 mL\n>11 lb: 0.6 mL',
+            unit: 'mL',
+            calc: {
+                type: 'weightTable',
+                rows: [
+                    { minLb: 0, maxLb: 5,  value: 0.2 },
+                    { minLb: 5, maxLb: 11,  value: 0.4 },
+                    { minLb: 11, maxLb: 20, value: 0.6, maxInclusive: true }
                 ]
             }
         },
