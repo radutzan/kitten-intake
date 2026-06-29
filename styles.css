@@ -847,7 +847,7 @@ input[type="radio"]:focus {
     font-size: var(--fs-body-medium);
     border-bottom: 1px solid var(--divider);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 6px;
 }
 
@@ -974,6 +974,11 @@ input[type="radio"]:focus {
     font-size: var(--fs-body);
 }
 
+/* When cats overflow into multiple tables, separate the stacked groups */
+.checklist-table + .checklist-table {
+    margin-top: 24px;
+}
+
 .checklist-table th,
 .checklist-table td {
     padding: 4px 8px;
@@ -1065,18 +1070,19 @@ footer {
 
 /* #region Print Styles */
 @media print {
+
     @page {
         size: landscape;
     }
 
     :root {
         --container-radius: 0;
-        --fs-body-small: 10px;
-        --fs-body-medium: 12px;
-        --fs-body-large: 14px;
+        --fs-body-small: 9px;
+        --fs-body-medium: 11px;
+        --fs-body-large: 13px;
         --fs-body: var(--fs-body-medium);
-        --fs-header-small: 14px;
-        --fs-header-large: 20px;
+        --fs-header-small: 13px;
+        --fs-header-large: 17px;
     }
 
     .no-print, header, nav, .kitten-form-content, footer {
@@ -1094,12 +1100,32 @@ footer {
         max-width: 900px;
     }
     
-    .kitten-form {
-        display: inline-block;
-        vertical-align: top;
+    /* Records print as rows of 3 (rows are wrapped in .print-row at print time
+       by PrintManager). The break unit is the .print-row BLOCK, not a grid item:
+       WebKit/Safari honors break-inside on block boxes but ignores it on grid
+       items, so a page break lands between whole rows — no sliced card/row. */
+    #kittens-container {
+        display: block;
+    }
+
+    .print-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        column-gap: 20px;
+        align-items: start;
+        margin-bottom: 32px;
+        break-inside: avoid;
+        page-break-inside: avoid; /* legacy alias for older WebKit */
+    }
+
+    .print-row:last-child {
         margin-bottom: 0;
-        margin-top: 20px;
-        margin-right: 20px;
+    }
+
+    .kitten-form {
+        display: block;
+        width: auto;
+        margin: 0;
     }
 
     .print-only {
@@ -1123,7 +1149,7 @@ footer {
     .result-display {
         padding: 0;
         background: none;
-        width: 280px;
+        width: auto;
     }
 
     .result-display .result-item {
@@ -1133,12 +1159,19 @@ footer {
     }
 
     .med-status {
-        background-color: white !important;
-        color: black !important;
-        border: 1px solid black;
-        padding: 0 6px;
+        background-color: #999 !important;
+        color: white !important;
+        border: 1px solid transparent;
+        padding: 0 4px;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
+
+
+    .med-status-done {
+        background-color: white !important;
+        color: #999 !important;
+        border: 1px solid #999;
     }
 
     .horizontal-label {
@@ -1194,6 +1227,12 @@ footer {
     
     .print-dispense-only #foster-checklist {
         display: none !important;
+    }
+
+    /* Wrapped cat-groups stack vertically on the same page; keep each table
+       whole so it only moves to a new page when it genuinely won't fit */
+    .checklist-table {
+        break-inside: avoid;
     }
 }
 /* #endregion */

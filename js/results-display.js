@@ -369,6 +369,48 @@ class ResultsDisplay {
             return p;
         }
 
+        // Split cats into chunks that fit a landscape page so the checklist
+        // wraps onto additional tables/pages instead of clipping past the edge.
+        // ponytail: 15 cols ≈ the 5 three-med cats that print fully on landscape today; tune if printer margins differ.
+        const MAX_MED_COLS_PER_TABLE = 15;
+        const chunks = [];
+        let current = [];
+        let cols = 0;
+        checklistData.kittenHeaders.forEach(kitten => {
+            const need = kitten.medications.length;
+            if (current.length && cols + need > MAX_MED_COLS_PER_TABLE) {
+                chunks.push(current);
+                current = [];
+                cols = 0;
+            }
+            current.push(kitten);
+            cols += need;
+        });
+        if (current.length) chunks.push(current);
+
+        if (chunks.length === 1) {
+            return this._buildChecklistTable(checklistData.kittenHeaders, checklistData.rows);
+        }
+
+        const wrapper = document.createElement('div');
+        chunks.forEach(chunk => {
+            const ids = new Set(chunk.map(k => k.id));
+            const rows = checklistData.rows.map(row => ({
+                ...row,
+                cells: row.cells.filter(cell => ids.has(cell.kittenId))
+            }));
+            wrapper.appendChild(this._buildChecklistTable(chunk, rows));
+        });
+        return wrapper;
+    }
+
+    /**
+     * Build a single checklist table for a subset of cats.
+     * @param {Array} kittenHeaders - Kittens to render as column groups
+     * @param {Array} rows - Row data with cells already filtered to these kittens
+     * @returns {HTMLElement} Table element
+     */
+    _buildChecklistTable(kittenHeaders, rows) {
         const table = document.createElement('table');
         table.className = 'checklist-table';
 
@@ -384,7 +426,7 @@ class ResultsDisplay {
         headerRow1.appendChild(dateHeader);
 
         // Kitten headers
-        checklistData.kittenHeaders.forEach(kitten => {
+        kittenHeaders.forEach(kitten => {
             const kittenHeader = document.createElement('th');
             kittenHeader.colSpan = kitten.medications.length;
             kittenHeader.className = 'kitten-header';
@@ -407,7 +449,7 @@ class ResultsDisplay {
 
         // Build body
         const tbody = document.createElement('tbody');
-        checklistData.rows.forEach(row => {
+        rows.forEach(row => {
             const tr = document.createElement('tr');
 
             // Date cell
