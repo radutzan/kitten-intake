@@ -99,7 +99,7 @@ const FormTemplate = {
                 <div class="medication-labels">
                     <div class="left">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="${kittenId}-flea-enabled" checked>
+                            <input type="checkbox" id="${kittenId}-flea-enabled">
                             <span class="slider"></span>
                         </label>
                         <span class="med-name">Flea Med</span>
@@ -140,7 +140,7 @@ const FormTemplate = {
                 <div class="medication-labels">
                     <div class="left">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="${kittenId}-capstar-enabled" checked>
+                            <input type="checkbox" id="${kittenId}-capstar-enabled">
                             <span class="slider"></span>
                         </label>
                         <span class="med-name">Capstar</span>
@@ -176,7 +176,7 @@ const FormTemplate = {
                 <div class="medication-labels">
                     <div class="left">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="${kittenId}-panacur-enabled" checked>
+                            <input type="checkbox" id="${kittenId}-panacur-enabled">
                             <span class="slider"></span>
                         </label>
                         <span class="med-name">Panacur</span>
@@ -215,7 +215,7 @@ const FormTemplate = {
                 <div class="medication-labels">
                     <div class="left">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="${kittenId}-ponazuril-enabled" checked>
+                            <input type="checkbox" id="${kittenId}-ponazuril-enabled">
                             <span class="slider"></span>
                         </label>
                         <span class="med-name">Ponazuril</span>
@@ -254,7 +254,7 @@ const FormTemplate = {
                 <div class="medication-labels">
                     <div class="left">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="${kittenId}-drontal-enabled" checked>
+                            <input type="checkbox" id="${kittenId}-drontal-enabled">
                             <span class="slider"></span>
                         </label>
                         <span class="med-name">Drontal</span>
