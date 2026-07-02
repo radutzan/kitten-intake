@@ -1100,32 +1100,26 @@ footer {
         max-width: 900px;
     }
     
-    /* Records print as rows of 3 (rows are wrapped in .print-row at print time
-       by PrintManager). The break unit is the .print-row BLOCK, not a grid item:
-       WebKit/Safari honors break-inside on block boxes but ignores it on grid
-       items, so a page break lands between whole rows — no sliced card/row. */
+    /* Records print 3-up via a plain CSS grid — no JS. iOS Safari never fires
+       beforeprint or the matchMedia('print') change event, so any print-time DOM
+       grouping silently no-ops there and cards fall back to full-width block rows.
+       ponytail: CSS grid holds the columns everywhere; we give up WebKit page-break
+       control on the cards (WebKit ignores break-inside on grid items anyway) —
+       keeping the grid matters more than avoiding a rare mid-card split. */
     #kittens-container {
-        display: block;
-    }
-
-    .print-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         column-gap: 20px;
+        row-gap: 32px;
         align-items: start;
-        margin-bottom: 32px;
-        break-inside: avoid;
-        page-break-inside: avoid; /* legacy alias for older WebKit */
-    }
-
-    .print-row:last-child {
-        margin-bottom: 0;
     }
 
     .kitten-form {
         display: block;
         width: auto;
         margin: 0;
+        break-inside: avoid;
+        page-break-inside: avoid; /* best-effort; honored by Chrome, ignored by WebKit */
     }
 
     .print-only {
