@@ -154,7 +154,7 @@ class UrlStateManager {
                 topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
                 ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
                 fvrcpStatus: document.querySelector(`input[name="${kittenId}-fvrcp-status"]:checked`)?.value || 'unknown',
-                panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '3',
+                panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5',
                 ponazurilDays: document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3',
                 fleaStatus: this._getMedStatusFromDom(kittenId, 'flea'),
                 capstarStatus: this._getMedStatusFromDom(kittenId, 'capstar'),
@@ -217,7 +217,7 @@ class UrlStateManager {
 
         // Bits 5-6: panacurDays (1, 3, or 5)
         const panacurDaysIndex = this.v2.panacurDays.indexOf(kitten.panacurDays);
-        bits |= (panacurDaysIndex >= 0 ? panacurDaysIndex : 1) << 5; // default 3d
+        bits |= (panacurDaysIndex >= 0 ? panacurDaysIndex : 2) << 5; // default 5d
 
         // Bit 7: ponazurilDays (1 or 3)
         const ponazurilDaysIndex = this.v2.ponazurilDays.indexOf(kitten.ponazurilDays);
@@ -276,7 +276,7 @@ class UrlStateManager {
             topical: topicalValue,
             ringwormStatus: this.v2.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
             fvrcpStatus: this.v2.fvrcpStatus[(bits >> 20) & 0x3] || 'unknown',
-            panacurDays: this.v2.panacurDays[(bits >> 5) & 0x3] || '3',
+            panacurDays: this.v2.panacurDays[(bits >> 5) & 0x3] || '5',
             ponazurilDays: this.v2.ponazurilDays[(bits >> 7) & 0x1] || '3',
             medications: {
                 flea: { enabled: fleaStatus !== 'skip', status: fleaStatus === 'skip' ? 'todo' : fleaStatus },
@@ -310,7 +310,7 @@ class UrlStateManager {
             topical: fleaSkipped ? 'revolution' : topicalRaw,
             ringwormStatus: this.v1.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
             fvrcpStatus: 'unknown',
-            panacurDays: this.v1.panacurDays[(bits >> 5) & 0x3] || '3',
+            panacurDays: this.v1.panacurDays[(bits >> 5) & 0x3] || '5',
             ponazurilDays: this.v1.ponazurilDays[(bits >> 7) & 0x1] || '3',
             medications: {
                 flea: { enabled: !fleaSkipped, status: fleaSkipped ? 'todo' : (fleaGiven ? 'done' : 'todo') },
@@ -345,7 +345,7 @@ class UrlStateManager {
                 topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
                 ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
                 fvrcpStatus: document.querySelector(`input[name="${kittenId}-fvrcp-status"]:checked`)?.value || 'unknown',
-                panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '3',
+                panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5',
                 ponazurilDays: document.querySelector(`input[name="${kittenId}-ponazuril"]:checked`)?.value || '3',
                 fleaStatus: this._getMedStatusFromDom(kittenId, 'flea'),
                 capstarStatus: this._getMedStatusFromDom(kittenId, 'capstar'),

@@ -166,7 +166,7 @@ const FormTemplate = {
     },
 
     /**
-     * Generate the Panacur row (1/3/5 day regimen)
+     * Generate the Panacur row (5-day regimen)
      * @param {string} kittenId - The kitten ID
      * @returns {string} HTML string
      */
@@ -187,11 +187,8 @@ const FormTemplate = {
                     </div>
                 </div>
                 <div class="medication-choices">
-                    <div class="radio-group">
-                        <input type="radio" name="${kittenId}-panacur" value="3" id="${kittenId}-panacur-3" checked>
-                        <label for="${kittenId}-panacur-3">3d</label>
-                        <input type="radio" name="${kittenId}-panacur" value="5" id="${kittenId}-panacur-5">
-                        <label for="${kittenId}-panacur-5">5d</label>
+                    <div class="single-option">
+                        <span class="option-label">5 Days</span>
                     </div>
                     <div class="radio-group status-control">
                         <input type="radio" name="${kittenId}-panacur-status" value="todo" id="${kittenId}-panacur-status-todo" checked>
