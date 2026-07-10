@@ -720,6 +720,17 @@ input[type="radio"]:focus {
     pointer-events: none;
 }
 
+/* Pyrantel locked out while Drontal (tablet) is selected — keep the
+   "Included in Drontal" explanation readable */
+.medication-row.locked .medication-choices {
+    opacity: 0.55;
+}
+
+.medication-row.locked .toggle-switch {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
 .medication-labels {
     display: flex;
     gap: 12px;

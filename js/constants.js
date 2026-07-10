@@ -5,7 +5,8 @@
 
 const Constants = {
     // Medication type keys (lowercase, used in form element IDs)
-    MEDICATIONS: ['flea', 'capstar', 'ponazuril', 'drontal', 'pyrantel', 'panacur'],
+    // Order here defines form and results rendering order
+    MEDICATIONS: ['flea', 'capstar', 'drontal', 'nexgard', 'ponazuril', 'panacur', 'pyrantel'],
 
     // Display names for medications
     MEDICATION_DISPLAY_NAMES: {
@@ -13,8 +14,15 @@ const Constants = {
         capstar: 'Capstar',
         panacur: 'Panacur',
         ponazuril: 'Ponazuril',
-        drontal: 'Drontal',
+        drontal: 'Dewormer',
+        nexgard: 'NexGard Combo',
         pyrantel: 'Pyrantel'
+    },
+
+    // Dewormer forms for the Droncit/Drontal row
+    DRONTAL_TYPE: {
+        DRONCIT: 'droncit',   // injectable (Praziquantel only)
+        DRONTAL: 'drontal'    // tablet (Praziquantel + Pyrantel)
     },
 
     // Topical medication brands
@@ -113,6 +121,7 @@ const Constants = {
         // Radio button name patterns (for querySelectorAll)
         medStatusName: (kittenId, med) => `${kittenId}-${med}-status`,
         topicalName: (kittenId) => `${kittenId}-topical`,
+        drontalTypeName: (kittenId) => `${kittenId}-drontal-type`,
         panacurName: (kittenId) => `${kittenId}-panacur`,
         ponazurilName: (kittenId) => `${kittenId}-ponazuril`,
         sexName: (kittenId) => `${kittenId}-sex`,
@@ -132,6 +141,7 @@ const Constants = {
 Object.freeze(Constants);
 Object.freeze(Constants.MEDICATIONS);
 Object.freeze(Constants.MEDICATION_DISPLAY_NAMES);
+Object.freeze(Constants.DRONTAL_TYPE);
 Object.freeze(Constants.TOPICAL);
 Object.freeze(Constants.STATUS);
 Object.freeze(Constants.SEX);

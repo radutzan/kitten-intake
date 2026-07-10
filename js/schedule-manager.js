@@ -80,7 +80,15 @@ class ScheduleManager {
                 } else if (med === 'drontal') {
                     if (!isSkipped('drontal') && !kitten.day1Given.drontal && kitten.doses.drontal !== outOfRangeString) {
                         schedule.medications.drontal = {
+                            type: kitten.drontalType || 'droncit',
                             dose: kitten.doses.drontal,
+                            days: this.generateDaysFromToday(1, notGivenStartOffset)
+                        };
+                    }
+                } else if (med === 'nexgard') {
+                    if (!isSkipped('nexgard') && !kitten.day1Given.nexgard && kitten.doses.nexgard !== outOfRangeString) {
+                        schedule.medications.nexgard = {
+                            dose: kitten.doses.nexgard,
                             days: this.generateDaysFromToday(1, notGivenStartOffset)
                         };
                     }
@@ -164,9 +172,13 @@ class ScheduleManager {
             topicalAmount = kitten.doses.topical === outOfRangeString ? 0 : kitten.doses.topical;
         }
 
-        // Drontal: 0 if skipped, otherwise 1 dose if not given at center
+        // Droncit/Drontal: 0 if skipped, otherwise 1 dose if not given at center
         const drontalAmount = isSkipped('drontal') ? 0 :
             (kitten.day1Given.drontal ? 0 : 1);
+
+        // NexGard Combo: 0 if skipped/out of range, otherwise dose mL if not given at center
+        const nexgardAmount = (isSkipped('nexgard') || kitten.doses.nexgard === this.appState.getOutOfRangeString()) ? 0 :
+            ((kitten.day1Given && kitten.day1Given.nexgard) ? 0 : kitten.doses.nexgard);
 
         // Pyrantel: 0 if skipped, otherwise 1 dose if not given at center
         const pyrantelAmount = isSkipped('pyrantel') ? 0 :
@@ -191,6 +203,9 @@ class ScheduleManager {
             },
             drontal: {
                 amount: drontalAmount
+            },
+            nexgard: {
+                amount: nexgardAmount
             },
             capstar: {
                 amount: capstarAmount
@@ -251,11 +266,24 @@ class ScheduleManager {
                 }
             } else if (med === 'drontal') {
                 if (remaining.drontal.amount > 0 && kitten.doses.drontal !== outOfRangeString) {
+                    const isTablet = kitten.drontalType === 'drontal';
+                    const doseStr = isTablet
+                        ? kitten.doses.drontal + ' tablet(s)'
+                        : AppState.formatNumber(kitten.doses.drontal, 2) + ' mL';
                     summary.push({
-                        medication: 'Drontal',
-                        dose: kitten.doses.drontal + ' tablet(s)',
+                        medication: isTablet ? 'Drontal' : 'Droncit',
+                        dose: doseStr,
                         days: 1,
-                        total: kitten.doses.drontal + ' tablet(s)'
+                        total: doseStr
+                    });
+                }
+            } else if (med === 'nexgard') {
+                if (remaining.nexgard && remaining.nexgard.amount > 0) {
+                    summary.push({
+                        medication: 'NexGard Combo',
+                        dose: AppState.formatNumber(kitten.doses.nexgard, 2) + ' mL',
+                        days: 1,
+                        total: AppState.formatNumber(remaining.nexgard.amount, 2) + ' mL'
                     });
                 }
             } else if (med === 'pyrantel') {

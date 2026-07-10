@@ -194,6 +194,12 @@ class FormManager {
             if (radio.checked) updates.topical = radio.value;
         });
 
+        // Get dewormer type (Droncit injectable / Drontal tablet)
+        const drontalTypeRadios = document.querySelectorAll(`input[name="${Constants.ID.drontalTypeName(kittenId)}"]`);
+        drontalTypeRadios.forEach(radio => {
+            if (radio.checked) updates.drontalType = radio.value;
+        });
+
         // Get regimen days
         const panacurRadios = document.querySelectorAll(`input[name="${Constants.ID.panacurName(kittenId)}"]`);
         panacurRadios.forEach(radio => {
@@ -264,6 +270,7 @@ class FormManager {
         this.bindMedicationToggleEvents(kittenId);
         this.bindMedicationStatusEvents(kittenId);
         this.bindTopicalEvents(kittenId);
+        this.bindDrontalTypeEvents(kittenId);
         this.bindRegimenEvents(kittenId);
         this.bindSexEvents(kittenId);
         this.bindRingwormEvents(kittenId);
@@ -273,6 +280,7 @@ class FormManager {
 
         // Initialize state from current form values
         this.syncFormToState(kittenId);
+        this.updatePyrantelAvailability(kittenId);
     }
 
     /**
@@ -370,6 +378,9 @@ class FormManager {
                     // Then render
                     this.renderer.updateMedicationRowState(kittenId, med);
                     this.renderer.updateStatusLight(kittenId, med);
+                    if (med === 'drontal') {
+                        this.updatePyrantelAvailability(kittenId);
+                    }
                     this.renderer.updateResultDisplay(kittenId);
                     if (window.KittenApp && window.KittenApp.resultsDisplay) {
                         window.KittenApp.resultsDisplay.updateResultsAutomatically();
@@ -428,6 +439,64 @@ class FormManager {
                 this.autoSaveFormData();
             });
         });
+    }
+
+    /**
+     * Dewormer type events (Droncit injectable / Drontal tablet)
+     * Data flow: Radio → State → Render
+     */
+    bindDrontalTypeEvents(kittenId) {
+        const typeRadios = document.querySelectorAll(`input[name="${Constants.ID.drontalTypeName(kittenId)}"]`);
+        typeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                // Update state first
+                this.updateKittenState(kittenId, { drontalType: radio.value });
+
+                // Then render
+                this.updatePyrantelAvailability(kittenId);
+                this.renderer.updateStatusLight(kittenId, 'drontal');
+                this.renderer.updateResultDisplay(kittenId);
+                if (window.KittenApp && window.KittenApp.resultsDisplay) {
+                    window.KittenApp.resultsDisplay.updateResultsAutomatically();
+                }
+                this.autoSaveFormData();
+            });
+        });
+    }
+
+    /**
+     * Enable/disable the Pyrantel row based on the dewormer selection.
+     * Drontal tablets already contain Pyrantel, so the two are never given
+     * together — lock Pyrantel out while Drontal (tablet) is active.
+     */
+    updatePyrantelAvailability(kittenId) {
+        const pyrantelToggle = document.getElementById(Constants.ID.medEnabled(kittenId, 'pyrantel'));
+        if (!pyrantelToggle) return;
+
+        const drontalToggle = document.getElementById(Constants.ID.medEnabled(kittenId, 'drontal'));
+        const drontalType = document.querySelector(`input[name="${Constants.ID.drontalTypeName(kittenId)}"]:checked`)?.value
+            || Constants.DRONTAL_TYPE.DRONCIT;
+        const blocked = !!(drontalToggle && drontalToggle.checked) && drontalType === Constants.DRONTAL_TYPE.DRONTAL;
+
+        if (blocked && pyrantelToggle.checked) {
+            // Uncheck via a change event so existing handlers sync state,
+            // status lights, results, and auto-save.
+            pyrantelToggle.checked = false;
+            pyrantelToggle.dispatchEvent(new Event('change'));
+        }
+
+        pyrantelToggle.disabled = blocked;
+        document.querySelectorAll(`input[name="${Constants.ID.medStatusName(kittenId, 'pyrantel')}"]`)
+            .forEach(input => { input.disabled = blocked; });
+
+        const row = document.getElementById(Constants.ID.medRow(kittenId, 'pyrantel'));
+        if (row) row.classList.toggle('locked', blocked);
+
+        // Explain the lockout in place of the "Single Dose" label
+        const optionLabel = document.querySelector(`#${Constants.ID.medRow(kittenId, 'pyrantel')} .option-label`);
+        if (optionLabel) {
+            optionLabel.textContent = blocked ? 'Included in Drontal' : 'Single Dose';
+        }
     }
 
     /**
@@ -781,6 +850,14 @@ class FormManager {
             const targetTopical = document.getElementById(`${targetId}-topical-${sourceTopical.value}`);
             if (targetTopical) targetTopical.checked = true;
         }
+
+        // Copy Dewormer type (Droncit / Drontal)
+        const sourceDrontalType = document.querySelector(`input[name="${sourceId}-drontal-type"]:checked`);
+        if (sourceDrontalType) {
+            const targetDrontalType = document.getElementById(`${targetId}-drontal-type-${sourceDrontalType.value}`);
+            if (targetDrontalType) targetDrontalType.checked = true;
+        }
+        this.updatePyrantelAvailability(targetId);
 
         // Copy Panacur Duration
         const sourcePanacur = document.querySelector(`input[name="${sourceId}-panacur"]:checked`);

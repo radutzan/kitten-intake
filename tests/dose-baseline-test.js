@@ -66,6 +66,21 @@ const baseline = [
     ['calculateDrontalDose',     17,   OOR],
     ['calculateDrontalDose',     1,    OOR],
 
+    ['calculateDroncitDose',     1,    OOR],
+    ['calculateDroncitDose',     1.5,  0.2],
+    ['calculateDroncitDose',     4.9,  0.2],
+    ['calculateDroncitDose',     5,    0.4],
+    ['calculateDroncitDose',     11,   0.6],
+    ['calculateDroncitDose',     20,   0.6],
+    ['calculateDroncitDose',     20.5, OOR],
+
+    ['calculateNexgardDose',     1,    OOR],
+    ['calculateNexgardDose',     1.8,  0.3],
+    ['calculateNexgardDose',     5.5,  0.3],
+    ['calculateNexgardDose',     5.6,  0.9],
+    ['calculateNexgardDose',     16.5, 0.9],
+    ['calculateNexgardDose',     16.6, OOR],
+
     ['calculateCapstarDose',     2,    '1'],
     ['calculateCapstarDose',     25,   '1'],
     ['calculateCapstarDose',     1,    OOR],

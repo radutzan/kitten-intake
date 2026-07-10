@@ -91,7 +91,13 @@ class FormRenderer {
                 : DoseCalculator.calculateAdvantageIIDose(weightLb);
             isOutOfRange = dose === outOfRangeString || dose === 0;
         } else if (medType === 'drontal') {
-            const dose = DoseCalculator.calculateDrontalDose(weightLb);
+            const drontalType = this._getDrontalType(kittenId);
+            const dose = drontalType === Constants.DRONTAL_TYPE.DRONTAL
+                ? DoseCalculator.calculateDrontalDose(weightLb)
+                : DoseCalculator.calculateDroncitDose(weightLb);
+            isOutOfRange = dose === outOfRangeString;
+        } else if (medType === 'nexgard') {
+            const dose = DoseCalculator.calculateNexgardDose(weightLb);
             isOutOfRange = dose === outOfRangeString;
         } else if (medType === 'capstar') {
             const dose = DoseCalculator.calculateCapstarDose(weightLb);
@@ -269,13 +275,14 @@ class FormRenderer {
             if (radio.checked) topical = radio.value;
         });
 
+        // Get selected dewormer type (Droncit injectable or Drontal tablet)
+        const drontalType = this._getDrontalType(kittenId);
+
         // Get medication statuses
-        const fleaStatus = this.getMedicationStatus(kittenId, 'flea');
-        const capstarStatus = this.getMedicationStatus(kittenId, 'capstar');
-        const panacurStatus = this.getMedicationStatus(kittenId, 'panacur');
-        const ponazurilStatus = this.getMedicationStatus(kittenId, 'ponazuril');
-        const drontalStatus = this.getMedicationStatus(kittenId, 'drontal');
-        const pyrantelStatus = this.getMedicationStatus(kittenId, 'pyrantel');
+        const statuses = {};
+        Constants.MEDICATIONS.forEach(med => {
+            statuses[med] = this.getMedicationStatus(kittenId, med);
+        });
 
         // Get regimen days
         const panacurDays = this._getRegimenDays(kittenId, 'panacur', Constants.DEFAULTS.PANACUR_DAYS);
@@ -285,13 +292,11 @@ class FormRenderer {
         const doses = this._calculateAllDoses(weightLb, topical);
 
         // Update inline dose displays
-        this._updateInlineDoseDisplays(kittenId, doses, topical);
+        this._updateInlineDoseDisplays(kittenId, doses, topical, drontalType);
 
         // Build the result display content
-        const content = this._buildResultDisplayContent(
-            doses, topical, fleaStatus, capstarStatus, panacurStatus,
-            ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays, kittenId
-        );
+        const content = this._buildDosesSection(doses, topical, drontalType, statuses, panacurDays, ponazurilDays)
+            + this._buildOtherSection(kittenId);
 
         doseDisplay.classList.remove(Constants.CSS.EMPTY);
         doseContent.innerHTML = content;
@@ -310,6 +315,16 @@ class FormRenderer {
             const doseEl = document.getElementById(`${kittenId}-${med}-dose`);
             if (doseEl) doseEl.textContent = '';
         });
+    }
+
+    /**
+     * Get the selected dewormer type for the Droncit/Drontal row
+     * @param {string} kittenId - The kitten ID
+     * @returns {string} 'droncit' (injectable) or 'drontal' (tablet)
+     */
+    _getDrontalType(kittenId) {
+        const checked = document.querySelector(`input[name="${Constants.ID.drontalTypeName(kittenId)}"]:checked`);
+        return checked ? checked.value : Constants.DRONTAL_TYPE.DRONCIT;
     }
 
     /**
@@ -339,6 +354,8 @@ class FormRenderer {
             panacur: this.doseCalculator.calculatePanacurDose(weightLb),
             ponazuril: this.doseCalculator.calculatePonazurilDose(weightLb),
             drontal: this.doseCalculator.calculateDrontalDose(weightLb),
+            droncit: this.doseCalculator.calculateDroncitDose(weightLb),
+            nexgard: this.doseCalculator.calculateNexgardDose(weightLb),
             revolution: this.doseCalculator.calculateRevolutionDose(weightLb),
             advantage: this.doseCalculator.calculateAdvantageIIDose(weightLb),
             capstar: this.doseCalculator.calculateCapstarDose ?
@@ -354,7 +371,7 @@ class FormRenderer {
      * @param {Object} doses - Calculated doses
      * @param {string} topical - Selected topical type
      */
-    _updateInlineDoseDisplays(kittenId, doses, topical) {
+    _updateInlineDoseDisplays(kittenId, doses, topical, drontalType) {
         const outOfRange = doses.outOfRange;
 
         // Flea dose
@@ -382,10 +399,20 @@ class FormRenderer {
             ponazurilDoseEl.textContent = `${AppState.formatNumber(doses.ponazuril, 2)} mL/day`;
         }
 
-        // Drontal dose
+        // Droncit/Drontal dose (tablet or injectable based on type)
         const drontalDoseEl = document.getElementById(`${kittenId}-drontal-dose`);
         if (drontalDoseEl) {
-            drontalDoseEl.textContent = doses.drontal === outOfRange ? outOfRange : `${doses.drontal} tablet(s)`;
+            if (drontalType === Constants.DRONTAL_TYPE.DRONTAL) {
+                drontalDoseEl.textContent = doses.drontal === outOfRange ? outOfRange : `${doses.drontal} tablet(s)`;
+            } else {
+                drontalDoseEl.textContent = doses.droncit === outOfRange ? outOfRange : `${AppState.formatNumber(doses.droncit, 2)} mL`;
+            }
+        }
+
+        // NexGard Combo dose
+        const nexgardDoseEl = document.getElementById(`${kittenId}-nexgard-dose`);
+        if (nexgardDoseEl) {
+            nexgardDoseEl.textContent = doses.nexgard === outOfRange ? outOfRange : `${AppState.formatNumber(doses.nexgard, 2)} mL`;
         }
 
         // Pyrantel dose
@@ -396,30 +423,10 @@ class FormRenderer {
     }
 
     /**
-     * Build the complete result display HTML content
-     * @returns {string} HTML content
-     */
-    _buildResultDisplayContent(doses, topical, fleaStatus, capstarStatus, panacurStatus,
-                               ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays, kittenId) {
-        const outOfRange = doses.outOfRange;
-        let content = '';
-
-        // Doses section
-        content += this._buildDosesSection(doses, topical, fleaStatus, capstarStatus,
-                                           panacurStatus, ponazurilStatus, drontalStatus,
-                                           pyrantelStatus, panacurDays, ponazurilDays);
-
-        // Other section (ringworm)
-        content += this._buildOtherSection(kittenId);
-
-        return content;
-    }
-
-    /**
      * Build the Doses section HTML
+     * @param {Object} statuses - Medication statuses keyed by med type
      */
-    _buildDosesSection(doses, topical, fleaStatus, capstarStatus, panacurStatus,
-                       ponazurilStatus, drontalStatus, pyrantelStatus, panacurDays, ponazurilDays) {
+    _buildDosesSection(doses, topical, drontalType, statuses, panacurDays, ponazurilDays) {
         const outOfRange = doses.outOfRange;
         let content = `
             <div class="collapsible-section">
@@ -430,9 +437,6 @@ class FormRenderer {
         `;
 
         // Render in Constants.MEDICATIONS order (matches form)
-        const statuses = { flea: fleaStatus, capstar: capstarStatus, panacur: panacurStatus,
-                           ponazuril: ponazurilStatus, drontal: drontalStatus, pyrantel: pyrantelStatus };
-
         Constants.MEDICATIONS.forEach(med => {
             const status = statuses[med];
             if (status === Constants.STATUS.SKIP) return;
@@ -466,9 +470,20 @@ class FormRenderer {
                     </div>
                 `;
             } else if (med === 'drontal') {
+                const isTablet = drontalType === Constants.DRONTAL_TYPE.DRONTAL;
+                const drontalName = isTablet ? 'Drontal' : 'Droncit';
+                const drontalDose = isTablet ? doses.drontal : doses.droncit;
+                const drontalDoseStr = drontalDose === outOfRange ? outOfRange
+                    : (isTablet ? drontalDose + ' tablet(s)' : AppState.formatNumber(drontalDose, 2) + ' mL');
                 content += `
                     <div class="result-item">
-                        <strong>Drontal</strong> <span class="result-item-dose">${doses.drontal === outOfRange ? outOfRange : doses.drontal + ' tablet(s)'}</span>${statusBadge}
+                        <strong>${drontalName}</strong> <span class="result-item-dose">${drontalDoseStr}</span>${statusBadge}
+                    </div>
+                `;
+            } else if (med === 'nexgard') {
+                content += `
+                    <div class="result-item">
+                        <strong>NexGard Combo</strong> <span class="result-item-dose">${doses.nexgard === outOfRange ? outOfRange : AppState.formatNumber(doses.nexgard, 2) + ' mL'}</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'pyrantel') {
@@ -516,7 +531,7 @@ class FormRenderer {
         });
 
         const ringwormStatusText = {
-            'not-scanned': 'Not scanned',
+            'not-scanned': 'Unknown',
             'negative': 'Negative',
             'positive': 'Positive'
         };

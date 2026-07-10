@@ -117,6 +117,7 @@ class AppState {
             weightGrams: kittenData.weightGrams || 0,
             weightLb: kittenData.weightLb || 0,
             topical: kittenData.topical || Constants.DEFAULTS.TOPICAL,
+            drontalType: kittenData.drontalType || Constants.DRONTAL_TYPE.DRONCIT,
             panacurDays: kittenData.panacurDays ?? Constants.DEFAULTS.PANACUR_DAYS,
             ponazurilDays: kittenData.ponazurilDays ?? Constants.DEFAULTS.PONAZURIL_DAYS,
             ringwormStatus: kittenData.ringwormStatus || Constants.RINGWORM_STATUS.NOT_SCANNED,
@@ -127,6 +128,7 @@ class AppState {
                 panacur: Constants.STATUS.TODO,
                 ponazuril: Constants.STATUS.TODO,
                 drontal: Constants.STATUS.TODO,
+                nexgard: Constants.STATUS.TODO,
                 pyrantel: Constants.STATUS.TODO
             },
             medicationEnabled: kittenData.medicationEnabled || {
@@ -135,6 +137,7 @@ class AppState {
                 panacur: true,
                 ponazuril: true,
                 drontal: true,
+                nexgard: false,
                 pyrantel: false
             },
             ...kittenData
@@ -358,12 +361,20 @@ class AppState {
                 if (radio.checked) topical = radio.value;
             });
 
+            // Get dewormer type (Droncit injectable / Drontal tablet)
+            const drontalTypeRadios = document.querySelectorAll(`input[name="${Constants.ID.drontalTypeName(kittenId)}"]`);
+            let drontalType = Constants.DRONTAL_TYPE.DRONCIT;
+            drontalTypeRadios.forEach(radio => {
+                if (radio.checked) drontalType = radio.value;
+            });
+
             // Get medication statuses using new system
             const fleaStatus = this.getMedicationStatus(kittenId, 'flea');
             const capstarStatus = this.getMedicationStatus(kittenId, 'capstar');
             const panacurStatus = this.getMedicationStatus(kittenId, 'panacur');
             const ponazurilStatus = this.getMedicationStatus(kittenId, 'ponazuril');
             const drontalStatus = this.getMedicationStatus(kittenId, 'drontal');
+            const nexgardStatus = this.getMedicationStatus(kittenId, 'nexgard');
             const pyrantelStatus = this.getMedicationStatus(kittenId, 'pyrantel');
 
             // Convert status to boolean for backward compatibility
@@ -385,6 +396,7 @@ class AppState {
             const panacurDay1Given = panacurStatus === Constants.STATUS.DONE;
             const ponazurilDay1Given = ponazurilStatus === Constants.STATUS.DONE;
             const drontalDay1Given = drontalStatus === Constants.STATUS.DONE;
+            const nexgardDay1Given = nexgardStatus === Constants.STATUS.DONE;
             const capstarDay1Given = capstarStatus === Constants.STATUS.DONE;
             const pyrantelDay1Given = pyrantelStatus === Constants.STATUS.DONE;
 
@@ -417,6 +429,7 @@ class AppState {
                 weightGrams,
                 weightLb,
                 topical: fleaStatus === Constants.STATUS.SKIP ? Constants.TOPICAL.NONE : topical,
+                drontalType,
                 fleaGiven,
                 panacurDays: panacurStatus === Constants.STATUS.SKIP ? 0 : panacurDays,
                 ponazurilDays: ponazurilStatus === Constants.STATUS.SKIP ? 0 : ponazurilDays,
@@ -426,6 +439,7 @@ class AppState {
                     panacur: panacurDay1Given,
                     ponazuril: ponazurilDay1Given,
                     drontal: drontalDay1Given,
+                    nexgard: nexgardDay1Given,
                     capstar: capstarDay1Given,
                     pyrantel: pyrantelDay1Given
                 },
@@ -436,6 +450,7 @@ class AppState {
                     panacur: panacurStatus,
                     ponazuril: ponazurilStatus,
                     drontal: drontalStatus,
+                    nexgard: nexgardStatus,
                     pyrantel: pyrantelStatus
                 }
             };

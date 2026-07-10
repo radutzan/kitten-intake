@@ -90,7 +90,9 @@ class ResultsDisplay {
             ponazuril: 0,
             revolution: 0,
             advantage: 0,
-            drontal: 0,
+            drontal: 0,   // tablet dose count
+            droncit: 0,   // mL
+            nexgard: 0,   // mL
             capstar: 0,
             pyrantel: 0
         };
@@ -111,7 +113,14 @@ class ResultsDisplay {
                 totals.advantage += remaining.topical.amount;
             }
             if (kitten.doses.drontal !== outOfRangeString) {
-                totals.drontal += remaining.drontal.amount;
+                if (kitten.drontalType === 'drontal') {
+                    totals.drontal += remaining.drontal.amount;
+                } else {
+                    totals.droncit += remaining.drontal.amount * kitten.doses.drontal;
+                }
+            }
+            if (remaining.nexgard) {
+                totals.nexgard += remaining.nexgard.amount;
             }
             if (remaining.capstar) {
                 totals.capstar += remaining.capstar.amount;
@@ -185,11 +194,29 @@ class ResultsDisplay {
                     `);
                 }
             } else if (med === 'drontal') {
+                // Droncit/Drontal split by selected form per kitten
+                if (totals.droncit > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>Droncit</span>
+                            <strong>${AppState.formatNumber(totals.droncit, 2)} mL</strong>
+                        </div>
+                    `);
+                }
                 if (totals.drontal > 0) {
                     items.push(`
                         <div class="total-item">
                             <span>Drontal</span>
                             <strong>${totals.drontal} tablet(s)</strong>
+                        </div>
+                    `);
+                }
+            } else if (med === 'nexgard') {
+                if (totals.nexgard > 0) {
+                    items.push(`
+                        <div class="total-item">
+                            <span>NexGard Combo</span>
+                            <strong>${AppState.formatNumber(totals.nexgard, 2)} mL</strong>
                         </div>
                     `);
                 }
@@ -307,13 +334,18 @@ class ResultsDisplay {
      * Get display name for medication type
      */
     _getMedicationDisplayName(medType, medData) {
+        if (medType === 'topical') {
+            return medData.type === 'revolution' ? 'Revolution' : 'Advantage II';
+        }
+        if (medType === 'drontal') {
+            return medData.type === 'drontal' ? 'Drontal' : 'Droncit';
+        }
         const names = {
             panacur: 'Panacur',
             ponazuril: 'Ponazuril',
-            drontal: 'Drontal',
+            nexgard: 'NexGard Combo',
             capstar: 'Capstar',
-            pyrantel: 'Pyrantel',
-            topical: medData.type === 'revolution' ? 'Revolution' : 'Advantage II'
+            pyrantel: 'Pyrantel'
         };
         return names[medType] || medType;
     }
@@ -322,14 +354,16 @@ class ResultsDisplay {
      * Get dose display string for medication
      */
     _getMedicationDoseDisplay(medType, medData) {
-        if (medType === 'pyrantel') {
+        if (medType === 'pyrantel' || medType === 'nexgard') {
             return `${AppState.formatNumber(medData.dose, 2)} mL`;
         }
         if (medType === 'panacur' || medType === 'ponazuril') {
             return `${AppState.formatNumber(medData.dose, 2)} mL`;
         }
         if (medType === 'drontal') {
-            return `${medData.dose} tablet(s)`;
+            return medData.type === 'drontal'
+                ? `${medData.dose} tablet(s)`
+                : `${AppState.formatNumber(medData.dose, 2)} mL`;
         }
         if (medType === 'capstar') {
             return medData.dose;

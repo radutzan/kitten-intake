@@ -27,7 +27,7 @@ function testUrlState() {
     }
 
     // Test v2 flag encoding
-    console.log('\n2. Flag encoding test (v2 - 20 bits):');
+    console.log('\n2. Flag encoding test (v5 - 25 bits):');
     const testCasesV2 = [
         {
             name: 'All defaults (unknown sex, rev, not-scanned, fvrcp unknown, 3d pan, 3d pon, all todo)',
@@ -43,6 +43,8 @@ function testUrlState() {
                 panacurStatus: 'todo',
                 ponazurilStatus: 'todo',
                 drontalStatus: 'todo',
+                nexgardStatus: 'todo',
+                drontalType: 'droncit',
                 pyrantelStatus: 'todo'
             }
         },
@@ -60,6 +62,8 @@ function testUrlState() {
                 panacurStatus: 'done',
                 ponazurilStatus: 'done',
                 drontalStatus: 'done',
+                nexgardStatus: 'done',
+                drontalType: 'drontal',
                 pyrantelStatus: 'done'
             }
         },
@@ -77,6 +81,8 @@ function testUrlState() {
                 panacurStatus: 'done',
                 ponazurilStatus: 'todo',
                 drontalStatus: 'skip',
+                nexgardStatus: 'skip',
+                drontalType: 'droncit',
                 pyrantelStatus: 'done'
             }
         },
@@ -94,6 +100,8 @@ function testUrlState() {
                 panacurStatus: 'skip',
                 ponazurilStatus: 'skip',
                 drontalStatus: 'skip',
+                nexgardStatus: 'skip',
+                drontalType: 'droncit',
                 pyrantelStatus: 'skip'
             }
         }
@@ -116,6 +124,8 @@ function testUrlState() {
             checkMedStatus(decoded.medications.panacur, tc.kitten.panacurStatus) &&
             checkMedStatus(decoded.medications.ponazuril, tc.kitten.ponazurilStatus) &&
             checkMedStatus(decoded.medications.drontal, tc.kitten.drontalStatus) &&
+            checkMedStatus(decoded.medications.nexgard, tc.kitten.nexgardStatus) &&
+            decoded.drontalType === tc.kitten.drontalType &&
             checkMedStatus(decoded.medications.pyrantel, tc.kitten.pyrantelStatus);
 
         console.log(`   ${tc.name}:`);
@@ -187,7 +197,11 @@ function showExampleUrls() {
 
     console.log('=== Example Encoded URLs ===\n');
 
-    console.log('V4 format (current, ~ separator, 4-char flags, microchip):');
+    console.log('V5 format (current, ~ separator, 5-char flags, microchip):');
+    console.log('  ?k=5~Mittens~450~~ABCDE');
+    console.log('  ?k=5~Mittens~450~985112345678901~ABCDE~Whiskers~380~~FGHIJ\n');
+
+    console.log('V4 format (legacy, ~ separator, 4-char flags, microchip):');
     console.log('  ?k=4~Mittens~450~~ABCD');
     console.log('  ?k=4~Mittens~450~985112345678901~ABCD~Whiskers~380~~EFGH\n');
 

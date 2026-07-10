@@ -146,6 +146,7 @@ class LocalStorageManager {
                 weight: this.getInputValue(Constants.ID.weight(kittenId)),
                 sex: this.getRadioValue(Constants.ID.sexName(kittenId)),
                 topical: this.getRadioValue(Constants.ID.topicalName(kittenId)),
+                drontalType: this.getRadioValue(Constants.ID.drontalTypeName(kittenId)),
                 panacurDays: this.getRadioValue(Constants.ID.panacurName(kittenId)),
                 ponazurilDays: this.getRadioValue(Constants.ID.ponazurilName(kittenId)),
                 ringwormStatus: this.getRadioValue(Constants.ID.ringwormName(kittenId)),
@@ -252,6 +253,7 @@ class LocalStorageManager {
         this.setInputValue(Constants.ID.weight(kittenId), kittenData.weight);
         this.setRadioValue(Constants.ID.sexName(kittenId), kittenData.sex || Constants.DEFAULTS.SEX);
         this.setRadioValue(Constants.ID.topicalName(kittenId), kittenData.topical);
+        this.setRadioValue(Constants.ID.drontalTypeName(kittenId), kittenData.drontalType || Constants.DRONTAL_TYPE.DRONCIT);
         this.setRadioValue(Constants.ID.panacurName(kittenId), kittenData.panacurDays || String(Constants.DEFAULTS.PANACUR_DAYS));
         this.setRadioValue(Constants.ID.ponazurilName(kittenId), kittenData.ponazurilDays || String(Constants.DEFAULTS.PONAZURIL_DAYS));
         this.setRadioValue(Constants.ID.ringwormName(kittenId), kittenData.ringwormStatus || Constants.RINGWORM_STATUS.NOT_SCANNED);
@@ -278,6 +280,7 @@ class LocalStorageManager {
                 window.KittenApp.formManager.updateMedicationRowState(kittenId, med);
                 window.KittenApp.formManager.updateStatusLight(kittenId, med);
             });
+            window.KittenApp.formManager.updatePyrantelAvailability(kittenId);
             window.KittenApp.formManager.updateRingwormStatusLight(kittenId);
             window.KittenApp.formManager.updateFvrcpStatusLight(kittenId);
         }

@@ -37,6 +37,8 @@ const cases = [
     { medId: 'revolution',   method: 'calculateRevolutionDose',  weights: [0.5, 1.0, 1.1, 1.5, 2.1, 2.2, 4.3, 4.4, 8.9, 9, 19.9, 20, 25] },
     { medId: 'advantage-ii', method: 'calculateAdvantageIIDose', weights: [0, 0.5, 0.99, 1, 4.99, 5, 8.99, 9, 100] },
     { medId: 'drontal',      method: 'calculateDrontalDose',     weights: [1, 1.49, 1.5, 1.99, 2, 3.99, 4, 8.99, 9, 12.99, 13, 16, 16.01, 17] },
+    { medId: 'droncit',      method: 'calculateDroncitDose',     weights: [1, 1.49, 1.5, 4.99, 5, 10.99, 11, 20, 20.01] },
+    { medId: 'nexgard-combo', method: 'calculateNexgardDose',    weights: [1, 1.79, 1.8, 5.5, 5.59, 5.6, 16.5, 16.51, 20] },
     { medId: 'capstar',      method: 'calculateCapstarDose',     weights: [1, 1.99, 2, 10, 25, 25.01, 30] },
 ];
 

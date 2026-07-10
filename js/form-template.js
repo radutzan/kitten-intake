@@ -80,10 +80,11 @@ const FormTemplate = {
             <div class="medication-grid">
                 ${this.generateFleaMedRow(kittenId)}
                 ${this.generateCapstarRow(kittenId)}
-                ${this.generatePonazurilRow(kittenId)}
                 ${this.generateDrontalRow(kittenId)}
-                ${this.generatePyrantelRow(kittenId)}
+                ${this.generateNexgardRow(kittenId)}
+                ${this.generatePonazurilRow(kittenId)}
                 ${this.generatePanacurRow(kittenId)}
+                ${this.generatePyrantelRow(kittenId)}
             </div>
         `;
     },
@@ -241,7 +242,7 @@ const FormTemplate = {
     },
 
     /**
-     * Generate the Drontal row (single dose)
+     * Generate the Droncit/Drontal row (single dose, injectable or tablet)
      * @param {string} kittenId - The kitten ID
      * @returns {string} HTML string
      */
@@ -254,7 +255,7 @@ const FormTemplate = {
                             <input type="checkbox" id="${kittenId}-drontal-enabled">
                             <span class="slider"></span>
                         </label>
-                        <span class="med-name">Drontal</span>
+                        <span class="med-name">Dewormer</span>
                     </div>
                     <div class="right">
                         <span class="status-light hidden" id="${kittenId}-drontal-status-light"></span>
@@ -262,14 +263,53 @@ const FormTemplate = {
                     </div>
                 </div>
                 <div class="medication-choices">
-                    <div class="single-option">
-                        <span class="option-label">Single Dose</span>
+                    <div class="radio-group">
+                        <input type="radio" name="${kittenId}-drontal-type" value="droncit" id="${kittenId}-drontal-type-droncit" checked>
+                        <label for="${kittenId}-drontal-type-droncit">Droncit</label>
+                        <input type="radio" name="${kittenId}-drontal-type" value="drontal" id="${kittenId}-drontal-type-drontal">
+                        <label for="${kittenId}-drontal-type-drontal">Drontal</label>
                     </div>
                     <div class="radio-group status-control">
                         <input type="radio" name="${kittenId}-drontal-status" value="todo" id="${kittenId}-drontal-status-todo" checked>
                         <label for="${kittenId}-drontal-status-todo">To Do</label>
                         <input type="radio" name="${kittenId}-drontal-status" value="done" id="${kittenId}-drontal-status-done">
                         <label for="${kittenId}-drontal-status-done">Done</label>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Generate the NexGard Combo row (single dose)
+     * @param {string} kittenId - The kitten ID
+     * @returns {string} HTML string
+     */
+    generateNexgardRow(kittenId) {
+        return `
+            <div class="medication-row" id="${kittenId}-nexgard-row">
+                <div class="medication-labels">
+                    <div class="left">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="${kittenId}-nexgard-enabled">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="med-name">NexGard Combo</span>
+                    </div>
+                    <div class="right">
+                        <span class="status-light hidden" id="${kittenId}-nexgard-status-light"></span>
+                        <span class="dose-display" id="${kittenId}-nexgard-dose"></span>
+                    </div>
+                </div>
+                <div class="medication-choices">
+                    <div class="single-option">
+                        <span class="option-label">Single Dose</span>
+                    </div>
+                    <div class="radio-group status-control">
+                        <input type="radio" name="${kittenId}-nexgard-status" value="todo" id="${kittenId}-nexgard-status-todo" checked>
+                        <label for="${kittenId}-nexgard-status-todo">To Do</label>
+                        <input type="radio" name="${kittenId}-nexgard-status" value="done" id="${kittenId}-nexgard-status-done">
+                        <label for="${kittenId}-nexgard-status-done">Done</label>
                     </div>
                 </div>
             </div>
@@ -328,7 +368,7 @@ const FormTemplate = {
                 </div>
                 <div class="radio-group">
                     <input type="radio" name="${kittenId}-ringworm-status" value="not-scanned" id="${kittenId}-ringworm-not-scanned" checked>
-                    <label for="${kittenId}-ringworm-not-scanned">Not Scanned</label>
+                    <label for="${kittenId}-ringworm-not-scanned">Unknown</label>
                     <input type="radio" name="${kittenId}-ringworm-status" value="positive" id="${kittenId}-ringworm-positive">
                     <label for="${kittenId}-ringworm-positive">Positive</label>
                     <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">

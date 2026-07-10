@@ -3,13 +3,16 @@
  * Supports temporary loading of shared URLs with eject-to-restore functionality
  *
  * Format: ?k=VERSION<sep>name<sep>weight<sep>microchip<sep>flags<sep>...
- *   (Version 4 [current]: separator is '~' — RFC 3986 unreserved, never percent-encoded
- *    by clients like Slack/iMessage. 4 segments per kitten.)
+ *   (Version 5 [current]: separator is '~', 4 segments per kitten, 5-char flags
+ *    adding nexgard status and drontal type)
+ *   (Version 4 legacy: separator is '~' — RFC 3986 unreserved, never percent-encoded
+ *    by clients like Slack/iMessage. 4 segments per kitten, 4-char flags.)
  *   (Version 3 legacy: separator is '|', 4 segments per kitten)
  *   (Version 2 legacy: separator is '|', 3 segments per kitten — no microchip)
  *   (Version 1 legacy: separator is '|', 3 segments per kitten, 2-char flags)
  *
- * Version 2/3/4 bitfield layout (22 bits, encoded as 4 base64url chars / 24 bits):
+ * Version 2/3/4/5 bitfield layout (25 bits, encoded as 5 base64url chars in v5,
+ * 4 chars in v2-4 where bits 22+ didn't exist and decode to 0):
  *   Bits 0-1:   sex (0=unknown, 1=female, 2=male)
  *   Bit 2:      topical (0=revolution, 1=advantage)
  *   Bits 3-4:   ringwormStatus (0=not-scanned, 1=negative, 2=positive)
@@ -22,6 +25,8 @@
  *   Bits 16-17: drontal status (0=skip, 1=todo, 2=done)
  *   Bits 18-19: pyrantel status (0=skip, 1=todo, 2=done)
  *   Bits 20-21: fvrcpStatus (0=unknown, 1=vaccinated, 2=not-vaccinated)
+ *   Bits 22-23: nexgard status (0=skip, 1=todo, 2=done) [v5+]
+ *   Bit 24:     drontalType (0=droncit, 1=drontal) [v5+]
  *
  * Version 1 (legacy, decode-only) bitfield layout (11 bits, 2 base64url chars):
  *   Bits 0-1:  topical (0=revolution, 1=advantage, 2=none)
@@ -36,7 +41,7 @@
 
 class UrlStateManager {
     constructor() {
-        this.version = 4;
+        this.version = 5;
         this.paramKey = 'k';
         this.backupStorageKey = 'cat-intake-form-backup';
         this.loadedStateKey = 'cat-intake-url-loaded';
@@ -44,7 +49,7 @@ class UrlStateManager {
 
         // Separator selection per version. v4+ uses '~' (safe across
         // messengers that percent-encode '|'). v1-v3 kept '|' for decode.
-        this.sepForVersion = { 1: '|', 2: '|', 3: '|', 4: '~' };
+        this.sepForVersion = { 1: '|', 2: '|', 3: '|', 4: '~', 5: '~' };
         this.currentSep = this.sepForVersion[this.version];
 
         // Base64url alphabet (RFC 4648 - URL safe)
@@ -59,7 +64,8 @@ class UrlStateManager {
             ponazurilDays: ['1', '3'],
             fleaStatus: ['skip', 'todo', 'delay', 'done'],
             medStatus: ['skip', 'todo', 'done'],
-            fvrcpStatus: ['unknown', 'vaccinated', 'not-vaccinated']
+            fvrcpStatus: ['unknown', 'vaccinated', 'not-vaccinated'],
+            drontalType: ['droncit', 'drontal']
         };
 
         // Enum mappings for version 1 (legacy decode-only)
@@ -152,6 +158,7 @@ class UrlStateManager {
             const kitten = {
                 sex: document.querySelector(`input[name="${kittenId}-sex"]:checked`)?.value || 'unknown',
                 topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
+                drontalType: document.querySelector(`input[name="${kittenId}-drontal-type"]:checked`)?.value || 'droncit',
                 ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
                 fvrcpStatus: document.querySelector(`input[name="${kittenId}-fvrcp-status"]:checked`)?.value || 'unknown',
                 panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5',
@@ -161,6 +168,7 @@ class UrlStateManager {
                 panacurStatus: this._getMedStatusFromDom(kittenId, 'panacur'),
                 ponazurilStatus: this._getMedStatusFromDom(kittenId, 'ponazuril'),
                 drontalStatus: this._getMedStatusFromDom(kittenId, 'drontal'),
+                nexgardStatus: this._getMedStatusFromDom(kittenId, 'nexgard'),
                 pyrantelStatus: this._getMedStatusFromDom(kittenId, 'pyrantel')
             };
 
@@ -251,7 +259,15 @@ class UrlStateManager {
         const fvrcpIndex = this.v2.fvrcpStatus.indexOf(kitten.fvrcpStatus);
         bits |= (fvrcpIndex >= 0 ? fvrcpIndex : 0) << 20;
 
-        return this.toBase64Url(bits, 4);
+        // Bits 22-23: nexgard status [v5+]
+        const nexgardIndex = this.v2.medStatus.indexOf(kitten.nexgardStatus);
+        bits |= (nexgardIndex >= 0 ? nexgardIndex : 1) << 22;
+
+        // Bit 24: drontalType [v5+]
+        const drontalTypeIndex = this.v2.drontalType.indexOf(kitten.drontalType);
+        bits |= (drontalTypeIndex >= 0 ? drontalTypeIndex : 0) << 24;
+
+        return this.toBase64Url(bits, 5);
     }
 
     /**
@@ -267,6 +283,9 @@ class UrlStateManager {
         const ponazurilStatus = this.v2.medStatus[(bits >> 14) & 0x3] || 'todo';
         const drontalStatus = this.v2.medStatus[(bits >> 16) & 0x3] || 'todo';
         const pyrantelStatus = this.v2.medStatus[(bits >> 18) & 0x3] || 'todo';
+        // v2-4 flags have no bits 22+, so these decode to skip/droncit there
+        const nexgardStatus = this.v2.medStatus[(bits >> 22) & 0x3] || 'skip';
+        const drontalType = this.v2.drontalType[(bits >> 24) & 0x1] || 'droncit';
 
         // Topical is 'none' equivalent when flea is skipped
         const topicalValue = this.v2.topical[(bits >> 2) & 0x1] || 'revolution';
@@ -274,6 +293,7 @@ class UrlStateManager {
         return {
             sex: this.v2.sex[bits & 0x3] || 'unknown',
             topical: topicalValue,
+            drontalType,
             ringwormStatus: this.v2.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
             fvrcpStatus: this.v2.fvrcpStatus[(bits >> 20) & 0x3] || 'unknown',
             panacurDays: this.v2.panacurDays[(bits >> 5) & 0x3] || '5',
@@ -284,6 +304,7 @@ class UrlStateManager {
                 panacur: { enabled: panacurStatus !== 'skip', status: panacurStatus === 'skip' ? 'todo' : panacurStatus },
                 ponazuril: { enabled: ponazurilStatus !== 'skip', status: ponazurilStatus === 'skip' ? 'todo' : ponazurilStatus },
                 drontal: { enabled: drontalStatus !== 'skip', status: drontalStatus === 'skip' ? 'todo' : drontalStatus },
+                nexgard: { enabled: nexgardStatus !== 'skip', status: nexgardStatus === 'skip' ? 'todo' : nexgardStatus },
                 pyrantel: { enabled: pyrantelStatus !== 'skip', status: pyrantelStatus === 'skip' ? 'todo' : pyrantelStatus }
             }
         };
@@ -308,6 +329,7 @@ class UrlStateManager {
         return {
             sex: 'unknown',
             topical: fleaSkipped ? 'revolution' : topicalRaw,
+            drontalType: 'droncit',
             ringwormStatus: this.v1.ringwormStatus[(bits >> 3) & 0x3] || 'not-scanned',
             fvrcpStatus: 'unknown',
             panacurDays: this.v1.panacurDays[(bits >> 5) & 0x3] || '5',
@@ -318,6 +340,7 @@ class UrlStateManager {
                 panacur: { enabled: true, status: panacurDay1Given ? 'done' : 'todo' },
                 ponazuril: { enabled: true, status: ponazurilDay1Given ? 'done' : 'todo' },
                 drontal: { enabled: true, status: drontalDay1Given ? 'done' : 'todo' },
+                nexgard: { enabled: false, status: 'todo' },
                 pyrantel: { enabled: true, status: 'todo' }
             }
         };
@@ -343,6 +366,7 @@ class UrlStateManager {
             const kitten = {
                 sex: document.querySelector(`input[name="${kittenId}-sex"]:checked`)?.value || 'unknown',
                 topical: document.querySelector(`input[name="${kittenId}-topical"]:checked`)?.value || 'revolution',
+                drontalType: document.querySelector(`input[name="${kittenId}-drontal-type"]:checked`)?.value || 'droncit',
                 ringwormStatus: document.querySelector(`input[name="${kittenId}-ringworm-status"]:checked`)?.value || 'not-scanned',
                 fvrcpStatus: document.querySelector(`input[name="${kittenId}-fvrcp-status"]:checked`)?.value || 'unknown',
                 panacurDays: document.querySelector(`input[name="${kittenId}-panacur"]:checked`)?.value || '5',
@@ -352,6 +376,7 @@ class UrlStateManager {
                 panacurStatus: this._getMedStatusFromDom(kittenId, 'panacur'),
                 ponazurilStatus: this._getMedStatusFromDom(kittenId, 'ponazuril'),
                 drontalStatus: this._getMedStatusFromDom(kittenId, 'drontal'),
+                nexgardStatus: this._getMedStatusFromDom(kittenId, 'nexgard'),
                 pyrantelStatus: this._getMedStatusFromDom(kittenId, 'pyrantel')
             };
 
@@ -384,7 +409,7 @@ class UrlStateManager {
         if (parts.length < 4) return null; // At least version + 1 kitten (name, weight, flags)
 
         const version = parseInt(parts[0]);
-        if (version < 1 || version > 4) {
+        if (version < 1 || version > 5) {
             console.warn(`Unknown URL state version: ${version}`);
             return null;
         }
@@ -651,6 +676,7 @@ class UrlStateManager {
                 if (urlKitten.weight !== localKitten.weight) return false;
                 if (urlKitten.sex !== (localKitten.sex || 'unknown')) return false;
                 if (urlKitten.topical !== localKitten.topical) return false;
+                if ((urlKitten.drontalType || 'droncit') !== (localKitten.drontalType || 'droncit')) return false;
                 if (urlKitten.panacurDays !== localKitten.panacurDays) return false;
                 if (urlKitten.ponazurilDays !== localKitten.ponazurilDays) return false;
                 if (urlKitten.ringwormStatus !== localKitten.ringwormStatus) return false;

@@ -29,6 +29,8 @@ class DoseCalculator {
     static calculatePyrantelDose(weightLb)   { return this._value('pyrantel',   weightLb); }
     static calculateRevolutionDose(weightLb) { return this._value('revolution', weightLb); }
     static calculateDrontalDose(weightLb)    { return this._value('drontal',    weightLb); }
+    static calculateDroncitDose(weightLb)    { return this._value('droncit',    weightLb); }
+    static calculateNexgardDose(weightLb)    { return this._value('nexgard-combo', weightLb); }
     static calculateCapstarDose(weightLb)    { return this._value('capstar',    weightLb); }
 
     static calculateAdvantageIIDose(weightLb) {
@@ -55,6 +57,8 @@ class DoseCalculator {
             revolution: this.calculateRevolutionDose(weightLb),
             advantage:  this.calculateAdvantageIIDose(weightLb),
             drontal:    this.calculateDrontalDose(weightLb),
+            droncit:    this.calculateDroncitDose(weightLb),
+            nexgard:    this.calculateNexgardDose(weightLb),
             capstar:    this.calculateCapstarDose(weightLb),
             pyrantel:   this.calculatePyrantelDose(weightLb)
         };
@@ -89,7 +93,10 @@ class DoseCalculator {
                 panacur: doses.panacur,
                 ponazuril: doses.ponazuril,
                 topical: topicalDose,
-                drontal: doses.drontal,
+                // Resolved to the selected dewormer form: tablets for Drontal,
+                // mL for Droncit (the default)
+                drontal: kitten.drontalType === 'drontal' ? doses.drontal : doses.droncit,
+                nexgard: doses.nexgard,
                 capstar: doses.capstar,
                 pyrantel: doses.pyrantel
             }
