@@ -280,6 +280,7 @@ class FormManager {
 
         // Initialize state from current form values
         this.syncFormToState(kittenId);
+        this.updateDrontalLabel(kittenId);
         this.updatePyrantelAvailability(kittenId);
     }
 
@@ -453,6 +454,7 @@ class FormManager {
                 this.updateKittenState(kittenId, { drontalType: radio.value });
 
                 // Then render
+                this.updateDrontalLabel(kittenId);
                 this.updatePyrantelAvailability(kittenId);
                 this.renderer.updateStatusLight(kittenId, 'drontal');
                 this.renderer.updateResultDisplay(kittenId);
@@ -462,6 +464,21 @@ class FormManager {
                 this.autoSaveFormData();
             });
         });
+    }
+
+    /**
+     * Update the dewormer row label to name the active ingredient(s):
+     * Droncit is praziquantel only, Drontal tablets add pyrantel pamoate.
+     */
+    updateDrontalLabel(kittenId) {
+        const label = document.getElementById(Constants.ID.drontalLabel(kittenId));
+        if (!label) return;
+
+        const drontalType = document.querySelector(`input[name="${Constants.ID.drontalTypeName(kittenId)}"]:checked`)?.value
+            || Constants.DRONTAL_TYPE.DRONCIT;
+        label.textContent = drontalType === Constants.DRONTAL_TYPE.DRONTAL
+            ? 'Praziquantel + Pyrantel'
+            : 'Praziquantel';
     }
 
     /**
@@ -857,6 +874,7 @@ class FormManager {
             const targetDrontalType = document.getElementById(`${targetId}-drontal-type-${sourceDrontalType.value}`);
             if (targetDrontalType) targetDrontalType.checked = true;
         }
+        this.updateDrontalLabel(targetId);
         this.updatePyrantelAvailability(targetId);
 
         // Copy Panacur Duration

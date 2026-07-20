@@ -280,6 +280,7 @@ class LocalStorageManager {
                 window.KittenApp.formManager.updateMedicationRowState(kittenId, med);
                 window.KittenApp.formManager.updateStatusLight(kittenId, med);
             });
+            window.KittenApp.formManager.updateDrontalLabel(kittenId);
             window.KittenApp.formManager.updatePyrantelAvailability(kittenId);
             window.KittenApp.formManager.updateRingwormStatusLight(kittenId);
             window.KittenApp.formManager.updateFvrcpStatusLight(kittenId);

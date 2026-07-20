@@ -747,6 +747,7 @@ input[type="radio"]:focus {
 .medication-labels .left .med-name {
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
 }
 
 .medication-labels .right {

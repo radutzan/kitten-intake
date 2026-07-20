@@ -255,7 +255,7 @@ const FormTemplate = {
                             <input type="checkbox" id="${kittenId}-drontal-enabled">
                             <span class="slider"></span>
                         </label>
-                        <span class="med-name">Dewormer</span>
+                        <span class="med-name" id="${kittenId}-drontal-label">Praziquantel</span>
                     </div>
                     <div class="right">
                         <span class="status-light hidden" id="${kittenId}-drontal-status-light"></span>

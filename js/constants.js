@@ -117,6 +117,7 @@ const Constants = {
         medEnabled: (kittenId, med) => `${kittenId}-${med}-enabled`,
         medStatusLight: (kittenId, med) => `${kittenId}-${med}-status-light`,
         medDose: (kittenId, med) => `${kittenId}-${med}-dose`,
+        drontalLabel: (kittenId) => `${kittenId}-drontal-label`,
 
         // Radio button name patterns (for querySelectorAll)
         medStatusName: (kittenId, med) => `${kittenId}-${med}-status`,
