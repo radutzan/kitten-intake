@@ -373,6 +373,8 @@ const FormTemplate = {
                     <label for="${kittenId}-ringworm-positive">Positive</label>
                     <input type="radio" name="${kittenId}-ringworm-status" value="negative" id="${kittenId}-ringworm-negative">
                     <label for="${kittenId}-ringworm-negative">Negative</label>
+                    <input type="radio" name="${kittenId}-ringworm-status" value="inconclusive" id="${kittenId}-ringworm-inconclusive">
+                    <label for="${kittenId}-ringworm-inconclusive">Inconclusive</label>
                 </div>
             </div>
         `;

@@ -15,7 +15,7 @@
  * 4 chars in v2-4 where bits 22+ didn't exist and decode to 0):
  *   Bits 0-1:   sex (0=unknown, 1=female, 2=male)
  *   Bit 2:      topical (0=revolution, 1=advantage)
- *   Bits 3-4:   ringwormStatus (0=not-scanned, 1=negative, 2=positive)
+ *   Bits 3-4:   ringwormStatus (0=not-scanned, 1=negative, 2=positive, 3=inconclusive)
  *   Bits 5-6:   panacurDays (0=1, 1=3, 2=5)
  *   Bit 7:      ponazurilDays (0=1, 1=3)
  *   Bits 8-9:   flea status (0=skip, 1=todo, 2=delay, 3=done)
@@ -59,7 +59,7 @@ class UrlStateManager {
         this.v2 = {
             sex: ['unknown', 'female', 'male'],
             topical: ['revolution', 'advantage'],
-            ringwormStatus: ['not-scanned', 'negative', 'positive'],
+            ringwormStatus: ['not-scanned', 'negative', 'positive', 'inconclusive'],
             panacurDays: ['1', '3', '5'],
             ponazurilDays: ['1', '3'],
             fleaStatus: ['skip', 'todo', 'delay', 'done'],

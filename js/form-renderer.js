@@ -152,7 +152,7 @@ class FormRenderer {
         // Map ringworm status to light color
         if (status === Constants.RINGWORM_STATUS.NEGATIVE) {
             statusLight.className = `${Constants.CSS.STATUS_LIGHT} ${Constants.STATUS.DONE}`;
-        } else if (status === Constants.RINGWORM_STATUS.POSITIVE) {
+        } else if (status === Constants.RINGWORM_STATUS.POSITIVE || status === Constants.RINGWORM_STATUS.INCONCLUSIVE) {
             statusLight.className = 'status-light delay'; // amber/warning color
         } else {
             statusLight.className = 'status-light todo';
@@ -533,7 +533,8 @@ class FormRenderer {
         const ringwormStatusText = {
             'not-scanned': 'Unknown',
             'negative': 'Negative',
-            'positive': 'Positive'
+            'positive': 'Positive',
+            'inconclusive': 'Inconclusive'
         };
 
         // Get FVRCP status

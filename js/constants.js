@@ -51,7 +51,8 @@ const Constants = {
     RINGWORM_STATUS: {
         NOT_SCANNED: 'not-scanned',
         POSITIVE: 'positive',
-        NEGATIVE: 'negative'
+        NEGATIVE: 'negative',
+        INCONCLUSIVE: 'inconclusive'
     },
 
     // FVRCP vaccination status values
