@@ -81,9 +81,9 @@ const FormTemplate = {
                 ${this.generateFleaMedRow(kittenId)}
                 ${this.generateCapstarRow(kittenId)}
                 ${this.generateDrontalRow(kittenId)}
-                ${this.generateNexgardRow(kittenId)}
-                ${this.generatePonazurilRow(kittenId)}
                 ${this.generatePanacurRow(kittenId)}
+                ${this.generatePonazurilRow(kittenId)}
+                ${this.generateNexgardRow(kittenId)}
                 ${this.generatePyrantelRow(kittenId)}
             </div>
         `;

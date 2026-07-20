@@ -6,7 +6,7 @@
 const Constants = {
     // Medication type keys (lowercase, used in form element IDs)
     // Order here defines form and results rendering order
-    MEDICATIONS: ['flea', 'capstar', 'drontal', 'nexgard', 'ponazuril', 'panacur', 'pyrantel'],
+    MEDICATIONS: ['flea', 'capstar', 'drontal', 'panacur', 'ponazuril', 'nexgard', 'pyrantel'],
 
     // Display names for medications
     MEDICATION_DISPLAY_NAMES: {
