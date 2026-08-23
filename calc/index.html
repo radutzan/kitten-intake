@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dose Calculator</title><!-- by Anti & Radu (& AI) -->
-    <link rel="stylesheet" href="../styles.css?v=76">
+    <link rel="stylesheet" href="../styles.css?v=80">
     <style>
         /* /calc/-specific styles. Spartan: a weight input and a table. */
 
@@ -68,6 +68,45 @@
             bottom: var(--control-padding);
             display: flex;
             align-items: center;
+            font-size: var(--fs-body-medium);
+        }
+
+        .calc-search-row {
+            margin-bottom: 16px;
+        }
+        .calc-search-row input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--input-radius);
+            font-size: var(--fs-body-medium);
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        /* appearance:none above strips Safari's native search chrome,
+           the clear button included. Put the clear button back. */
+        .calc-search-row input::-webkit-search-cancel-button {
+            -webkit-appearance: searchfield-cancel-button;
+        }
+        .calc-search-row input:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(40, 90, 168, 0.2);
+        }
+
+        /* Filtering. Both selectors carry an extra class so they outrank the
+           `display: block/grid` the mobile media query puts on these elements. */
+        .meds-table tbody tr.is-filtered-out {
+            display: none;
+        }
+        .meds-table.is-empty {
+            display: none;
+        }
+        .calc-no-results {
+            padding: 16px 12px;
+            margin: 0;
+            color: var(--text-secondary);
             font-size: var(--fs-body-medium);
         }
 
@@ -199,6 +238,10 @@
         </div>
     </div>
 
+    <div class="calc-search-row">
+        <input type="search" id="calc-search" placeholder="Search medications" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search medications">
+    </div>
+
     <table class="meds-table">
         <thead>
             <tr>
@@ -212,13 +255,15 @@
         <tbody id="meds-tbody"></tbody>
     </table>
 
+    <p class="calc-no-results" id="calc-no-results" role="status" hidden>No medications match “<span id="calc-no-results-term"></span>”.</p>
+
     <footer>
         <p class="footer-disclaimer">This tool is provided for informational purposes only. It does not constitute veterinary or medical advice. Always consult a licensed veterinarian before administering any medication. Use this tool at your own risk.</p>
     </footer>
 
-    <script src="../js/constants.js?v=76"></script>
-    <script src="../js/meds-data.js?v=76"></script>
-    <script src="../js/med-calculator.js?v=76"></script>
-    <script src="calc-app.js?v=76"></script>
+    <script src="../js/constants.js?v=80"></script>
+    <script src="../js/meds-data.js?v=80"></script>
+    <script src="../js/med-calculator.js?v=80"></script>
+    <script src="calc-app.js?v=80"></script>
 </body>
 </html>

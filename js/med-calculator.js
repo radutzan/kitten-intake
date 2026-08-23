@@ -49,6 +49,11 @@ const MedCalculator = (() => {
             return { kind: 'mL', value: raw };
         }
 
+        // mg/lb path: result is mg (tablet meds dosed per pound).
+        if (typeof spec.mgPerLb === 'number') {
+            return { kind: 'mg', value: weightLb * spec.mgPerLb };
+        }
+
         // mg path: result is mg, optionally converted to mL via concentration.
         if (typeof spec.mgPerKg === 'number') {
             const mg = weightKg * spec.mgPerKg;
@@ -94,9 +99,11 @@ const MedCalculator = (() => {
     }
 
     function computeOutputRange(spec, weightLb) {
-        const min = weightLb * spec.mlPerLbMin;
-        const max = weightLb * spec.mlPerLbMax;
-        return { value: [min, max] };
+        // Ranges are expressed per pound in either mL or mg; the med's `unit`
+        // decides the suffix at format time.
+        const perLbMin = (typeof spec.mgPerLbMin === 'number') ? spec.mgPerLbMin : spec.mlPerLbMin;
+        const perLbMax = (typeof spec.mgPerLbMax === 'number') ? spec.mgPerLbMax : spec.mlPerLbMax;
+        return { value: [weightLb * perLbMin, weightLb * perLbMax] };
     }
 
     function formatDisplay(med, computed) {
@@ -106,7 +113,7 @@ const MedCalculator = (() => {
 
         if (med.calc.type === 'outputRange') {
             const [lo, hi] = v;
-            return `${format2(lo)}–${format2(hi)} mL`;
+            return `${format2(lo)}–${format2(hi)} ${med.unit === 'mg' ? 'mg' : 'mL'}`;
         }
 
         if (med.unit === 'mL') {

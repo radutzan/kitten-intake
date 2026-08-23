@@ -16,6 +16,7 @@
  * Calc spec shapes (all `type: 'linear' | 'weightTable' | 'outputRange'`):
  *
  *   { type: 'linear', mlPerLb, [min], [roundDown] }
+ *   { type: 'linear', mgPerLb }                          // direct mg result
  *   { type: 'linear', mgPerKg }                          // direct mg result
  *   { type: 'linear', mgPerKg, concMgPerMl }             // mg → mL via concentration
  *   { type: 'weightTable', rows: [{ minLb, maxLb, value }] }
@@ -23,6 +24,7 @@
  *       is the largest one ≤ weight, provided weight ≤ that row's maxLb.
  *       maxLb may be Infinity for an unbounded last row.
  *   { type: 'outputRange', mlPerLbMin, mlPerLbMax }
+ *   { type: 'outputRange', mgPerLbMin, mgPerLbMax }      // mg range; unit picks suffix
  *
  * Weight-table rows for built-in meds (Revolution, Advantage II, Drontal,
  * Capstar) intentionally preserve the EXISTING DoseCalculator boundaries,
@@ -133,6 +135,23 @@ const MedsData = (() => {
             calc: { type: 'linear', mlPerLb: 0.1 }
         },
         {
+            id: 'doxycycline',
+            name: 'Doxycycline',
+            concentration: '20 mg tablets',
+            calculationText: '4.5–5 mg/lb\nOnce daily (SID) × 10 days',
+            unit: 'mg',
+            warning: 'Follow with at least 3ml of water or food to prevent the pill from sticking and damaging the esophagus',
+            calc: { type: 'outputRange', mgPerLbMin: 4.5, mgPerLbMax: 5 }
+        },
+        {
+            id: 'famciclovir',
+            name: 'Famciclovir',
+            concentration: '125 mg tablets',
+            calculationText: '40 mg/lb\n90 mg/kg\nThree times daily (TID) × 5–7 days',
+            unit: 'mg',
+            calc: { type: 'linear', mgPerLb: 40 }
+        },
+        {
             id: 'drontal',
             name: 'Drontal',
             concentration: 'Praziquantel 18.2 mg + Pyrantel Pamoate 72.6 mg per tablet',
@@ -151,7 +170,7 @@ const MedsData = (() => {
         },
         {
             id: 'droncit',
-            name: 'Injectable Droncit',
+            name: 'Droncit (Injectable)',
             concentration: '56.8 mg/mL',
             calculationText: '1.5–5 lb: 0.2 mL\n5–11 lb: 0.4 mL\n>11 lb: 0.6 mL',
             unit: 'mL',
