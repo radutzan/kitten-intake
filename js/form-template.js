@@ -42,10 +42,19 @@ const FormTemplate = {
 
                 <div class="form-group weight-sex-row">
                     <div class="weight-input-wrapper">
-                        <label for="${kittenId}-weight">Weight (grams)</label>
-                        <input type="text" inputmode="decimal" pattern="[0-9.]*" id="${kittenId}-weight" placeholder="Weight (grams)" name="weight" min="1" step="0.1" required>
+                        <label for="${kittenId}-weight-entry">Weight</label>
+                        <input type="hidden" id="${kittenId}-weight" name="weight">
+                        <input type="text" inputmode="decimal" pattern="[0-9.]*" id="${kittenId}-weight-entry" class="weight-entry-input" placeholder="Weight" required>
+                        <div class="weight-input-overlay">
+                            <div class="weight-display" id="${kittenId}-weight-display" style="display: none;"></div>
+                            <div class="weight-unit-toggle radio-group">
+                                <input type="radio" name="${kittenId}-weight-unit" value="g" id="${kittenId}-weight-unit-g" checked>
+                                <label for="${kittenId}-weight-unit-g">g</label>
+                                <input type="radio" name="${kittenId}-weight-unit" value="lb" id="${kittenId}-weight-unit-lb">
+                                <label for="${kittenId}-weight-unit-lb">lb</label>
+                            </div>
+                        </div>
                         <div class="error" id="${kittenId}-weight-error"></div>
-                        <div class="weight-display" id="${kittenId}-weight-display" style="display: none;"></div>
                     </div>
                     <div class="radio-group sex-selector">
                         <input type="radio" name="${kittenId}-sex" value="unknown" id="${kittenId}-sex-unknown" checked>
@@ -65,6 +74,7 @@ const FormTemplate = {
                         <input type="file" id="${kittenId}-microchip-file" accept="image/*" capture="environment" class="microchip-file-input">
                     </div>
                     <div class="microchip-feedback" id="${kittenId}-microchip-feedback"></div>
+                    <div class="weight-warning" id="${kittenId}-weight-warning" role="status" style="display: none;"></div>
                 </div>
             </div>
         `;

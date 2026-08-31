@@ -264,6 +264,10 @@ class AppState {
         return grams / 453.59237;
     }
 
+    static convertToGrams(pounds) {
+        return pounds * 453.59237;
+    }
+
     /**
      * Format a number with thousands separators and optional decimal places
      * @param {number} num - The number to format

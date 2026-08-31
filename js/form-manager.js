@@ -267,6 +267,7 @@ class FormManager {
      */
     bindKittenFormEvents(kittenId) {
         this.bindWeightEvents(kittenId);
+        this.bindWeightUnitEvents(kittenId);
         this.bindMedicationToggleEvents(kittenId);
         this.bindMedicationStatusEvents(kittenId);
         this.bindTopicalEvents(kittenId);
@@ -289,70 +290,95 @@ class FormManager {
      * Data flow: Input → Filter → State → Render
      */
     bindWeightEvents(kittenId) {
-        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
-        if (!weightInput) return;
+        const entryInput = document.getElementById(Constants.ID.weightEntry(kittenId));
+        if (!entryInput) return;
 
         // Filter input to allow only numbers and periods
-        weightInput.addEventListener('input', (e) => {
+        entryInput.addEventListener('input', (e) => {
             const filteredValue = e.target.value.replace(/[^0-9.]/g, '');
             const parts = filteredValue.split('.');
-            if (parts.length > 2) {
-                e.target.value = parts[0] + '.' + parts.slice(1).join('');
-            } else {
-                e.target.value = filteredValue;
-            }
-
-            // Update state first (State as source of truth)
-            const weightGrams = parseFloat(e.target.value) || 0;
-            this.updateKittenState(kittenId, {
-                weightGrams,
-                weightLb: AppState.convertToPounds(weightGrams)
-            });
-
-            // Then render from state
-            this.renderer.updateWeightDisplay(kittenId);
-            this.renderer.updateResultDisplay(kittenId);
-            this.renderer.updateAllStatusLights(kittenId);
-            if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                window.KittenApp.resultsDisplay.updateResultsAutomatically();
-            }
+            e.target.value = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredValue;
+            this.commitWeightEntry(kittenId);
             this.debouncedAutoSave();
         });
 
         // Prevent pasting invalid characters
-        weightInput.addEventListener('paste', (e) => {
+        entryInput.addEventListener('paste', (e) => {
             e.preventDefault();
             const paste = (e.clipboardData || window.clipboardData).getData('text');
             const filteredPaste = paste.replace(/[^0-9.]/g, '');
             const parts = filteredPaste.split('.');
-            const validPaste = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
-
-            e.target.value = validPaste;
-
-            // Update state first
-            const weightGrams = parseFloat(validPaste) || 0;
-            this.updateKittenState(kittenId, {
-                weightGrams,
-                weightLb: AppState.convertToPounds(weightGrams)
-            });
-
-            this.renderer.updateWeightDisplay(kittenId);
-            this.renderer.updateResultDisplay(kittenId);
-            this.renderer.updateAllStatusLights(kittenId);
-            if (window.KittenApp && window.KittenApp.resultsDisplay) {
-                window.KittenApp.resultsDisplay.updateResultsAutomatically();
-            }
+            entryInput.value = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : filteredPaste;
+            this.commitWeightEntry(kittenId);
             this.autoSaveFormData();
         });
 
         // Validation on blur
-        weightInput.addEventListener('blur', () => {
+        entryInput.addEventListener('blur', () => {
             this.validator.validateField(kittenId, 'weight');
             if (window.KittenApp && window.KittenApp.resultsDisplay) {
                 window.KittenApp.resultsDisplay.updateResultsAutomatically();
             }
             this.autoSaveFormData();
         });
+    }
+
+    /**
+     * Recompute the canonical grams value from the entry field's current
+     * text and selected unit, then render. Shared by typing and unit-toggle
+     * changes (toggling re-interprets the same number, it never rewrites it).
+     * @param {string} kittenId - The kitten ID
+     */
+    commitWeightEntry(kittenId) {
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
+        const entryInput = document.getElementById(Constants.ID.weightEntry(kittenId));
+        if (!weightInput || !entryInput) return;
+
+        const enteredAmount = parseFloat(entryInput.value) || 0;
+        const weightGrams = this.getWeightUnit(kittenId) === Constants.WEIGHT_UNIT.LB
+            ? Math.round(AppState.convertToGrams(enteredAmount))
+            : enteredAmount;
+        weightInput.value = weightGrams;
+
+        // Update state first (State as source of truth)
+        this.updateKittenState(kittenId, {
+            weightGrams,
+            weightLb: AppState.convertToPounds(weightGrams)
+        });
+
+        // Then render from state
+        this.renderer.updateWeightDisplay(kittenId);
+        this.renderer.updateResultDisplay(kittenId);
+        this.renderer.updateAllStatusLights(kittenId);
+        if (window.KittenApp && window.KittenApp.resultsDisplay) {
+            window.KittenApp.resultsDisplay.updateResultsAutomatically();
+        }
+    }
+
+    /**
+     * Weight unit toggle events (grams / pounds) — reinterprets the entry
+     * field's existing number under the new unit; the typed value itself
+     * never changes.
+     * Data flow: Toggle → Reinterpret entry value → State → Render
+     */
+    bindWeightUnitEvents(kittenId) {
+        const unitRadios = document.querySelectorAll(`input[name="${Constants.ID.weightUnitName(kittenId)}"]`);
+        unitRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.commitWeightEntry(kittenId);
+                this.autoSaveFormData();
+            });
+        });
+    }
+
+    /**
+     * Get the currently selected weight entry unit for a kitten
+     * @param {string} kittenId - The kitten ID
+     * @returns {string} 'g' or 'lb'
+     */
+    getWeightUnit(kittenId) {
+        const checked = document.querySelector(`input[name="${Constants.ID.weightUnitName(kittenId)}"]:checked`);
+        return checked ? checked.value : Constants.WEIGHT_UNIT.GRAMS;
     }
 
     /**

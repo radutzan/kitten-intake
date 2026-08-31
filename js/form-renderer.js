@@ -26,11 +26,43 @@ class FormRenderer {
 
         const grams = parseFloat(weightInput.value);
         if (grams > 0) {
-            const pounds = AppState.convertToPounds(grams);
-            display.textContent = `${AppState.formatNumber(grams)} g = ${AppState.formatNumber(pounds, 2)} lb`;
-            display.style.display = 'block';
+            // The field already shows the number in the selected unit, so only
+            // the converted counterpart is worth the space (the row is tight
+            // on mobile once the unit toggle is in there too).
+            const unit = document.querySelector(`input[name="${Constants.ID.weightUnitName(kittenId)}"]:checked`)?.value
+                || Constants.WEIGHT_UNIT.GRAMS;
+            display.textContent = unit === Constants.WEIGHT_UNIT.LB
+                ? `= ${AppState.formatNumber(grams)} g`
+                : `= ${AppState.formatNumber(AppState.convertToPounds(grams), 2)} lb`;
+            // 'flex' (not 'block') so the stylesheet's align-items: center
+            // survives — an inline display would otherwise kill the centering.
+            display.style.display = 'flex';
         } else {
             display.style.display = 'none';
+        }
+
+        this.updateWeightWarning(kittenId);
+    }
+
+    /**
+     * Show a warning for unusually heavy cats — a mistyped weight would
+     * otherwise scale every dose up without anything flagging it.
+     * @param {string} kittenId - The kitten ID
+     */
+    updateWeightWarning(kittenId) {
+        const weightInput = document.getElementById(Constants.ID.weight(kittenId));
+        const warning = document.getElementById(Constants.ID.weightWarning(kittenId));
+
+        if (!weightInput || !warning) return;
+
+        const grams = parseFloat(weightInput.value);
+        const isHeavy = grams > 0 && AppState.convertToPounds(grams) > Constants.HEAVY_WEIGHT_LB;
+
+        if (isHeavy) {
+            warning.textContent = Constants.MESSAGES.HEAVY_WEIGHT;
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
         }
     }
 

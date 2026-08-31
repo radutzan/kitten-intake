@@ -19,6 +19,12 @@ const Constants = {
         pyrantel: 'Pyrantel'
     },
 
+    // Weight entry units (display/input only — stored weight is always grams)
+    WEIGHT_UNIT: {
+        GRAMS: 'g',
+        LB: 'lb'
+    },
+
     // Dewormer forms for the Droncit/Drontal row
     DRONTAL_TYPE: {
         DRONCIT: 'droncit',   // injectable (Praziquantel only)
@@ -64,8 +70,13 @@ const Constants = {
 
     // Validation messages
     MESSAGES: {
-        OUT_OF_RANGE: 'Out of range'
+        OUT_OF_RANGE: 'Out of range',
+        HEAVY_WEIGHT: 'Cat over 6lb. Make sure weight is accurate to prevent overdosing'
     },
+
+    // Weight above this (in pounds) is unusual for intake — warn so a
+    // mistyped weight doesn't silently produce an overdose.
+    HEAVY_WEIGHT_LB: 6,
 
     // Main container element IDs
     ELEMENTS: {
@@ -107,7 +118,10 @@ const Constants = {
     ID: {
         // Kitten-level elements
         weight: (kittenId) => `${kittenId}-weight`,
+        weightEntry: (kittenId) => `${kittenId}-weight-entry`,
+        weightUnitName: (kittenId) => `${kittenId}-weight-unit`,
         weightDisplay: (kittenId) => `${kittenId}-weight-display`,
+        weightWarning: (kittenId) => `${kittenId}-weight-warning`,
         name: (kittenId) => `${kittenId}-name`,
         resultDisplay: (kittenId) => `${kittenId}-result-display`,
         resultHeader: (kittenId) => `${kittenId}-result-header`,
@@ -143,6 +157,7 @@ const Constants = {
 Object.freeze(Constants);
 Object.freeze(Constants.MEDICATIONS);
 Object.freeze(Constants.MEDICATION_DISPLAY_NAMES);
+Object.freeze(Constants.WEIGHT_UNIT);
 Object.freeze(Constants.DRONTAL_TYPE);
 Object.freeze(Constants.TOPICAL);
 Object.freeze(Constants.STATUS);

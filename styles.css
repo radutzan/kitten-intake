@@ -451,6 +451,17 @@ h1 {
     color: var(--red);
 }
 
+.weight-warning {
+    background-color: var(--bg-yellow);
+    border: 1px solid var(--orange);
+    border-radius: calc(var(--input-radius) - var(--control-padding));
+    padding: 6px 10px;
+    margin-top: 6px;
+    font-size: var(--fs-body-small);
+    font-weight: 600;
+    color: #856404; /* Matches the shared-URL banner warning text */
+}
+
 .microchip-display {
     font-weight: normal;
     color: var(--text-secondary);
@@ -468,16 +479,40 @@ h1 {
     width: 33%;
 }
 
+.weight-input-overlay {
+    position: absolute;
+    top: var(--control-padding);
+    right: var(--control-padding);
+    bottom: var(--control-padding);
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+}
+
 .weight-display {
     background-color: var(--bg-light);
-    padding: 6px 8px;
+    padding: 0 8px;
     border-radius: calc(var(--input-radius) - var(--control-padding));
     font-weight: 600;
+    font-size: var(--fs-body-small);
     color: var(--text-secondary);
-    position: absolute;
-    right: var(--control-padding);
-    top: var(--control-padding);
-    bottom: var(--control-padding);
+    display: flex;
+    align-items: center;
+}
+
+.weight-input-wrapper .weight-entry-input {
+    padding-right: 154px;
+}
+
+.weight-unit-toggle.radio-group {
+    width: auto;
+    margin-top: 0;
+    padding: var(--control-padding);
+    font-size: var(--fs-body-medium);
+}
+
+.weight-unit-toggle.radio-group label {
+    padding: 2px 9px;
 }
 /* #endregion */
 
@@ -1377,6 +1412,21 @@ footer {
 
     .top .form-group input {
         width: 100%;
+    }
+
+    /* The weight row is tight on narrow screens — trim the conversion
+       readout so the typed number never slides underneath it. */
+    .weight-input-overlay {
+        gap: 4px;
+    }
+
+    .weight-display {
+        font-size: 11px;
+        padding: 0 6px;
+    }
+
+    .weight-input-wrapper .weight-entry-input {
+        padding-right: 142px;
     }
 
     .horizontal-label {

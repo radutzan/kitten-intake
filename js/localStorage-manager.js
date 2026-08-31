@@ -251,6 +251,7 @@ class LocalStorageManager {
         this.setInputValue(Constants.ID.name(kittenId), kittenData.name);
         this.setInputValue(Constants.ID.microchip(kittenId), kittenData.microchip || '');
         this.setInputValue(Constants.ID.weight(kittenId), kittenData.weight);
+        this.setInputValue(Constants.ID.weightEntry(kittenId), kittenData.weight);
         this.setRadioValue(Constants.ID.sexName(kittenId), kittenData.sex || Constants.DEFAULTS.SEX);
         this.setRadioValue(Constants.ID.topicalName(kittenId), kittenData.topical);
         this.setRadioValue(Constants.ID.drontalTypeName(kittenId), kittenData.drontalType || Constants.DRONTAL_TYPE.DRONCIT);
