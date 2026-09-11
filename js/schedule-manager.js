@@ -233,7 +233,7 @@ class ScheduleManager {
                     const topicalName = remaining.topical.type === 'revolution' ? 'Revolution' : 'Advantage II';
                     summary.push({
                         medication: topicalName,
-                        dose: AppState.formatNumber(remaining.topical.amount, 2) + ' mL',
+                        dose: AppState.formatDose(remaining.topical.amount) + ' mL',
                         days: 1
                     });
                 }
@@ -250,18 +250,18 @@ class ScheduleManager {
                 if (remaining.panacur.remaining > 0) {
                     summary.push({
                         medication: 'Panacur',
-                        dose: AppState.formatNumber(kitten.doses.panacur, 2) + ' mL',
+                        dose: AppState.formatDose(kitten.doses.panacur) + ' mL',
                         days: remaining.panacur.remaining,
-                        total: AppState.formatNumber(remaining.panacur.total, 2) + ' mL total'
+                        total: AppState.formatDose(remaining.panacur.total) + ' mL total'
                     });
                 }
             } else if (med === 'ponazuril') {
                 if (remaining.ponazuril.remaining > 0) {
                     summary.push({
                         medication: 'Ponazuril',
-                        dose: AppState.formatNumber(kitten.doses.ponazuril, 2) + ' mL',
+                        dose: AppState.formatDose(kitten.doses.ponazuril) + ' mL',
                         days: remaining.ponazuril.remaining,
-                        total: AppState.formatNumber(remaining.ponazuril.total, 2) + ' mL total'
+                        total: AppState.formatDose(remaining.ponazuril.total) + ' mL total'
                     });
                 }
             } else if (med === 'drontal') {
@@ -269,7 +269,7 @@ class ScheduleManager {
                     const isTablet = kitten.drontalType === 'drontal';
                     const doseStr = isTablet
                         ? kitten.doses.drontal + ' tablet(s)'
-                        : AppState.formatNumber(kitten.doses.drontal, 2) + ' mL';
+                        : AppState.formatDose(kitten.doses.drontal) + ' mL';
                     summary.push({
                         medication: isTablet ? 'Drontal' : 'Droncit',
                         dose: doseStr,
@@ -281,18 +281,18 @@ class ScheduleManager {
                 if (remaining.nexgard && remaining.nexgard.amount > 0) {
                     summary.push({
                         medication: 'NexGard Combo',
-                        dose: AppState.formatNumber(kitten.doses.nexgard, 2) + ' mL',
+                        dose: AppState.formatDose(kitten.doses.nexgard) + ' mL',
                         days: 1,
-                        total: AppState.formatNumber(remaining.nexgard.amount, 2) + ' mL'
+                        total: AppState.formatDose(remaining.nexgard.amount) + ' mL'
                     });
                 }
             } else if (med === 'pyrantel') {
                 if (remaining.pyrantel && remaining.pyrantel.amount > 0) {
                     summary.push({
                         medication: 'Pyrantel',
-                        dose: AppState.formatNumber(kitten.doses.pyrantel, 2) + ' mL',
+                        dose: AppState.formatDose(kitten.doses.pyrantel) + ' mL',
                         days: 1,
-                        total: AppState.formatNumber(remaining.pyrantel.amount, 2) + ' mL'
+                        total: AppState.formatDose(remaining.pyrantel.amount) + ' mL'
                     });
                 }
             }

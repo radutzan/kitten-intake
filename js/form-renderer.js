@@ -410,7 +410,7 @@ class FormRenderer {
         const fleaDoseEl = document.getElementById(`${kittenId}-flea-dose`);
         if (fleaDoseEl) {
             const dose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
-            fleaDoseEl.textContent = dose === outOfRange ? outOfRange : `${AppState.formatNumber(dose, 2)} mL`;
+            fleaDoseEl.innerHTML = dose === outOfRange ? outOfRange : `${AppState.formatDose(dose)} mL ${AppState.routeTag()}`;
         }
 
         // Capstar dose
@@ -422,13 +422,13 @@ class FormRenderer {
         // Panacur dose
         const panacurDoseEl = document.getElementById(`${kittenId}-panacur-dose`);
         if (panacurDoseEl) {
-            panacurDoseEl.textContent = `${AppState.formatNumber(doses.panacur, 2)} mL/day`;
+            panacurDoseEl.textContent = `${AppState.formatDose(doses.panacur)} mL/day`;
         }
 
         // Ponazuril dose
         const ponazurilDoseEl = document.getElementById(`${kittenId}-ponazuril-dose`);
         if (ponazurilDoseEl) {
-            ponazurilDoseEl.textContent = `${AppState.formatNumber(doses.ponazuril, 2)} mL/day`;
+            ponazurilDoseEl.textContent = `${AppState.formatDose(doses.ponazuril)} mL/day`;
         }
 
         // Droncit/Drontal dose (tablet or injectable based on type)
@@ -437,20 +437,20 @@ class FormRenderer {
             if (drontalType === Constants.DRONTAL_TYPE.DRONTAL) {
                 drontalDoseEl.textContent = doses.drontal === outOfRange ? outOfRange : `${doses.drontal} tablet(s)`;
             } else {
-                drontalDoseEl.textContent = doses.droncit === outOfRange ? outOfRange : `${AppState.formatNumber(doses.droncit, 2)} mL`;
+                drontalDoseEl.textContent = doses.droncit === outOfRange ? outOfRange : `${AppState.formatDose(doses.droncit)} mL`;
             }
         }
 
         // NexGard Combo dose
         const nexgardDoseEl = document.getElementById(`${kittenId}-nexgard-dose`);
         if (nexgardDoseEl) {
-            nexgardDoseEl.textContent = doses.nexgard === outOfRange ? outOfRange : `${AppState.formatNumber(doses.nexgard, 2)} mL`;
+            nexgardDoseEl.innerHTML = doses.nexgard === outOfRange ? outOfRange : `${AppState.formatDose(doses.nexgard)} mL ${AppState.routeTag()}`;
         }
 
         // Pyrantel dose
         const pyrantelDoseEl = document.getElementById(`${kittenId}-pyrantel-dose`);
         if (pyrantelDoseEl) {
-            pyrantelDoseEl.textContent = `${AppState.formatNumber(doses.pyrantel, 2)} mL`;
+            pyrantelDoseEl.textContent = `${AppState.formatDose(doses.pyrantel)} mL`;
         }
     }
 
@@ -480,7 +480,7 @@ class FormRenderer {
                 const topicalDose = topical === Constants.TOPICAL.REVOLUTION ? doses.revolution : doses.advantage;
                 content += `
                     <div class="result-item">
-                        <strong>${topicalName}</strong> <span class="result-item-dose">${topicalDose === outOfRange ? outOfRange : AppState.formatNumber(topicalDose, 2) + ' mL'}</span>${statusBadge}
+                        <strong>${topicalName}</strong> <span class="result-item-dose">${topicalDose === outOfRange ? outOfRange : AppState.formatDose(topicalDose) + ' mL ' + AppState.routeTag()}</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'capstar') {
@@ -492,13 +492,13 @@ class FormRenderer {
             } else if (med === 'panacur') {
                 content += `
                     <div class="result-item">
-                        <strong>Panacur</strong> <span class="result-item-dose">${AppState.formatNumber(doses.panacur, 2)} mL/day × ${panacurDays} days</span>${statusBadge}
+                        <strong>Panacur</strong> <span class="result-item-dose">${AppState.formatDose(doses.panacur)} mL/day × ${panacurDays} days</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'ponazuril') {
                 content += `
                     <div class="result-item">
-                        <strong>Ponazuril</strong> <span class="result-item-dose">${AppState.formatNumber(doses.ponazuril, 2)} mL/day × ${ponazurilDays} days</span>${statusBadge}
+                        <strong>Ponazuril</strong> <span class="result-item-dose">${AppState.formatDose(doses.ponazuril)} mL/day × ${ponazurilDays} days</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'drontal') {
@@ -506,7 +506,7 @@ class FormRenderer {
                 const drontalName = isTablet ? 'Drontal' : 'Droncit';
                 const drontalDose = isTablet ? doses.drontal : doses.droncit;
                 const drontalDoseStr = drontalDose === outOfRange ? outOfRange
-                    : (isTablet ? drontalDose + ' tablet(s)' : AppState.formatNumber(drontalDose, 2) + ' mL');
+                    : (isTablet ? drontalDose + ' tablet(s)' : AppState.formatDose(drontalDose) + ' mL');
                 content += `
                     <div class="result-item">
                         <strong>${drontalName}</strong> <span class="result-item-dose">${drontalDoseStr}</span>${statusBadge}
@@ -515,13 +515,13 @@ class FormRenderer {
             } else if (med === 'nexgard') {
                 content += `
                     <div class="result-item">
-                        <strong>NexGard Combo</strong> <span class="result-item-dose">${doses.nexgard === outOfRange ? outOfRange : AppState.formatNumber(doses.nexgard, 2) + ' mL'}</span>${statusBadge}
+                        <strong>NexGard Combo</strong> <span class="result-item-dose">${doses.nexgard === outOfRange ? outOfRange : AppState.formatDose(doses.nexgard) + ' mL ' + AppState.routeTag()}</span>${statusBadge}
                     </div>
                 `;
             } else if (med === 'pyrantel') {
                 content += `
                     <div class="result-item">
-                        <strong>Pyrantel</strong> <span class="result-item-dose">${AppState.formatNumber(doses.pyrantel, 2)} mL</span>${statusBadge}
+                        <strong>Pyrantel</strong> <span class="result-item-dose">${AppState.formatDose(doses.pyrantel)} mL</span>${statusBadge}
                     </div>
                 `;
             }

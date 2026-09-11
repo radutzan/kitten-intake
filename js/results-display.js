@@ -154,7 +154,7 @@ class ResultsDisplay {
                     items.push(`
                         <div class="total-item">
                             <span>Revolution</span>
-                            <strong>${AppState.formatNumber(totals.revolution, 2)} mL</strong>
+                            <strong>${AppState.formatDose(totals.revolution)} mL</strong>
                         </div>
                     `);
                 }
@@ -162,7 +162,7 @@ class ResultsDisplay {
                     items.push(`
                         <div class="total-item">
                             <span>Advantage II</span>
-                            <strong>${AppState.formatNumber(totals.advantage, 2)} mL</strong>
+                            <strong>${AppState.formatDose(totals.advantage)} mL</strong>
                         </div>
                     `);
                 }
@@ -180,7 +180,7 @@ class ResultsDisplay {
                     items.push(`
                         <div class="total-item">
                             <span>Panacur</span>
-                            <strong>${AppState.formatNumber(totals.panacur, 2)} mL</strong>
+                            <strong>${AppState.formatDose(totals.panacur)} mL</strong>
                         </div>
                     `);
                 }
@@ -189,7 +189,7 @@ class ResultsDisplay {
                     items.push(`
                         <div class="total-item">
                             <span>Ponazuril</span>
-                            <strong>${AppState.formatNumber(totals.ponazuril, 2)} mL</strong>
+                            <strong>${AppState.formatDose(totals.ponazuril)} mL</strong>
                         </div>
                     `);
                 }
@@ -199,7 +199,7 @@ class ResultsDisplay {
                     items.push(`
                         <div class="total-item">
                             <span>Droncit</span>
-                            <strong>${AppState.formatNumber(totals.droncit, 2)} mL</strong>
+                            <strong>${AppState.formatDose(totals.droncit)} mL</strong>
                         </div>
                     `);
                 }
@@ -216,7 +216,7 @@ class ResultsDisplay {
                     items.push(`
                         <div class="total-item">
                             <span>NexGard Combo</span>
-                            <strong>${AppState.formatNumber(totals.nexgard, 2)} mL</strong>
+                            <strong>${AppState.formatDose(totals.nexgard)} mL</strong>
                         </div>
                     `);
                 }
@@ -225,7 +225,7 @@ class ResultsDisplay {
                     items.push(`
                         <div class="total-item">
                             <span>Pyrantel</span>
-                            <strong>${AppState.formatNumber(totals.pyrantel, 2)} mL</strong>
+                            <strong>${AppState.formatDose(totals.pyrantel)} mL</strong>
                         </div>
                     `);
                 }
@@ -354,22 +354,25 @@ class ResultsDisplay {
      * Get dose display string for medication
      */
     _getMedicationDoseDisplay(medType, medData) {
-        if (medType === 'pyrantel' || medType === 'nexgard') {
-            return `${AppState.formatNumber(medData.dose, 2)} mL`;
+        if (medType === 'nexgard') {
+            return `${AppState.formatDose(medData.dose)} mL ${AppState.routeTag()}`;
+        }
+        if (medType === 'pyrantel') {
+            return `${AppState.formatDose(medData.dose)} mL`;
         }
         if (medType === 'panacur' || medType === 'ponazuril') {
-            return `${AppState.formatNumber(medData.dose, 2)} mL`;
+            return `${AppState.formatDose(medData.dose)} mL`;
         }
         if (medType === 'drontal') {
             return medData.type === 'drontal'
                 ? `${medData.dose} tablet(s)`
-                : `${AppState.formatNumber(medData.dose, 2)} mL`;
+                : `${AppState.formatDose(medData.dose)} mL`;
         }
         if (medType === 'capstar') {
             return medData.dose;
         }
         if (medType === 'topical') {
-            return `${AppState.formatNumber(medData.dose, 2)} mL`;
+            return `${AppState.formatDose(medData.dose)} mL ${AppState.routeTag()}`;
         }
         return '';
     }

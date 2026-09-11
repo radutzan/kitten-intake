@@ -284,6 +284,31 @@ class AppState {
         });
     }
 
+    /**
+     * Format a dose amount, trimming trailing zeros (0.20 → 0.2, 1.00 → 1).
+     * @param {number} num - The dose amount
+     * @param {number} decimals - Maximum decimal places (default 2)
+     * @returns {string} Formatted dose
+     */
+    static formatDose(num, decimals = 2) {
+        if (typeof num !== 'number' || isNaN(num)) {
+            return String(num);
+        }
+        return num.toLocaleString('en-US', {
+            maximumFractionDigits: decimals
+        });
+    }
+
+    /**
+     * Markup for a route-of-administration tag (e.g. the yellow "Topical" pill
+     * shown beside flea med and NexGard doses).
+     * @param {string} label - Tag text
+     * @returns {string} HTML string
+     */
+    static routeTag(label = 'Topical') {
+        return `<span class="route-tag">${label}</span>`;
+    }
+
     static updateDateTime() {
         const now = new Date();
         

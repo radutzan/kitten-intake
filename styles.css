@@ -35,6 +35,8 @@
     --bg-light: var(--gray-50);
     --bg-medium: var(--gray-100);
     --bg-yellow: #fff3cd;
+    --tag-yellow-border: #ffd24d;
+    --tag-yellow-text: #8a6116;
     --bg-green: #e8f5e8;
 
     /* Spacing & sizing */
@@ -793,6 +795,9 @@ input[type="radio"]:focus {
 }
 
 .medication-labels .right .dose-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -935,6 +940,22 @@ input[type="radio"]:focus {
 
 .med-status-delay {
     background-color: var(--status-delay);
+}
+
+/* Route-of-administration tag (e.g. "Topical" beside a dose) */
+.route-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: var(--fs-body-small);
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+    flex-shrink: 0;
+    vertical-align: middle;
+    background-color: var(--bg-yellow);
+    border: 1px solid var(--tag-yellow-border);
+    color: var(--tag-yellow-text);
 }
 
 .result-display > .dose-section-header {
@@ -1213,6 +1234,14 @@ footer {
         background-color: white !important;
         color: #999 !important;
         border: 1px solid #999;
+    }
+
+    .route-tag {
+        background-color: var(--bg-yellow) !important;
+        border-color: var(--tag-yellow-border) !important;
+        color: var(--tag-yellow-text) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .horizontal-label {
