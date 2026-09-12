@@ -32,7 +32,7 @@ class FormRenderer {
             const unit = document.querySelector(`input[name="${Constants.ID.weightUnitName(kittenId)}"]:checked`)?.value
                 || Constants.WEIGHT_UNIT.GRAMS;
             display.textContent = unit === Constants.WEIGHT_UNIT.LB
-                ? `= ${AppState.formatNumber(grams)} g`
+                ? `= ${this.formatGramsReadout(grams)}`
                 : `= ${AppState.formatNumber(AppState.convertToPounds(grams), 2)} lb`;
             // 'flex' (not 'block') so the stylesheet's align-items: center
             // survives — an inline display would otherwise kill the centering.
@@ -42,6 +42,18 @@ class FormRenderer {
         }
 
         this.updateWeightWarning(kittenId);
+    }
+
+    /**
+     * Format the metric side of the conversion readout. Anything from a
+     * kilogram up reads better in kg than as a four-digit gram count.
+     * @param {number} grams - Weight in grams
+     * @returns {string} e.g. "450 g" or "2.27 kg"
+     */
+    formatGramsReadout(grams) {
+        return grams >= Constants.KG_DISPLAY_THRESHOLD_G
+            ? `${AppState.formatDose(grams / 1000, 2)} kg`
+            : `${AppState.formatNumber(grams)} g`;
     }
 
     /**

@@ -509,12 +509,24 @@ h1 {
 .weight-unit-toggle.radio-group {
     width: auto;
     margin-top: 0;
-    padding: var(--control-padding);
+    /* The overlay already insets by --control-padding from the input border;
+       no padding of its own, so the chip sits as close to the container as
+       the sex selector's does. */
+    padding: 0;
     font-size: var(--fs-body-medium);
+    /* Sits inside the weight input, which already has its own border */
+    box-shadow: none;
+    background-color: transparent;
+    /* Nothing left to clip, and with no padding the group's own 14px radius
+       would re-cut the chips' corners into a lopsided curve. */
+    overflow: visible;
 }
 
 .weight-unit-toggle.radio-group label {
-    padding: 2px 9px;
+    padding: 2px 4px;
+    /* Equal, near-square chips so they read as rounded rectangles like the
+       sex selector's, rather than narrow lozenges. */
+    min-width: 34px;
 }
 /* #endregion */
 

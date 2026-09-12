@@ -78,6 +78,10 @@ const Constants = {
     // mistyped weight doesn't silently produce an overdose.
     HEAVY_WEIGHT_LB: 6,
 
+    // At or above this many grams, the lb-entry conversion readout switches
+    // to kg — "= 2.27 kg" is easier to read at a glance than "= 2,268 g".
+    KG_DISPLAY_THRESHOLD_G: 1000,
+
     // Main container element IDs
     ELEMENTS: {
         KITTENS_CONTAINER: 'kittens-container',
