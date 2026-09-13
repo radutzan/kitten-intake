@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Meds Calculator</title><!-- by Anti & Radu (& AI) -->
+    <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="../styles.css?v=85">
     <style>
         /* /calc/-specific styles. Spartan: a weight input and a table. */
+
+        :root {
+            /* Weight and search boxes share one height, whatever their font size. */
+            --calc-input-height: 46px;
+        }
 
         .calc-header {
             display: flex;
@@ -29,6 +35,13 @@
             font-weight: 600;
             white-space: nowrap;
         }
+        /* Body padding drops to 0 on mobile; keep the heading clear of the
+           status bar / Safari's translucent top bar. */
+        @media (max-width: 768px) {
+            .calc-header {
+                padding-top: calc(20px + env(safe-area-inset-top));
+            }
+        }
 
         .calc-weight-row {
             margin-bottom: 24px;
@@ -41,6 +54,7 @@
         }
         .calc-weight-wrapper #calc-weight {
             width: 100%;
+            height: var(--calc-input-height);
             /* Right padding clears the conversion readout + g/lb toggle overlay. */
             padding: 8px 154px 8px 12px;
             border: 1px solid var(--border-color);
@@ -66,12 +80,17 @@
 
         .calc-search-row {
             margin-bottom: 16px;
-            /* Inset to line up with the table cells' 12px side padding. */
-            padding: 0 12px;
+            /* Same side inset as the weight bar (its container's padding). */
+            padding: 0 var(--container-radius);
+        }
+        .calc-search-wrapper {
+            position: relative;
         }
         .calc-search-row input {
             width: 100%;
-            padding: 8px 12px;
+            height: var(--calc-input-height);
+            /* Right padding clears the Clear button. */
+            padding: 8px 64px 8px 12px;
             border: 1px solid var(--border-color);
             border-radius: var(--input-radius);
             font-size: var(--fs-body-medium);
@@ -79,10 +98,34 @@
             -webkit-appearance: none;
             appearance: none;
         }
-        /* appearance:none above strips Safari's native search chrome,
-           the clear button included. Put the clear button back. */
+        /* Hide the native clear "x" (Chrome shows it despite appearance:none);
+           the Clear button below replaces it. */
         .calc-search-row input::-webkit-search-cancel-button {
-            -webkit-appearance: searchfield-cancel-button;
+            -webkit-appearance: none;
+            display: none;
+        }
+        .calc-search-clear {
+            position: absolute;
+            top: 50%;
+            right: 4px;
+            transform: translateY(-50%);
+            padding: 4px 10px;
+            border: none;
+            border-radius: var(--input-radius);
+            background: none;
+            color: var(--blue);
+            font-size: var(--fs-body-medium);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .calc-search-clear:hover {
+            background-color: var(--bg-light);
+        }
+        /* iOS Safari zooms into any focused input under 16px. */
+        @media (max-width: 768px) {
+            .calc-search-row input {
+                font-size: 16px;
+            }
         }
         .calc-search-row input:focus {
             outline: none;
@@ -100,7 +143,7 @@
         }
         .calc-no-results {
             padding: 16px 12px;
-            margin: 0 12px;
+            margin: 0 var(--container-radius);
             color: var(--text-secondary);
             font-size: var(--fs-body-medium);
         }
@@ -118,21 +161,24 @@
             border-bottom: 1px solid var(--divider);
         }
         /* Row backgrounds run full width, but the outer cells' text lines up
-           with the search box text (12px row inset + 12px input padding). */
+           with the search box text (row inset + 12px input padding). */
+        .meds-table {
+            --calc-text-inset: calc(var(--container-radius) + 12px);
+        }
         .meds-table th:first-child,
         .meds-table td:first-child {
-            padding-left: 24px;
+            padding-left: var(--calc-text-inset);
         }
         .meds-table th:last-child,
         .meds-table td:last-child {
-            padding-right: 24px;
+            padding-right: var(--calc-text-inset);
         }
         .meds-table th {
             font-weight: 600;
             color: var(--text-heading);
             background-color: var(--bg-light);
             position: sticky;
-            top: 60px;  /* below the sticky nav */
+            top: 0;
             z-index: 10;
         }
         .meds-table tbody tr:hover {
@@ -186,14 +232,14 @@
             }
             /* Dose is the visible last header once the others are hidden. */
             .meds-table thead th.col-dose {
-                padding-right: 24px;
+                padding-right: var(--calc-text-inset);
             }
             .meds-table tbody td.col-conc,
             .meds-table tbody td.col-calc,
             .meds-table tbody td.col-notes {
                 display: block;
                 border-bottom: none;
-                padding: 0 24px 4px 24px;
+                padding: 0 var(--calc-text-inset) 4px var(--calc-text-inset);
                 color: var(--text-secondary);
                 font-size: var(--fs-body-small);
             }
@@ -225,8 +271,8 @@
             .meds-table tbody td.col-calc { grid-area: calc; }
             .meds-table tbody td.col-dose {
                 grid-area: dose;
-                align-self: center;
-                padding-right: 24px;
+                align-self: start;
+                padding-right: var(--calc-text-inset);
                 border-bottom: none;
                 text-align: right;
             }
@@ -257,7 +303,10 @@
     </div>
 
     <div class="calc-search-row">
-        <input type="search" id="calc-search" placeholder="Search medications" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search medications">
+        <div class="calc-search-wrapper">
+            <input type="search" id="calc-search" placeholder="Search medications" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search medications">
+            <button type="button" class="calc-search-clear" id="calc-search-clear" hidden>Clear</button>
+        </div>
     </div>
 
     <table class="meds-table">

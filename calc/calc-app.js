@@ -25,6 +25,7 @@
     const weightDisplay = document.getElementById('calc-weight-display');
     const weightWarning = document.getElementById('calc-weight-warning');
     const searchInput = document.getElementById('calc-search');
+    const searchClear = document.getElementById('calc-search-clear');
     const table = document.querySelector('.meds-table');
     const tbody = document.getElementById('meds-tbody');
     const noResults = document.getElementById('calc-no-results');
@@ -91,6 +92,7 @@
      * "onda inj" finds Ondansetron (Injectable) regardless of word order.
      */
     function applyFilter() {
+        searchClear.hidden = !searchInput.value;
         const query = searchInput.value.trim().toLowerCase();
         const terms = query ? query.split(/\s+/) : [];
         let visible = 0;
@@ -215,5 +217,10 @@
             searchInput.value = '';
             applyFilter();
         }
+    });
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        applyFilter();
+        searchInput.focus();
     });
 })();
