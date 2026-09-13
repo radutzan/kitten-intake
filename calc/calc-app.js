@@ -15,10 +15,15 @@
     'use strict';
 
     const KG_PER_LB = 0.45359237;
+    // Holds the number as typed, in the selected unit. The key name predates
+    // the g/lb toggle; kept so previously saved gram weights still load.
     const STORAGE_KEY = 'calc-weight-grams';
+    const UNIT_STORAGE_KEY = 'calc-weight-unit';
+    const UNIT_RADIO_NAME = 'calc-weight-unit';
 
     const weightInput = document.getElementById('calc-weight');
     const weightDisplay = document.getElementById('calc-weight-display');
+    const weightWarning = document.getElementById('calc-weight-warning');
     const searchInput = document.getElementById('calc-search');
     const table = document.querySelector('.meds-table');
     const tbody = document.getElementById('meds-tbody');
@@ -26,6 +31,17 @@
     const noResultsTerm = document.getElementById('calc-no-results-term');
 
     function gramsToLb(g) { return g / 1000 / KG_PER_LB; }
+    function lbToGrams(lb) { return lb * KG_PER_LB * 1000; }
+
+    function formatNumber(num, maxDecimals = 0) {
+        return num.toLocaleString('en-US', { maximumFractionDigits: maxDecimals });
+    }
+
+    /** Digits and a single decimal point only (type="text" allows anything). */
+    function sanitizeWeight(value) {
+        const parts = value.replace(/[^0-9.]/g, '').split('.');
+        return parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : parts.join('.');
+    }
 
     function escapeHtml(s) {
         return String(s)
@@ -92,11 +108,37 @@
         if (empty) noResultsTerm.textContent = searchInput.value.trim();
     }
 
+    function selectedUnit() {
+        const checked = document.querySelector(`input[name="${UNIT_RADIO_NAME}"]:checked`);
+        return checked ? checked.value : Constants.WEIGHT_UNIT.GRAMS;
+    }
+
+    /**
+     * Canonical grams from the typed number and selected unit. lb entries are
+     * rounded to whole grams, matching the main intake form, so both pages
+     * give identical doses for the same weight.
+     */
+    function enteredGrams() {
+        const amount = parseFloat(weightInput.value) || 0;
+        return selectedUnit() === Constants.WEIGHT_UNIT.LB ? Math.round(lbToGrams(amount)) : amount;
+    }
+
+    /** "= 450 g" / "= 2.27 kg" when entering lb; "= 11.02 lb" when entering g. */
+    function conversionReadout(grams) {
+        if (selectedUnit() === Constants.WEIGHT_UNIT.LB) {
+            return grams >= Constants.KG_DISPLAY_THRESHOLD_G
+                ? `= ${formatNumber(grams / 1000, 2)} kg`
+                : `= ${formatNumber(grams)} g`;
+        }
+        return `= ${gramsToLb(grams).toFixed(2)} lb`;
+    }
+
     function updateDoses() {
-        const grams = parseFloat(weightInput.value);
+        const grams = enteredGrams();
 
         if (!grams || grams <= 0) {
-            weightDisplay.textContent = '';
+            weightDisplay.hidden = true;
+            weightWarning.hidden = true;
             for (const cell of tbody.querySelectorAll('[data-dose-cell]')) {
                 cell.textContent = '';
                 cell.classList.remove('out-of-range');
@@ -105,7 +147,13 @@
         }
 
         const weightLb = gramsToLb(grams);
-        weightDisplay.textContent = `${weightLb.toFixed(2)} lb`;
+        weightDisplay.textContent = conversionReadout(grams);
+        weightDisplay.hidden = false;
+
+        // A mistyped weight would otherwise scale every dose up with nothing flagging it.
+        const isHeavy = weightLb > Constants.HEAVY_WEIGHT_LB;
+        weightWarning.textContent = isHeavy ? Constants.MESSAGES.HEAVY_WEIGHT : '';
+        weightWarning.hidden = !isHeavy;
 
         for (const med of MedsData.all()) {
             const cell = tbody.querySelector(`[data-dose-cell="${med.id}"]`);
@@ -120,6 +168,9 @@
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) weightInput.value = saved;
+            const savedUnit = localStorage.getItem(UNIT_STORAGE_KEY);
+            const radio = document.querySelector(`input[name="${UNIT_RADIO_NAME}"][value="${savedUnit}"]`);
+            if (radio) radio.checked = true;
         } catch (e) {
             // localStorage may be unavailable; non-fatal.
         }
@@ -132,6 +183,7 @@
             } else {
                 localStorage.removeItem(STORAGE_KEY);
             }
+            localStorage.setItem(UNIT_STORAGE_KEY, selectedUnit());
         } catch (e) {
             // non-fatal
         }
@@ -143,9 +195,19 @@
     applyFilter();
 
     weightInput.addEventListener('input', () => {
+        const clean = sanitizeWeight(weightInput.value);
+        if (clean !== weightInput.value) weightInput.value = clean;
         updateDoses();
         persist();
     });
+
+    // Switching units reinterprets the number already typed; it never rewrites it.
+    for (const radio of document.querySelectorAll(`input[name="${UNIT_RADIO_NAME}"]`)) {
+        radio.addEventListener('change', () => {
+            updateDoses();
+            persist();
+        });
+    }
 
     searchInput.addEventListener('input', applyFilter);
     searchInput.addEventListener('keydown', (e) => {

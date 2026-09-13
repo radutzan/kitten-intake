@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dose Calculator</title><!-- by Anti & Radu (& AI) -->
-    <link rel="stylesheet" href="../styles.css?v=83">
+    <title>All Meds Calculator</title><!-- by Anti & Radu (& AI) -->
+    <link rel="stylesheet" href="../styles.css?v=85">
     <style>
         /* /calc/-specific styles. Spartan: a weight input and a table. */
 
@@ -31,48 +31,43 @@
         }
 
         .calc-weight-row {
-            display: flex;
-            align-items: stretch;
-            gap: 8px;
             margin-bottom: 24px;
             background-color: var(--bg-medium);
             border-radius: var(--container-radius);
             padding: var(--container-radius);
         }
         .calc-weight-wrapper {
-            flex: 1;
             position: relative;
         }
-        .calc-weight-wrapper input {
+        .calc-weight-wrapper #calc-weight {
             width: 100%;
-            padding: 8px 12px;
+            /* Right padding clears the conversion readout + g/lb toggle overlay. */
+            padding: 8px 154px 8px 12px;
             border: 1px solid var(--border-color);
             border-radius: var(--input-radius);
             font-size: var(--fs-header-large);
             background: white;
         }
-        .calc-weight-wrapper input:focus {
+        .calc-weight-wrapper #calc-weight:focus {
             outline: none;
             border-color: var(--blue);
             box-shadow: 0 0 0 2px rgba(40, 90, 168, 0.2);
         }
-        .calc-weight-display {
-            background-color: var(--bg-light);
-            padding: 6px 10px;
-            border-radius: calc(var(--input-radius) - var(--control-padding));
-            font-weight: 600;
-            color: var(--text-secondary);
-            position: absolute;
-            right: var(--control-padding);
-            top: var(--control-padding);
-            bottom: var(--control-padding);
-            display: flex;
-            align-items: center;
-            font-size: var(--fs-body-medium);
+        /* The shared .weight-display / .weight-warning classes set a display
+           value, which would otherwise beat the plain [hidden] attribute. */
+        .calc-weight-row [hidden] {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .calc-weight-wrapper #calc-weight {
+                padding-right: 142px;
+            }
         }
 
         .calc-search-row {
             margin-bottom: 16px;
+            /* Inset to line up with the table cells' 12px side padding. */
+            padding: 0 12px;
         }
         .calc-search-row input {
             width: 100%;
@@ -105,7 +100,7 @@
         }
         .calc-no-results {
             padding: 16px 12px;
-            margin: 0;
+            margin: 0 12px;
             color: var(--text-secondary);
             font-size: var(--fs-body-medium);
         }
@@ -121,6 +116,16 @@
             text-align: left;
             vertical-align: top;
             border-bottom: 1px solid var(--divider);
+        }
+        /* Row backgrounds run full width, but the outer cells' text lines up
+           with the search box text (12px row inset + 12px input padding). */
+        .meds-table th:first-child,
+        .meds-table td:first-child {
+            padding-left: 24px;
+        }
+        .meds-table th:last-child,
+        .meds-table td:last-child {
+            padding-right: 24px;
         }
         .meds-table th {
             font-weight: 600;
@@ -179,12 +184,16 @@
             .meds-table thead th.col-notes {
                 display: none;
             }
+            /* Dose is the visible last header once the others are hidden. */
+            .meds-table thead th.col-dose {
+                padding-right: 24px;
+            }
             .meds-table tbody td.col-conc,
             .meds-table tbody td.col-calc,
             .meds-table tbody td.col-notes {
                 display: block;
                 border-bottom: none;
-                padding: 0 12px 4px 12px;
+                padding: 0 24px 4px 24px;
                 color: var(--text-secondary);
                 font-size: var(--fs-body-small);
             }
@@ -217,7 +226,7 @@
             .meds-table tbody td.col-dose {
                 grid-area: dose;
                 align-self: center;
-                padding-right: 12px;
+                padding-right: 24px;
                 border-bottom: none;
                 text-align: right;
             }
@@ -228,14 +237,23 @@
 <body>
     <header class="calc-header">
         <a href="../">← Back</a>
-        <h1>Dose Calculator</h1>
+        <h1>All Meds Calculator</h1>
     </header>
 
     <div class="calc-weight-row">
         <div class="calc-weight-wrapper">
-            <input type="number" id="calc-weight" placeholder="Weight (g)" inputmode="numeric" min="0" step="any" autofocus>
-            <div class="calc-weight-display" id="calc-weight-display"></div>
+            <input type="text" id="calc-weight" placeholder="Weight" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" aria-label="Weight" autofocus>
+            <div class="weight-input-overlay">
+                <div class="weight-display" id="calc-weight-display" hidden></div>
+                <div class="weight-unit-toggle radio-group">
+                    <input type="radio" name="calc-weight-unit" value="g" id="calc-weight-unit-g" checked>
+                    <label for="calc-weight-unit-g">g</label>
+                    <input type="radio" name="calc-weight-unit" value="lb" id="calc-weight-unit-lb">
+                    <label for="calc-weight-unit-lb">lb</label>
+                </div>
+            </div>
         </div>
+        <div class="weight-warning" id="calc-weight-warning" role="status" hidden></div>
     </div>
 
     <div class="calc-search-row">
@@ -261,9 +279,9 @@
         <p class="footer-disclaimer">This tool is provided for informational purposes only. It does not constitute veterinary or medical advice. Always consult a licensed veterinarian before administering any medication. Use this tool at your own risk.</p>
     </footer>
 
-    <script src="../js/constants.js?v=83"></script>
-    <script src="../js/meds-data.js?v=83"></script>
-    <script src="../js/med-calculator.js?v=83"></script>
-    <script src="calc-app.js?v=83"></script>
+    <script src="../js/constants.js?v=85"></script>
+    <script src="../js/meds-data.js?v=85"></script>
+    <script src="../js/med-calculator.js?v=85"></script>
+    <script src="calc-app.js?v=85"></script>
 </body>
 </html>
