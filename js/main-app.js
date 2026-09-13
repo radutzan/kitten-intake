@@ -22,6 +22,7 @@ class MainApp {
         this.resultsDisplay = new ResultsDisplay(this.appState, this.scheduleManager, this.doseCalculator);
         this.printManager = new PrintManager(this.appState);
         this.urlStateManager = new UrlStateManager();
+        this.pageZoomManager = new PageZoomManager();
 
         // Store references in global namespace for easy access
         window.KittenApp = {
@@ -32,6 +33,7 @@ class MainApp {
             resultsDisplay: this.resultsDisplay,
             printManager: this.printManager,
             urlStateManager: this.urlStateManager,
+            pageZoomManager: this.pageZoomManager,
             mainApp: this
         };
     }
@@ -233,6 +235,9 @@ class MainApp {
                     break;
                 case 'print':
                     this.handlePrint();
+                    break;
+                case 'zoom':
+                    this.pageZoomManager.open();
                     break;
             }
         });

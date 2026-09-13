@@ -73,6 +73,7 @@ body {
     padding: 20px;
     min-height: 100vh;
     min-width: 350px;
+    zoom: var(--page-zoom, 1);
 }
 
 .print-only {
@@ -228,6 +229,83 @@ h1 {
 
 .nav-menu-dropdown button.destructive:hover {
     background-color: #fef3f0;
+}
+/* #endregion */
+
+/* #region Page Zoom Sheet */
+.page-zoom-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+}
+
+.page-zoom-backdrop.open {
+    display: block;
+}
+
+.page-zoom-sheet {
+    /* Cancel the body zoom so the sheet stays the same size */
+    zoom: calc(1 / var(--page-zoom, 1));
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    max-width: 400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: stretch;
+    background-color: white;
+    border-radius: var(--container-radius);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    z-index: 901;
+    visibility: hidden;
+    transform: translateY(calc(100% + 40px));
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.page-zoom-sheet.open {
+    visibility: visible;
+    transform: translateY(0);
+    transition: transform 0.25s ease;
+}
+
+.page-zoom-sheet button {
+    flex: 1;
+    height: 60px;
+    border: none;
+    background: none;
+    color: var(--text-heading);
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.page-zoom-sheet button + button {
+    border-left: 1px solid var(--gray-200);
+}
+
+.page-zoom-sheet button:active {
+    background-color: var(--gray-100);
+}
+
+.page-zoom-sheet button:disabled {
+    color: var(--gray-300);
+    cursor: default;
+    background: none;
+}
+
+.page-zoom-smaller {
+    font-size: 15px;
+}
+
+.page-zoom-value {
+    font-size: var(--fs-body-large);
+    font-weight: 600;
+}
+
+.page-zoom-bigger {
+    font-size: 26px;
 }
 /* #endregion */
 
@@ -1172,6 +1250,15 @@ footer {
 
     @page {
         size: landscape;
+    }
+
+    body {
+        zoom: 1;
+    }
+
+    .page-zoom-sheet,
+    .page-zoom-backdrop {
+        display: none;
     }
 
     :root {
