@@ -232,7 +232,7 @@ class MainApp {
                     this.handleShare();
                     break;
                 case 'print':
-                    window.print();
+                    this.handlePrint();
                     break;
             }
         });
@@ -258,6 +258,58 @@ class MainApp {
         // });
     }
 
+    /**
+     * iOS 27 silently ignores window.print() in home-screen web apps (it works in
+     * Safari tabs). The OS version in the UA is frozen at 18_x since iOS 26, but
+     * the Version/NN token is accurate in both Safari and standalone mode.
+     */
+    isPrintBlockedInStandalone() {
+        if (window.navigator.standalone !== true) return false;
+        const match = navigator.userAgent.match(/Version\/(\d+)/);
+        return match !== null && parseInt(match[1], 10) >= 27;
+    }
+
+    handlePrint() {
+        if (!this.isPrintBlockedInStandalone()) {
+            window.print();
+            return;
+        }
+
+        const openInSafari = confirm(
+            'Printing doesn\'t work from the Home Screen app on this version of iOS.\n\n' +
+            'Open this intake in Safari to print?'
+        );
+        if (!openInSafari) return;
+
+        // Home-screen apps don't share storage with Safari, so carry the data over
+        // in the share URL. Copy it first so there's a fallback if the redirect fails.
+        this.urlStateManager.updateUrlNow();
+        const url = window.location.href;
+        const copied = this.copyTextSync(url);
+
+        // x-safari- forces Safari even for in-scope URLs, but only accepts https
+        // (plain-http local testing gets "address is invalid").
+        if (window.location.protocol === 'https:') {
+            window.location.href = `x-safari-${url}`;
+        } else {
+            alert(copied
+                ? 'Link copied. Paste it into Safari to print.'
+                : 'Couldn\'t copy the link. Use Share Link, then open it in Safari.');
+        }
+    }
+
+    /** Synchronous copy via a hidden textarea — works outside secure contexts
+     *  (navigator.clipboard is undefined on plain http) and within the tap gesture. */
+    copyTextSync(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return success;
+    }
+
     async handleShare() {
         const menuBtn = document.getElementById('nav-menu-btn');
         const originalText = menuBtn.textContent;
@@ -273,14 +325,7 @@ class MainApp {
             showFeedback('Copied!');
         } catch (e) {
             // Fallback for older browsers
-            const textarea = document.createElement('textarea');
-            textarea.value = window.location.href;
-            document.body.appendChild(textarea);
-            textarea.select();
-            const success = document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            showFeedback(success ? 'Copied!' : 'Failed');
+            showFeedback(this.copyTextSync(window.location.href) ? 'Copied!' : 'Failed');
         }
     }
 
