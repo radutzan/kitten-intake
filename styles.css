@@ -63,6 +63,13 @@
     -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
+/* Explicit white ground — without it, embedded viewers paint their own gray
+   behind the page and the gray cards lose their rounded edges */
+html,
+body {
+    background-color: white;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: var(--fs-body);
@@ -173,6 +180,59 @@ h1 {
     background-color: var(--gray-300);
 }
 
+/* Session intake date — a pill in the nav, beside the menu button.
+   The visible text is MM/DD/YY; the native date input sits invisibly on top
+   so a tap/click still opens the system date picker. */
+.nav-date {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    background-color: white;
+    color: var(--text-primary);
+    font-size: var(--fs-body-medium);
+    font-weight: 600;
+    line-height: 18px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.nav-date:hover {
+    background-color: var(--gray-50);
+}
+
+.nav-date-icon {
+    width: 15px;
+    height: 15px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.nav-date:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.nav-date input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
 .nav-menu-dropdown {
     display: none;
     position: absolute;
@@ -204,6 +264,7 @@ h1 {
     color: var(--text-primary);
     cursor: pointer;
     text-decoration: none;
+    white-space: nowrap;
     box-sizing: border-box;
 }
 
@@ -374,6 +435,7 @@ h1 {
 .input-section {
     margin-bottom: 20px;
 }
+
 
 .kitten-form {
     margin-bottom: 20px;
@@ -1442,6 +1504,11 @@ footer {
     .header-buttons {
         justify-content: space-between;
         flex-wrap: nowrap;
+    }
+
+    .nav-date {
+        height: 34px;
+        padding: 0 12px;
     }
 
     .nav-btn {

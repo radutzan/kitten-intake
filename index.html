@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cat Intake</title><!-- by Anti & Radu (& AI) -->
-    <link rel="manifest" href="manifest.webmanifest?v=87">
-    <link rel="icon" type="image/png" href="img/icon.png?v=87">
-    <link rel="apple-touch-icon" href="img/icon.png?v=87">
+    <link rel="manifest" href="manifest.webmanifest?v=88">
+    <link rel="icon" type="image/png" href="img/icon.png?v=88">
+    <link rel="apple-touch-icon" href="img/icon.png?v=88">
     <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" href="styles.css?v=87">
+    <link rel="stylesheet" href="styles.css?v=88">
     <script>
         // Apply saved page zoom before first paint (see js/page-zoom.js)
         try {
@@ -30,11 +30,19 @@
                         <button type="button" data-action="print">Print & Export</button>
                         <button type="button" data-action="share">Share Link</button>
                         <button type="button" data-action="zoom">Page Zoom</button>
+                        <a href="calc/">All Meds Calculator</a>
                         <hr>
                         <button type="button" data-action="clear" class="destructive">Clear All</button>
                     </div>
                 </div>
-                <a href="calc/" class="nav-btn nav-btn-secondary">All Meds Calculator</a>
+                <div class="nav-date">
+                    <span class="nav-date-text" id="intake-date-text" aria-hidden="true"></span>
+                    <svg class="nav-date-icon" viewBox="0 0 16 16" aria-hidden="true">
+                        <rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <input type="date" id="intake-date" aria-label="Intake date" title="Intake date">
+                </div>
             </div>
             <div class="nav-center" id="nav-center">
                 <div id="pagination-dots" class="pagination-dots">
@@ -85,27 +93,27 @@
     </div>
 
     <footer>
-        <small>Updated 09/12/26 · <a href="https://github.com/radutzan/kitten-intake">#87</a> · For the cats</small>
+        <small>Updated 09/14/26 · <a href="https://github.com/radutzan/kitten-intake">#88</a> · For the cats</small>
         <p class="footer-disclaimer">This tool is provided for informational purposes only. It does not constitute veterinary or medical advice. Always consult a licensed veterinarian before administering any medication. Use this tool at your own risk.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/barcode-detector@3/dist/iife/polyfill.js"></script>
-    <script src="js/constants.js?v=87"></script>
-    <script src="js/app-state.js?v=87"></script>
-    <script src="js/meds-data.js?v=87"></script>
-    <script src="js/med-calculator.js?v=87"></script>
-    <script src="js/dose-calculator.js?v=87"></script>
-    <script src="js/form-pagination.js?v=87"></script>
-    <script src="js/form-template.js?v=87"></script>
-    <script src="js/form-renderer.js?v=87"></script>
-    <script src="js/form-validator.js?v=87"></script>
-    <script src="js/form-manager.js?v=87"></script>
-    <script src="js/schedule-manager.js?v=87"></script>
-    <script src="js/results-display.js?v=87"></script>
-    <script src="js/print-manager.js?v=87"></script>
-    <script src="js/page-zoom.js?v=87"></script>
-    <script src="js/main-app.js?v=87"></script>
-    <script src="js/localStorage-manager.js?v=87"></script>
-    <script src="js/url-state-manager.js?v=87"></script>
+    <script src="js/constants.js?v=88"></script>
+    <script src="js/app-state.js?v=88"></script>
+    <script src="js/meds-data.js?v=88"></script>
+    <script src="js/med-calculator.js?v=88"></script>
+    <script src="js/dose-calculator.js?v=88"></script>
+    <script src="js/form-pagination.js?v=88"></script>
+    <script src="js/form-template.js?v=88"></script>
+    <script src="js/form-renderer.js?v=88"></script>
+    <script src="js/form-validator.js?v=88"></script>
+    <script src="js/form-manager.js?v=88"></script>
+    <script src="js/schedule-manager.js?v=88"></script>
+    <script src="js/results-display.js?v=88"></script>
+    <script src="js/print-manager.js?v=88"></script>
+    <script src="js/page-zoom.js?v=88"></script>
+    <script src="js/main-app.js?v=88"></script>
+    <script src="js/localStorage-manager.js?v=88"></script>
+    <script src="js/url-state-manager.js?v=88"></script>
 </body>
 </html>

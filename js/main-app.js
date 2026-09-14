@@ -117,7 +117,7 @@ class MainApp {
 
     init() {
         this.setupEventListeners();
-        AppState.updateDateTime(); // Set current date and time in header
+        AppState.setIntakeDate(AppState.todayISO()); // Default; restored sessions override it
 
         // Check for URL state first (shared link)
         if (this.urlStateManager.isSharedLink()) {
@@ -202,6 +202,22 @@ class MainApp {
         // Global event listeners
         document.getElementById('add-kitten-btn').addEventListener('click', () => {
             window.addKitten();
+        });
+
+        // Intake date applies to every cat in the session
+        const intakeDateInput = document.getElementById('intake-date');
+
+        // The input is invisible over the pill; open the picker on any click
+        // (desktop browsers otherwise only open it from the calendar icon)
+        intakeDateInput.addEventListener('click', () => {
+            try { intakeDateInput.showPicker(); } catch (e) { /* native tap handling */ }
+        });
+
+        intakeDateInput.addEventListener('change', (e) => {
+            if (!e.target.value) e.target.value = AppState.todayISO();
+            AppState.updateDateTime();
+            this.resultsDisplay.updateResultsAutomatically();
+            this.autoSaveFormData();
         });
 
         // Nav menu dropdown
@@ -387,14 +403,14 @@ class MainApp {
             // Hide results section
             document.getElementById('results-section').style.display = 'none';
 
+            // Reset intake date to today (also updates the print header)
+            AppState.setIntakeDate(AppState.todayISO());
+
             // Add fresh kitten form (this also updates URL)
             this.formManager.addKitten();
 
             // Update button states
             this.resultsDisplay.updateHeaderButtons();
-
-            // Update date/time header
-            AppState.updateDateTime();
 
             // Update URL to reflect cleared state
             this.urlStateManager.updateUrlNow();

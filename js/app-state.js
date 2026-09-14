@@ -309,36 +309,55 @@ class AppState {
         return `<span class="route-tag">${label}</span>`;
     }
 
-    static updateDateTime() {
+    /** Today's local date as YYYY-MM-DD (the <input type="date"> value format). */
+    static todayISO() {
         const now = new Date();
-        
-        // Format date parts
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    }
+
+    /** Session-wide intake date as YYYY-MM-DD; falls back to today when unset/invalid. */
+    static getIntakeDateISO() {
+        const input = document.getElementById('intake-date');
+        const value = input ? input.value : '';
+        return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : AppState.todayISO();
+    }
+
+    /** Session-wide intake date as a local Date (midnight). */
+    static getIntakeDate() {
+        const [year, month, day] = AppState.getIntakeDateISO().split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    /** Set the intake date input (YYYY-MM-DD); invalid/empty values reset to today. */
+    static setIntakeDate(value) {
+        const input = document.getElementById('intake-date');
+        if (!input) return;
+        input.value = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value : AppState.todayISO();
+        AppState.updateDateTime();
+    }
+
+    static updateDateTime() {
+        const date = AppState.getIntakeDate();
+
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                            'July', 'August', 'September', 'October', 'November', 'December'];
-        
-        const dayName = dayNames[now.getDay()];
-        const monthName = monthNames[now.getMonth()];
-        const day = now.getDate();
-        const year = now.getFullYear();
-        
-        // Format time
-        let hours = now.getHours();
-        const minutes = now.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
-        const minutesStr = minutes < 10 ? '0' + minutes : minutes;
-        
-        // Build the formatted string: "Wednesday, August 27 2025 • 4:20 PM"
-        const dateTimeString = `${dayName}, ${monthName} ${day} ${year} at ${hours}:${minutesStr} ${ampm}`;
 
-        console.log(dateTimeString);
-        
-        // Update the h2 element
+        // "Wednesday, August 27 2025" — the intake date, shared by all cats in the session
+        const dateString = `${dayNames[date.getDay()]}, ${monthNames[date.getMonth()]} ${date.getDate()} ${date.getFullYear()}`;
+
+        // Nav pill shows the short MM/DD/YY form
+        const pillText = document.getElementById('intake-date-text');
+        if (pillText) {
+            const pad = (n) => String(n).padStart(2, '0');
+            pillText.textContent = `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${String(date.getFullYear()).slice(-2)}`;
+        }
+
+        // Update the print heading (also mirrored into the PDF title/filename)
         const headerElement = document.querySelector('h2.print-only');
         if (headerElement) {
-            headerElement.textContent = 'Cat Intake • ' + dateTimeString;
+            headerElement.textContent = 'Cat Intake • ' + dateString;
         }
     }
 

@@ -130,6 +130,7 @@ class LocalStorageManager {
         const formData = {
             appState: {
                 kittenCounter: window.kittenCounter || 0,
+                intakeDate: AppState.getIntakeDateISO(),
                 activeKittens: []
             },
             kittens: {}
@@ -181,6 +182,9 @@ class LocalStorageManager {
             if (container) {
                 container.innerHTML = '';
             }
+
+            // Restore session intake date (older saves without one fall back to today)
+            AppState.setIntakeDate(data.appState.intakeDate);
 
             // Restore application state
             if (window.kittenCounter !== undefined) {

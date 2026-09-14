@@ -116,7 +116,7 @@ class ScheduleManager {
     }
 
     generateDaysFromToday(numDays, startOffset = 0) {
-        const today = new Date();
+        const today = this.appState.constructor.getIntakeDate();
         const days = [];
         
         for (let i = 0; i < numDays; i++) {
