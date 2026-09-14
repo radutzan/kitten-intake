@@ -952,6 +952,14 @@ class FormManager {
         const element = document.getElementById(kittenId);
         if (!element) return;
 
+        // Last remaining cat: clear its data instead of leaving an empty page
+        if (document.querySelectorAll(`.${Constants.CSS.KITTEN_FORM}`).length <= 1) {
+            window.KittenApp.mainApp.clearAllData(
+                'Are you sure you want to clear this cat\'s data?\n\nThis cannot be undone.'
+            );
+            return;
+        }
+
         // Simple confirmation for removing a kitten form
         const confirmed = confirm('Are you sure you want to remove this cat form?');
         if (!confirmed) {

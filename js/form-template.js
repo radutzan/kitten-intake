@@ -13,7 +13,7 @@ const FormTemplate = {
      */
     generate(kittenId, kittenNumber) {
         return `
-            ${kittenNumber > 1 ? `<button type="button" class="btn btn-danger remove" onclick="removeKitten('${kittenId}')">—</button>` : ''}
+            <button type="button" class="btn btn-danger remove" onclick="removeKitten('${kittenId}')">—</button>
             <div class="number">${kittenNumber}</div>
             <div class="kitten-form-content">
                 ${this.generateTopSection(kittenId)}

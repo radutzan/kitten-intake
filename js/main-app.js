@@ -362,15 +362,15 @@ class MainApp {
     }
 
     // Clear all data function with confirmation
-    clearAllData() {
+    clearAllData(confirmMessage) {
         const hasData = document.querySelectorAll('.kitten-form').length > 0;
-        
+
         if (!hasData) {
             alert('No data to clear.');
             return;
         }
-        
-        const confirmed = confirm(
+
+        const confirmed = confirm(confirmMessage ||
             'Are you sure you want to clear all cat data?\n\n' +
             'This cannot be undone.'
         );
