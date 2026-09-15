@@ -45,17 +45,11 @@ class ResultsDisplay {
 
         // We have at least one valid kitten, update results
         try {
-            const kittens = this.appState.collectKittenData();
+            const results = this._buildResults();
 
-            // Add doses to kittens and filter out invalid ones
-            const validKittens = kittens
-                .map(kitten => this.doseCalculator.addDosesToKitten(kitten))
-                .filter(kitten => kitten.weightGrams > 0);
-
-            if (validKittens.length > 0) {
-                const schedules = this.scheduleManager.generateSchedule(validKittens);
-                this.displayFosterChecklist(validKittens, schedules);
-                this.displayDispenseSummary(validKittens);
+            if (results) {
+                this.displayFosterChecklist(results.kittens, results.schedules);
+                this.displayDispenseSummary(results.kittens);
 
                 document.getElementById(Constants.ELEMENTS.RESULTS_SECTION).style.display = 'block';
             } else {
@@ -72,6 +66,38 @@ class ResultsDisplay {
     _hideResults() {
         document.getElementById(Constants.ELEMENTS.RESULTS_SECTION).style.display = 'none';
         this.updateHeaderButtons();
+    }
+
+    /**
+     * Collect weighed kittens with doses and their schedules
+     * @param {Set<string>} [kittenIds] - Limit to these kittens (all when omitted)
+     * @returns {{kittens: Array, schedules: Array}|null} null when no kitten has a weight
+     */
+    _buildResults(kittenIds = null) {
+        const kittens = this.appState.collectKittenData()
+            .filter(kitten => !kittenIds || kittenIds.has(kitten.id))
+            .map(kitten => this.doseCalculator.addDosesToKitten(kitten))
+            .filter(kitten => kitten.weightGrams > 0);
+
+        if (kittens.length === 0) return null;
+        return { kittens, schedules: this.scheduleManager.generateSchedule(kittens) };
+    }
+
+    /**
+     * Render the checklist for a subset of cats into the print-only section.
+     * Kept apart from the on-screen results so nothing has to be restored after
+     * printing (iOS Safari doesn't reliably fire afterprint).
+     * @param {Set<string>} kittenIds - Cats to include
+     */
+    renderPrintSubset(kittenIds) {
+        const section = document.getElementById('print-subset-section');
+        const results = this._buildResults(kittenIds);
+
+        section.classList.toggle('empty', !results);
+        if (!results) return;
+
+        this.displayFosterChecklist(results.kittens, results.schedules,
+            document.getElementById('print-foster-checklist-content'));
     }
 
     // ==========================================
@@ -275,12 +301,6 @@ class ResultsDisplay {
         // Get all unique dates across all schedules
         const allDays = this.scheduleManager.getAllScheduleDays(schedules);
 
-        // Optimize Drontal scheduling
-        this._optimizeDrontalScheduling(kittens, schedules, allDays);
-
-        // Recalculate days after optimization
-        const updatedAllDays = this.scheduleManager.getAllScheduleDays(schedules);
-
         // Build kitten header data
         const kittenHeaders = kittens
             .map(kitten => {
@@ -308,7 +328,7 @@ class ResultsDisplay {
             .filter(k => k.hasMedications);
 
         // Build row data
-        const rows = updatedAllDays.map(day => ({
+        const rows = allDays.map(day => ({
             date: day,
             displayDate: AppState.formatDateForDisplay(day),
             cells: kittenHeaders.flatMap(kitten => {
@@ -323,10 +343,10 @@ class ResultsDisplay {
         }));
 
         return {
-            days: updatedAllDays,
+            days: allDays,
             kittenHeaders,
             rows,
-            isEmpty: updatedAllDays.length === 0
+            isEmpty: allDays.length === 0
         };
     }
 
@@ -377,19 +397,6 @@ class ResultsDisplay {
         return '';
     }
 
-    /**
-     * Optimize Drontal scheduling to first available day
-     */
-    _optimizeDrontalScheduling(kittens, schedules, allDays) {
-        if (allDays.length === 0) return;
-
-        kittens.forEach(kitten => {
-            const schedule = schedules.find(s => s.kittenId === kitten.id);
-            if (!schedule || !schedule.medications.drontal) return;
-            schedule.medications.drontal.days = [allDays[0]];
-        });
-    }
-
     // ==========================================
     // Foster Checklist - HTML Rendering
     // ==========================================
@@ -426,7 +433,10 @@ class ResultsDisplay {
         if (current.length) chunks.push(current);
 
         if (chunks.length === 1) {
-            return this._buildChecklistTable(checklistData.kittenHeaders, checklistData.rows);
+            const table = this._buildChecklistTable(checklistData.kittenHeaders, checklistData.rows);
+            // A lone cat's few columns look lost stretched across the page
+            table.classList.toggle('compact', checklistData.kittenHeaders.length === 1);
+            return table;
         }
 
         const wrapper = document.createElement('div');
@@ -529,10 +539,9 @@ class ResultsDisplay {
      * Display foster checklist - orchestrates data prep, rendering, and DOM update
      * @param {Array} kittens - Array of kitten objects
      * @param {Array} schedules - Array of schedule objects
+     * @param {HTMLElement} [container] - Target element (on-screen checklist when omitted)
      */
-    displayFosterChecklist(kittens, schedules) {
-        const container = document.getElementById(Constants.ELEMENTS.FOSTER_CHECKLIST_CONTENT);
-
+    displayFosterChecklist(kittens, schedules, container = document.getElementById(Constants.ELEMENTS.FOSTER_CHECKLIST_CONTENT)) {
         // Step 1: Prepare data
         const checklistData = this.prepareFosterChecklistData(kittens, schedules);
 
@@ -570,13 +579,6 @@ class ResultsDisplay {
     // ==========================================
     // Legacy / Compatibility
     // ==========================================
-
-    /**
-     * @deprecated Use optimizeDrontalScheduling prefix convention
-     */
-    optimizeDrontalScheduling(kittens, schedules, allDays) {
-        this._optimizeDrontalScheduling(kittens, schedules, allDays);
-    }
 
     /**
      * Legacy function - kept for compatibility

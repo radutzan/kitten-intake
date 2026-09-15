@@ -44,6 +44,7 @@ class UrlStateManager {
         this.version = 5;
         this.paramKey = 'k';
         this.dateParamKey = 'd'; // Session intake date (YYYY-MM-DD)
+        this.printParamKey = 'p'; // Cats picked to print (1-based positions, e.g. 1.3.4)
         this.backupStorageKey = 'cat-intake-form-backup';
         this.loadedStateKey = 'cat-intake-url-loaded';
         this.ownUrlKey = 'cat-intake-own-url';
@@ -475,6 +476,23 @@ class UrlStateManager {
     hasUrlState() {
         const url = new URL(window.location.href);
         return url.searchParams.has(this.paramKey);
+    }
+
+    /**
+     * Read and strip the print selection added when the iOS Home Screen app hands
+     * printing off to Safari, so a reload doesn't reopen the picker
+     * @returns {number[]|null} 1-based cat positions
+     */
+    takePrintSelection() {
+        const url = new URL(window.location.href);
+        const value = url.searchParams.get(this.printParamKey);
+        if (value === null) return null;
+
+        url.searchParams.delete(this.printParamKey);
+        window.history.replaceState({}, '', url.toString());
+
+        const positions = value.split('.').map(Number).filter(n => Number.isInteger(n) && n > 0);
+        return positions.length > 0 ? positions : null;
     }
 
     /**

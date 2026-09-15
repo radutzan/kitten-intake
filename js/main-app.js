@@ -20,7 +20,8 @@ class MainApp {
         this.formManager = new FormManager(this.appState, this.doseCalculator);
         this.scheduleManager = new ScheduleManager(this.appState);
         this.resultsDisplay = new ResultsDisplay(this.appState, this.scheduleManager, this.doseCalculator);
-        this.printManager = new PrintManager(this.appState);
+        this.printManager = new PrintManager(this.appState, this.resultsDisplay);
+        this.printManager.onPrint = (kittenIds, positions) => this.handlePrint(kittenIds, positions);
         this.urlStateManager = new UrlStateManager();
         this.pageZoomManager = new PageZoomManager();
 
@@ -118,6 +119,7 @@ class MainApp {
     init() {
         this.setupEventListeners();
         AppState.setIntakeDate(AppState.todayISO()); // Default; restored sessions override it
+        const printSelection = this.urlStateManager.takePrintSelection();
 
         // Check for URL state first (shared link)
         if (this.urlStateManager.isSharedLink()) {
@@ -144,6 +146,12 @@ class MainApp {
         } else {
             // Normal load from localStorage (includes reload with matching URL)
             this.loadNormalState();
+        }
+
+        // Handed off from the iOS Home Screen app to print: reopen the picker with
+        // the same cats. Same delay as the restore timers above, so it runs after them.
+        if (printSelection) {
+            setTimeout(() => this.printManager.openPicker(printSelection), 100);
         }
 
         // Hide results section initially
@@ -250,7 +258,7 @@ class MainApp {
                     this.handleShare();
                     break;
                 case 'print':
-                    this.handlePrint();
+                    this.openPrint();
                     break;
                 case 'zoom':
                     this.pageZoomManager.open();
@@ -290,8 +298,26 @@ class MainApp {
         return match !== null && parseInt(match[1], 10) >= 27;
     }
 
-    handlePrint() {
+    /** Print straight away with one cat; otherwise let the user pick which cats. */
+    openPrint() {
+        if (document.querySelectorAll('.kitten-form').length > 1) {
+            this.printManager.openPicker();
+        } else {
+            this.handlePrint();
+        }
+    }
+
+    /**
+     * @param {Set<string>} [kittenIds] - Cats to print (all when omitted)
+     * @param {number[]} [positions] - Their 1-based card positions, carried to Safari
+     */
+    handlePrint(kittenIds = null, positions = null) {
         if (!this.isPrintBlockedInStandalone()) {
+            if (kittenIds) {
+                this.printManager.applySelection(kittenIds);
+            } else {
+                this.printManager.clearSelection();
+            }
             window.print();
             return;
         }
@@ -304,8 +330,13 @@ class MainApp {
 
         // Home-screen apps don't share storage with Safari, so carry the data over
         // in the share URL. Copy it first so there's a fallback if the redirect fails.
+        // Positions rather than ids: Safari rebuilds the cats as kitten-1..N.
         this.urlStateManager.updateUrlNow();
-        const url = window.location.href;
+        const printUrl = new URL(window.location.href);
+        if (positions) {
+            printUrl.searchParams.set(this.urlStateManager.printParamKey, positions.join('.'));
+        }
+        const url = printUrl.toString();
         const copied = this.copyTextSync(url);
 
         // x-safari- forces Safari even for in-scope URLs, but only accepts https

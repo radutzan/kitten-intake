@@ -83,7 +83,7 @@ The application manages **5 medications** with various controls that determine w
 | ☐ unchecked | In range | 1 dose starting **today*** | 1 tablet(s) |
 | ☐ unchecked | Out of range | Not included | Not shown |
 
-*Drontal is then optimized to the first day that has other medications scheduled (`optimizeDrontalScheduling` in `results-display.js:202`).
+*Intake day is always the first day of the checklist, since no medication is scheduled before it.
 
 ---
 
