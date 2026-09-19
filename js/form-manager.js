@@ -408,12 +408,36 @@ class FormManager {
                     if (med === 'drontal') {
                         this.updatePyrantelAvailability(kittenId);
                     }
+                    if (toggleCheckbox.checked) {
+                        this.deselectConflictingMeds(kittenId, med);
+                    }
                     this.renderer.updateResultDisplay(kittenId);
                     if (window.KittenApp && window.KittenApp.resultsDisplay) {
                         window.KittenApp.resultsDisplay.updateResultsAutomatically();
                     }
                     this.autoSaveFormData();
                 });
+            }
+        });
+    }
+
+    /**
+     * NexGard Combo already covers fleas and tapeworms, so it is never given
+     * alongside Flea Med or Praziquantel. Enabling one side unchecks the other.
+     */
+    deselectConflictingMeds(kittenId, med) {
+        const conflicts = {
+            nexgard: ['flea', 'drontal'],
+            flea: ['nexgard'],
+            drontal: ['nexgard']
+        };
+        (conflicts[med] || []).forEach(other => {
+            const otherToggle = document.getElementById(Constants.ID.medEnabled(kittenId, other));
+            if (otherToggle && otherToggle.checked) {
+                // Uncheck via a change event so existing handlers sync state,
+                // status lights, results, and auto-save.
+                otherToggle.checked = false;
+                otherToggle.dispatchEvent(new Event('change'));
             }
         });
     }
