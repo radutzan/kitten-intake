@@ -10,10 +10,7 @@ A single-page HTML/JS application for rescued cat and kitten intake. It calculat
 
 **Local development:** Open `index.html` directly in a browser.
 
-**Update footer before committing:**
-```bash
-node scripts/update-footer.js
-```
+**Footer:** `scripts/update-footer.js` runs automatically on the deploy server. Never run it locally when making changes — just commit.
 
 ## Architecture
 
@@ -48,6 +45,6 @@ MainApp (main-app.js)
 ## Deployment
 
 Three deployment contexts (see `scripts/deploy/DEPLOYMENT_WORKFLOW.md`):
-- **Local:** Manual commit, footer gets +1 to commit count
+- **Local:** Manual commit only; do not run the footer script (the server handles it)
 - **GitHub Actions:** Auto-deploys to GitHub Pages on push to main
 - **Ubuntu Server:** Polls every 3 minutes via systemd timer
