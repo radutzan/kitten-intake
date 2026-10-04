@@ -336,7 +336,7 @@ class FormRenderer {
         const doses = this._calculateAllDoses(weightLb, topical);
 
         // Update inline dose displays
-        this._updateInlineDoseDisplays(kittenId, doses, topical, drontalType);
+        this._updateInlineDoseDisplays(kittenId, doses, topical, drontalType, weightLb);
 
         // Build the result display content
         const content = this._buildDosesSection(doses, topical, drontalType, statuses, panacurDays, ponazurilDays)
@@ -359,6 +359,17 @@ class FormRenderer {
             const doseEl = document.getElementById(`${kittenId}-${med}-dose`);
             if (doseEl) doseEl.textContent = '';
         });
+        this._setDroncitWarning(kittenId, false);
+    }
+
+    /**
+     * Show/hide the red "6 weeks or older" tag under the Droncit/Drontal pills
+     * @param {string} kittenId - The kitten ID
+     * @param {boolean} show - Whether the warning is visible
+     */
+    _setDroncitWarning(kittenId, show) {
+        const warningEl = document.getElementById(`${kittenId}-drontal-warning`);
+        if (warningEl) warningEl.hidden = !show;
     }
 
     /**
@@ -414,8 +425,10 @@ class FormRenderer {
      * @param {string} kittenId - The kitten ID
      * @param {Object} doses - Calculated doses
      * @param {string} topical - Selected topical type
+     * @param {string} drontalType - Selected dewormer type (droncit/drontal)
+     * @param {number} weightLb - Weight in pounds
      */
-    _updateInlineDoseDisplays(kittenId, doses, topical, drontalType) {
+    _updateInlineDoseDisplays(kittenId, doses, topical, drontalType, weightLb) {
         const outOfRange = doses.outOfRange;
 
         // Flea dose
@@ -452,6 +465,10 @@ class FormRenderer {
                 drontalDoseEl.textContent = doses.droncit === outOfRange ? outOfRange : `${AppState.formatDose(doses.droncit)} mL`;
             }
         }
+
+        // Droncit under 1.5 lb: only for kittens 6 weeks or older
+        this._setDroncitWarning(kittenId,
+            drontalType === Constants.DRONTAL_TYPE.DRONCIT && doses.droncit !== outOfRange && weightLb < 1.5);
 
         // NexGard Combo dose
         const nexgardDoseEl = document.getElementById(`${kittenId}-nexgard-dose`);

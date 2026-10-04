@@ -286,6 +286,9 @@ const FormTemplate = {
                         <label for="${kittenId}-drontal-status-done">Done</label>
                     </div>
                 </div>
+                <div class="med-warning" id="${kittenId}-drontal-warning" hidden>
+                    <span class="route-tag route-tag-warning">Only proceed if kitten is 6 weeks or older</span>
+                </div>
             </div>
         `;
     },

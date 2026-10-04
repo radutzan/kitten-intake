@@ -37,6 +37,9 @@
     --bg-yellow: #fff3cd;
     --tag-yellow-border: #ffd24d;
     --tag-yellow-text: #8a6116;
+    --bg-red: #fdecea;
+    --tag-red-border: #f5a19a;
+    --tag-red-text: #b03a2e;
     --bg-green: #e8f5e8;
 
     /* Spacing & sizing */
@@ -1133,6 +1136,17 @@ input[type="radio"]:focus {
     color: var(--tag-yellow-text);
 }
 
+/* Red variant for dosing cautions (e.g. Droncit under 1.5 lb) */
+.route-tag.route-tag-warning {
+    background-color: var(--bg-red);
+    border-color: var(--tag-red-border);
+    color: var(--tag-red-text);
+}
+
+.med-warning[hidden] {
+    display: none;
+}
+
 .result-display > .dose-section-header {
     margin-top: 0;
 }
@@ -1524,6 +1538,12 @@ footer {
         color: var(--tag-yellow-text) !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
+
+    .route-tag.route-tag-warning {
+        background-color: var(--bg-red) !important;
+        border-color: var(--tag-red-border) !important;
+        color: var(--tag-red-text) !important;
     }
 
     .horizontal-label {
