@@ -172,12 +172,12 @@ const MedsData = (() => {
             id: 'droncit',
             name: 'Droncit (Injectable)',
             concentration: '56.8 mg/mL',
-            calculationText: '1.5–5 lb: 0.2 mL\n5–11 lb: 0.4 mL\n>11 lb: 0.6 mL',
+            calculationText: '500 g–5 lb: 0.2 mL\n5–11 lb: 0.4 mL\n>11 lb: 0.6 mL',
             unit: 'mL',
             calc: {
                 type: 'weightTable',
                 rows: [
-                    { minLb: 1.5, maxLb: 5,  value: 0.2 },
+                    { minLb: 500 / 453.59237, maxLb: 5,  value: 0.2 },  // 500 g
                     { minLb: 5, maxLb: 11,  value: 0.4 },
                     { minLb: 11, maxLb: 20, value: 0.6, maxInclusive: true }
                 ]

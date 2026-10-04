@@ -67,6 +67,9 @@ const baseline = [
     ['calculateDrontalDose',     1,    OOR],
 
     ['calculateDroncitDose',     1,    OOR],
+    ['calculateDroncitDose',     1.1,  OOR],
+    ['calculateDroncitDose',     500 / 453.59237, 0.2],
+    ['calculateDroncitDose',     1.11, 0.2],
     ['calculateDroncitDose',     1.5,  0.2],
     ['calculateDroncitDose',     4.9,  0.2],
     ['calculateDroncitDose',     5,    0.4],
