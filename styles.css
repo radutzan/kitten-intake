@@ -1227,6 +1227,24 @@ input[type="radio"]:focus {
     break-before: page;
 }
 
+.checklist-start {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.checklist-start label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.checklist-start input[type="date"] {
+    font: inherit;
+    padding: 4px 8px;
+}
+
 .checklist-table {
     width: 100%;
     border-collapse: collapse;

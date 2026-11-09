@@ -337,6 +337,21 @@ class AppState {
         AppState.updateDateTime();
     }
 
+    /** Checklist "Start on" date (YYYY-MM-DD), or null to start on the scheduled first day. */
+    static getChecklistStart() {
+        return AppState._checklistStart || null;
+    }
+
+    static setChecklistStart(value) {
+        AppState._checklistStart = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value : null;
+    }
+
+    /** Convert a schedule day ("M/D/YYYY" from formatDate) to YYYY-MM-DD. */
+    static dayToISO(day) {
+        const [month, date, year] = day.split('/');
+        return `${year}-${month.padStart(2, '0')}-${date.padStart(2, '0')}`;
+    }
+
     static updateDateTime() {
         const date = AppState.getIntakeDate();
 

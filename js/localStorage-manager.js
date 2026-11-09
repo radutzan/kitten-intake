@@ -131,6 +131,7 @@ class LocalStorageManager {
             appState: {
                 kittenCounter: window.kittenCounter || 0,
                 intakeDate: AppState.getIntakeDateISO(),
+                checklistStart: AppState.getChecklistStart(),
                 activeKittens: []
             },
             kittens: {}
@@ -185,6 +186,7 @@ class LocalStorageManager {
 
             // Restore session intake date (older saves without one fall back to today)
             AppState.setIntakeDate(data.appState.intakeDate);
+            AppState.setChecklistStart(data.appState.checklistStart);
 
             // Restore application state
             if (window.kittenCounter !== undefined) {

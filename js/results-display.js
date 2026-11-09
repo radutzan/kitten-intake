@@ -50,6 +50,7 @@ class ResultsDisplay {
             if (results) {
                 this.displayFosterChecklist(results.kittens, results.schedules);
                 this.displayDispenseSummary(results.kittens);
+                this._updateChecklistStartInput(results.schedules);
 
                 document.getElementById(Constants.ELEMENTS.RESULTS_SECTION).style.display = 'block';
             } else {
@@ -80,7 +81,18 @@ class ResultsDisplay {
             .filter(kitten => kitten.weightGrams > 0);
 
         if (kittens.length === 0) return null;
-        return { kittens, schedules: this.scheduleManager.generateSchedule(kittens) };
+        const schedules = this.scheduleManager.generateSchedule(kittens);
+        this.scheduleManager.shiftToStart(schedules, AppState.getChecklistStart());
+        return { kittens, schedules };
+    }
+
+    /** Show the checklist's actual first day in the "Start on" picker. */
+    _updateChecklistStartInput(schedules) {
+        const input = document.getElementById('checklist-start-date');
+        if (!input) return;
+        const days = this.scheduleManager.getAllScheduleDays(schedules);
+        input.value = days.length ? AppState.dayToISO(days[0]) : '';
+        input.disabled = days.length === 0;
     }
 
     /**

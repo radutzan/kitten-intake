@@ -224,6 +224,16 @@ class MainApp {
         intakeDateInput.addEventListener('change', (e) => {
             if (!e.target.value) e.target.value = AppState.todayISO();
             AppState.updateDateTime();
+            // A new intake date restarts the checklist on its normal schedule
+            AppState.setChecklistStart(null);
+            this.resultsDisplay.updateResultsAutomatically();
+            this.autoSaveFormData();
+        });
+
+        // Foster checklist "Start on" date: moves the first row (and every row after it)
+        const checklistStartInput = document.getElementById('checklist-start-date');
+        checklistStartInput.addEventListener('change', (e) => {
+            AppState.setChecklistStart(e.target.value);
             this.resultsDisplay.updateResultsAutomatically();
             this.autoSaveFormData();
         });
@@ -436,6 +446,7 @@ class MainApp {
 
             // Reset intake date to today (also updates the print header)
             AppState.setIntakeDate(AppState.todayISO());
+            AppState.setChecklistStart(null);
 
             // Add fresh kitten form (this also updates URL)
             this.formManager.addKitten();

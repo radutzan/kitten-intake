@@ -128,6 +128,36 @@ class ScheduleManager {
         return days;
     }
 
+    /**
+     * Shift every schedule so the first checklist day lands on startISO,
+     * keeping the spacing between days. No-op when startISO is null.
+     * @param {Array} schedules - Schedules from generateSchedule (modified in place)
+     * @param {string|null} startISO - Desired first day as YYYY-MM-DD
+     * @returns {Array} The same schedules
+     */
+    shiftToStart(schedules, startISO) {
+        const allDays = this.getAllScheduleDays(schedules);
+        if (!startISO || allDays.length === 0) return schedules;
+
+        const parseISO = (iso) => {
+            const [year, month, day] = iso.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        };
+        const shiftDays = Math.round((parseISO(startISO) - parseISO(AppState.dayToISO(allDays[0]))) / 86400000);
+        if (shiftDays === 0) return schedules;
+
+        schedules.forEach(schedule => {
+            Object.values(schedule.medications).forEach(med => {
+                med.days = med.days.map(day => {
+                    const date = parseISO(AppState.dayToISO(day));
+                    date.setDate(date.getDate() + shiftDays);
+                    return this.appState.constructor.formatDate(date);
+                });
+            });
+        });
+        return schedules;
+    }
+
     getAllScheduleDays(schedules) {
         const allDays = new Set();
         
