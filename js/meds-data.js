@@ -111,6 +111,14 @@ const MedsData = (() => {
             calc: { type: 'linear', mgPerKg: 1 }
         },
         {
+            id: 'cerenia-injectable',
+            name: 'Cerenia (Injectable)',
+            concentration: '10 mg/mL',
+            calculationText: '1 mg/kg every 24h',
+            unit: 'mL',
+            calc: { type: 'linear', mgPerKg: 1, concMgPerMl: 10 }
+        },
+        {
             id: 'ondansetron-tablets',
             name: 'Ondansetron (Tablets)',
             concentration: '4 mg tablets',
